@@ -1,0 +1,33 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
+
+namespace ProjetoEventX.Models
+{
+    public class Fornecedor : IdentityUser<int>
+    {
+        [Required]
+        public int PessoaId { get; set; }
+
+        [ForeignKey("PessoaId")]
+        public Pessoa Pessoa { get; set; }
+
+        [Required]
+        [StringLength(18)]
+        public string Cnpj { get; set; }
+
+        [StringLength(255)]
+        public string TipoServico { get; set; }
+
+        public decimal AvaliacaoMedia { get; set; } = 0.0m;
+
+        public DateTime DataCadastro { get; set; } = DateTime.Now;
+
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
+        // Relacionamentos
+        public ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
+        public ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
+    }
+}

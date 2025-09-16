@@ -1,0 +1,56 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using OpenAI.Chat;
+using ProjetoEventX.Models;
+using Stripe;
+using DotNetEnv;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Carregar variáveis do .env
+Env.Load();
+
+// DbContext com conexão do .env
+var dbConnection = Environment.GetEnvironmentVariable("DB_CONNECTION");
+builder.Services.AddDbContext<EventXContext>(options =>
+    options.UseNpgsql(dbConnection));
+
+// Identity
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<EventXContext>();
+
+// Stripe
+StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+
+// SignalR
+builder.Services.AddSignalR();
+
+// OpenAI
+var GeminiAiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+builder.Services.AddSingleton<ChatClient>(sp => new ChatClient(GeminiAiKey));
+
+builder.Services.AddControllersWithViews();
+
+var app = builder.Build();
+
+// Middleware
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapRazorPages();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapHub<ChatHub>("/chatHub");
+
+app.Run();
