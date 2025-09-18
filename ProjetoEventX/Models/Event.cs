@@ -10,15 +10,15 @@ namespace ProjetoEventX.Models
 
         [Required]
         [StringLength(255)]
-        public string NomeEvento { get; set; }
+        public required string NomeEvento { get; set; }
 
         [Required]
         public DateTime DataEvento { get; set; }
 
-        public string DescricaoEvento { get; set; }
+        public required string DescricaoEvento { get; set; }
 
         [StringLength(100)]
-        public string TipoEvento { get; set; }
+        public required string TipoEvento { get; set; }
 
         public decimal CustoEstimado { get; set; } = 0.0m;
 
@@ -28,13 +28,13 @@ namespace ProjetoEventX.Models
         public int? IdTemplateEvento { get; set; }
 
         [ForeignKey("IdTemplateEvento")]
-        public TemplateEvento TemplateEvento { get; set; }
+        public required TemplateEvento TemplateEvento { get; set; }
 
         [StringLength(5)]
-        public string HoraInicio { get; set; }
+        public required string HoraInicio { get; set; }
 
         [StringLength(5)]
-        public string HoraFim { get; set; }
+        public required string HoraFim { get; set; }
 
         public int PublicoEstimado { get; set; }
 
@@ -42,12 +42,12 @@ namespace ProjetoEventX.Models
         public int OrganizadorId { get; set; }
 
         [ForeignKey("OrganizadorId")]
-        public Organizador Organizador { get; set; }
+        public required Organizador Organizador { get; set; }
 
         public int? LocalId { get; set; }
 
         [ForeignKey("LocalId")]
-        public Local Local { get; set; }
+        public required Local Local { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;

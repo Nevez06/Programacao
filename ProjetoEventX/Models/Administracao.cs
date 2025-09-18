@@ -17,6 +17,6 @@ namespace ProjetoEventX.Models
         public int IdEvento { get; set; }
 
         [ForeignKey("IdEvento")]
-        public Evento Evento { get; set; }
+        public required Evento Evento { get; set; }
     }
 }

@@ -10,14 +10,14 @@ namespace ProjetoEventX.Models
         public int PessoaId { get; set; }
 
         [ForeignKey("PessoaId")]
-        public Pessoa Pessoa { get; set; }
+        public required Pessoa Pessoa { get; set; }
 
         [Required]
         [StringLength(18)]
-        public string Cnpj { get; set; }
+        public required string Cnpj { get; set; }
 
         [StringLength(255)]
-        public string TipoServico { get; set; }
+        public required string TipoServico { get; set; }
 
         public decimal AvaliacaoMedia { get; set; } = 0.0m;
 

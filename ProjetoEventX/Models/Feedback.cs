@@ -9,24 +9,24 @@ namespace ProjetoEventX.Models
         public int Id { get; set; }
 
         [StringLength(50)]
-        public string AvaliacaoFeedback { get; set; }
+        public required string AvaliacaoFeedback { get; set; }
 
-        public string ComentarioFeedback { get; set; }
+        public string? ComentarioFeedback { get; set; }
 
         public DateTime DataEnvioFeedback { get; set; } = DateTime.Now;
 
         [StringLength(50)]
-        public string TipoFeedback { get; set; }
+        public required string TipoFeedback { get; set; }
 
         public int? FornecedorId { get; set; }
 
         [ForeignKey("FornecedorId")]
-        public Fornecedor Fornecedor { get; set; }
+        public  Fornecedor? Fornecedor { get; set; }
 
         public int? EventoId { get; set; }
 
         [ForeignKey("EventoId")]
-        public Evento Evento { get; set; }
+        public required Evento Evento { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;

@@ -9,12 +9,12 @@ namespace ProjetoEventX.Models
         public int Id { get; set; }
 
         [Required]
-        public string DescricaoTarefaEvento { get; set; }
+        public string? DescricaoTarefaEvento { get; set; }
 
         public int? ResponsavelId { get; set; }
 
         [ForeignKey("ResponsavelId")]
-        public Pessoa Responsavel { get; set; }
+        public Pessoa? Responsavel { get; set; }
 
         [StringLength(50)]
         public string StatusConclusao { get; set; } = "Pendente";
@@ -22,7 +22,7 @@ namespace ProjetoEventX.Models
         public DateTime? DataLimite { get; set; }
 
         [StringLength(50)]
-        public string PrioridadeTarefaEvento { get; set; }
+        public string? PrioridadeTarefaEvento { get; set; }
 
         public DateTime? DataConclusao { get; set; }
 
@@ -30,7 +30,7 @@ namespace ProjetoEventX.Models
         public int EventoId { get; set; }
 
         [ForeignKey("EventoId")]
-        public Evento Evento { get; set; }
+        public required Evento Evento { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;

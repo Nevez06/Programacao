@@ -10,7 +10,7 @@ namespace ProjetoEventX.Models
         public int PessoaId { get; set; }
 
         [ForeignKey("PessoaId")]
-        public Pessoa Pessoa { get; set; }
+        public required Pessoa Pessoa { get; set; }
 
         public DateTime DataCadastro { get; set; } = DateTime.Now;
 

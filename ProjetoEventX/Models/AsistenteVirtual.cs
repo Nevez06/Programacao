@@ -9,9 +9,9 @@ namespace ProjetoEventX.Models
         public int Id { get; set; }
 
         [StringLength(100)]
-        public string AlgoritmoIA { get; set; }
+        public required string AlgoritmoIA { get; set; }
 
-        public string Sugestoes { get; set; }
+        public required string Sugestoes { get; set; }
 
         public DateTime DataGeracao { get; set; } = DateTime.Now;
 
@@ -19,7 +19,7 @@ namespace ProjetoEventX.Models
         public int EventoId { get; set; }
 
         [ForeignKey("EventoId")]
-        public Evento Evento { get; set; }
+        public required Evento Evento { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;

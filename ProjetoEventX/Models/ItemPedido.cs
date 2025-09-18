@@ -9,7 +9,7 @@ namespace ProjetoEventX.Models
         public int Id { get; set; }
 
         [Required]
-        public string DescricaoItemPedido { get; set; }
+        public required string DescricaoItemPedido { get; set; }
 
         [Required]
         [Range(1, int.MaxValue)]
@@ -19,13 +19,13 @@ namespace ProjetoEventX.Models
         public decimal PrecoUnitario { get; set; }
 
         [StringLength(100)]
-        public string CategoriaItemPedido { get; set; }
+        public required string CategoriaItemPedido { get; set; }
 
         [Required]
         public int PedidoId { get; set; }
 
         [ForeignKey("PedidoId")]
-        public Pedido Pedido { get; set; }
+        public required Pedido Pedido { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
