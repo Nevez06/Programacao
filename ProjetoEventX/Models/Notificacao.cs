@@ -9,28 +9,28 @@ namespace ProjetoEventX.Models
         public int Id { get; set; }
 
         [Required]
-        public string MensagemNotificacao { get; set; }
+        public required string MensagemNotificacao { get; set; }
 
         [StringLength(50)]
-        public string Tipo { get; set; }
+        public required string Tipo { get; set; }
 
         public DateTime DataEnvio { get; set; } = DateTime.Now;
 
         public bool Lida { get; set; } = false;
 
         [StringLength(50)]
-        public string PrioridadeNotificacao { get; set; }
+        public required string PrioridadeNotificacao { get; set; }
 
         [Required]
         public int DestinatarioId { get; set; }
 
         [ForeignKey("DestinatarioId")]
-        public Pessoa Destinatario { get; set; }
+        public required Pessoa Destinatario { get; set; }
 
         public int? EventoId { get; set; }
 
         [ForeignKey("EventoId")]
-        public Evento Evento { get; set; }
+        public required Evento Evento { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;

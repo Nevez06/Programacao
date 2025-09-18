@@ -15,18 +15,18 @@ namespace ProjetoEventX.Models
         public string StatusPagamento { get; set; } = "Pendente";
 
         [StringLength(50)]
-        public string MetodoPagamento { get; set; }
+        public required string MetodoPagamento { get; set; }
 
         public DateTime? DataPagamento { get; set; }
 
         [StringLength(255)]
-        public string Comprovante { get; set; }
+        public required string Comprovante { get; set; }
 
         [Required]
         public int PedidoId { get; set; }
 
         [ForeignKey("PedidoId")]
-        public Pedido Pedido { get; set; }
+        public required Pedido Pedido { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;

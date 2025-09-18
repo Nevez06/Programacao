@@ -9,9 +9,9 @@ namespace ProjetoEventX.Models
 
         [Required]
         [StringLength(255)]
-        public string Nome { get; set; }
+        public required string Nome { get; set; }
 
-        public string Descricao { get; set; }
+        public required string Descricao { get; set; }
 
         [Required]
         [Range(0.01, 1000000)]
@@ -19,13 +19,13 @@ namespace ProjetoEventX.Models
 
         [Required]
         [StringLength(50)]
-        public string Tipo { get; set; } // Produto, Local
+        public required string Tipo { get; set; } // Produto, Local
 
         [Required]
         public Guid FornecedorId { get; set; }
 
         [ForeignKey("FornecedorId")]
-        public Fornecedor Fornecedor { get; set; }
+        public required Fornecedor Fornecedor { get; set; }
 
         // Relacionamento
         public ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();

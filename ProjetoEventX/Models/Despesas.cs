@@ -12,10 +12,10 @@ namespace ProjetoEventX.Models
         public Guid EventoId { get; set; }
 
         [ForeignKey("EventoId")]
-        public Event Evento { get; set; }
+        public required Event Evento { get; set; }
 
         [Required]
-        public string Descricao { get; set; }
+        public required string Descricao { get; set; }
 
         [Required]
         [Range(0.01, 1000000)]
