@@ -1,9 +1,9 @@
+using DotNetEnv;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using OpenAI.Chat;
+using ProjetoEventX.Hubs;
 using ProjetoEventX.Models;
 using Stripe;
-using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +16,8 @@ builder.Services.AddDbContext<EventXContext>(options =>
     options.UseNpgsql(dbConnection));
 
 // Identity
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddRoles<IdentityRole>()
+builder.Services.AddDefaultIdentity<IdentityUser<int>>(options => options.SignIn.RequireConfirmedAccount = false)
+    .AddRoles<IdentityRole<int>>()
     .AddEntityFrameworkStores<EventXContext>();
 
 // Stripe
@@ -25,10 +25,6 @@ StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_K
 
 // SignalR
 builder.Services.AddSignalR();
-
-// OpenAI
-var GeminiAiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
-builder.Services.AddSingleton<ChatClient>(sp => new ChatClient(GeminiAiKey));
 
 builder.Services.AddControllersWithViews();
 
