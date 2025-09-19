@@ -1,28 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Stripe;
-
-namespace ProjetoEventX.Models
+﻿namespace ProjetoEventX.Models
 {
     public class MensagemChat
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public int Id { get; set; }
+        public int RemetenteId { get; set; } // ID do Organizador que envia
+        public int DestinatarioId { get; set; } // ID do Convidado ou Fornecedor
+        public required string TipoDestinatario { get; set; } // "Convidado" ou "Fornecedor"
+        public required string Conteudo { get; set; } // Texto da mensagem
+        public DateTime DataEnvio { get; set; }
+        public int EventoId { get; set; } // Relacionado ao Evento
+        public bool EhRespostaAssistente { get; set; } // Indica se é resposta do assistente virtual
 
-        [Required]
-        public Guid EventoId { get; set; }
-
-        [ForeignKey("EventoId")]
-        public required Event Evento { get; set; }
-
-        [Required]
-        public Guid ConvidadoId { get; set; }
-
-        [ForeignKey("ConvidadoId")]
-        public required Convidado Convidado { get; set; }
-
-        [Required]
-        public string? Mensagem { get; set; }
-
-        public DateTime DataEnvio { get; set; } = DateTime.Now;
+        // Relacionamentos
+        public required Pessoa Remetente { get; set; } // Organizador
+        public required Pessoa Destinatario { get; set; } // Convidado ou Fornecedor
+        public required Evento Evento { get; set; }
     }
 }

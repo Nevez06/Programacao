@@ -24,6 +24,7 @@ namespace ProjetoEventX.Models
         public DbSet<ListaConvidado> ListasConvidados { get; set; }
         public DbSet<Notificacao> Notificacoes { get; set; }
         public DbSet<Feedback> Feedbacks { get; set; }
+        public DbSet<MensagemChat> MensagemChats { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -34,13 +35,32 @@ namespace ProjetoEventX.Models
             builder.Entity<IdentityRole<int>>().ToTable("AspNetRoles").HasKey(r => r.Id);
 
             // Configurar herança/composição para usuários
-            builder.Entity<Fornecedor>().HasOne(f => f.Pessoa).WithOne().HasForeignKey<Fornecedor>(f => f.PessoaId);
-            builder.Entity<Organizador>().HasOne(o => o.Pessoa).WithOne().HasForeignKey<Organizador>(o => o.PessoaId);
-            builder.Entity<Convidado>().HasOne(c => c.Pessoa).WithOne().HasForeignKey<Convidado>(c => c.PessoaId);
+            builder.Entity<Fornecedor>().HasOne(f => f.Pessoa).WithOne().HasForeignKey<Fornecedor>(f => f.PessoaId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Organizador>().HasOne(o => o.Pessoa).WithOne().HasForeignKey<Organizador>(o => o.PessoaId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Convidado>().HasOne(c => c.Pessoa).WithOne().HasForeignKey<Convidado>(c => c.PessoaId).OnDelete(DeleteBehavior.Restrict);
+
+            // Configurar relacionamentos para MensagemChat
+            builder.Entity<MensagemChat>()
+                .HasOne(m => m.Remetente)
+                .WithMany()
+                .HasForeignKey(m => m.RemetenteId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<MensagemChat>()
+                .HasOne(m => m.Destinatario)
+                .WithMany()
+                .HasForeignKey(m => m.DestinatarioId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<MensagemChat>()
+                .HasOne(m => m.Evento)
+                .WithMany()
+                .HasForeignKey(m => m.EventoId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Restrições para status
             builder.Entity<Evento>().Property(e => e.StatusEvento).HasDefaultValue("Planejado");
-            builder.Entity<Pedido>().Property(p => p.StatusPedido).HasDefaultValue("Pendente");
+            builder.Entity<Pedido>().Property(p => p.Status).HasDefaultValue("Pendente");
             builder.Entity<Pagamento>().Property(p => p.StatusPagamento).HasDefaultValue("Pendente");
             builder.Entity<TarefaEvento>().Property(t => t.StatusConclusao).HasDefaultValue("Pendente");
 
