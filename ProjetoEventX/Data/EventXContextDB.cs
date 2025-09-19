@@ -30,14 +30,43 @@ namespace ProjetoEventX.Models
         {
             base.OnModelCreating(builder);
 
+            // Ignorar classes do Stripe que não devem ser mapeadas
+            builder.Ignore<Stripe.StripeResponse>();
+            builder.Ignore<Stripe.StripeRequest>();
+            builder.Ignore<Stripe.StripeError>();
+            builder.Ignore<Stripe.Checkout.Session>();
+            builder.Ignore<Stripe.Event>();
+            
+            // Ignorar propriedades que podem causar problemas com interfaces
+            // Manter relacionamentos principais; não ignorar coleções necessárias para o domínio
+            
+            // Ignorar propriedades de navegação em outras entidades
+            // Manter navegações essenciais; evitar ignorar propriedades necessárias
+            
+            // Manter navegações essenciais de Organizador
+
             // Configurar chaves int para Identity
             builder.Entity<IdentityUser<int>>().ToTable("AspNetUsers").HasKey(u => u.Id);
             builder.Entity<IdentityRole<int>>().ToTable("AspNetRoles").HasKey(r => r.Id);
 
-            // Configurar herança/composição para usuários
-            builder.Entity<Fornecedor>().HasOne(f => f.Pessoa).WithOne().HasForeignKey<Fornecedor>(f => f.PessoaId).OnDelete(DeleteBehavior.Restrict);
-            builder.Entity<Organizador>().HasOne(o => o.Pessoa).WithOne().HasForeignKey<Organizador>(o => o.PessoaId).OnDelete(DeleteBehavior.Restrict);
-            builder.Entity<Convidado>().HasOne(c => c.Pessoa).WithOne().HasForeignKey<Convidado>(c => c.PessoaId).OnDelete(DeleteBehavior.Restrict);
+            // Configurar herança/composição para usuários com navegações inversas explícitas
+            builder.Entity<Fornecedor>()
+                .HasOne(f => f.Pessoa)
+                .WithOne(p => p.Fornecedor)
+                .HasForeignKey<Fornecedor>(f => f.PessoaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Organizador>()
+                .HasOne(o => o.Pessoa)
+                .WithOne(p => p.Organizador)
+                .HasForeignKey<Organizador>(o => o.PessoaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Convidado>()
+                .HasOne(c => c.Pessoa)
+                .WithOne(p => p.Convidado)
+                .HasForeignKey<Convidado>(c => c.PessoaId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Configurar relacionamentos para MensagemChat
             builder.Entity<MensagemChat>()

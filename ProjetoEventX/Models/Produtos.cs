@@ -22,7 +22,7 @@ namespace ProjetoEventX.Models
         public required string Tipo { get; set; } // Produto, Local
 
         [Required]
-        public Guid FornecedorId { get; set; }
+        public int FornecedorId { get; set; }
 
         [ForeignKey("FornecedorId")]
         public required Fornecedor Fornecedor { get; set; }

@@ -28,7 +28,7 @@ namespace ProjetoEventX.Models
         public int? IdTemplateEvento { get; set; }
 
         [ForeignKey("IdTemplateEvento")]
-        public required TemplateEvento TemplateEvento { get; set; }
+        public TemplateEvento? TemplateEvento { get; set; }
 
         [StringLength(5)]
         public required string HoraInicio { get; set; }
@@ -42,12 +42,12 @@ namespace ProjetoEventX.Models
         public int OrganizadorId { get; set; }
 
         [ForeignKey("OrganizadorId")]
-        public required Organizador Organizador { get; set; }
+        public Organizador? Organizador { get; set; }
 
         public int? LocalId { get; set; }
 
         [ForeignKey("LocalId")]
-        public required Local Local { get; set; }
+        public Local? Local { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;

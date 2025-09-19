@@ -1,5 +1,6 @@
 using DotNetEnv;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ProjetoEventX.Hubs;
 using ProjetoEventX.Models;
@@ -7,21 +8,33 @@ using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Carregar vari·veis do .env
-Env.Load();
+// Carregar vari√°veis do .env (se existir)
+try
+{
+    Env.Load();
+}
+catch
+{
+    // Arquivo .env n√£o encontrado, usar appsettings.json
+}
 
-// DbContext com conex„o do .env
-var dbConnection = Environment.GetEnvironmentVariable("DB_CONNECTION");
+// DbContext com conex√£o do .env ou appsettings.json
+var dbConnection = Environment.GetEnvironmentVariable("DB_CONNECTION") 
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<EventXContext>(options =>
+    options.UseNpgsql(dbConnection));
+    
+builder.Services.AddDbContext<SimpleEventXContext>(options =>
     options.UseNpgsql(dbConnection));
 
 // Identity
-builder.Services.AddDefaultIdentity<IdentityUser<int>>(options => options.SignIn.RequireConfirmedAccount = false)
-    .AddRoles<IdentityRole<int>>()
-    .AddEntityFrameworkStores<EventXContext>();
+builder.Services.AddIdentity<IdentityUser<int>, IdentityRole<int>>()
+    .AddEntityFrameworkStores<EventXContext>()
+    .AddDefaultTokenProviders();
 
 // Stripe
-StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") 
+    ?? builder.Configuration["Stripe:SecretKey"];
 
 // SignalR
 builder.Services.AddSignalR();
@@ -43,7 +56,6 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapRazorPages();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

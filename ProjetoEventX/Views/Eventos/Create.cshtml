@@ -1,0 +1,125 @@
+@model ProjetoEventX.Models.Evento
+
+@{
+    ViewData["Title"] = "Criar Evento";
+}
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="event-card">
+            <div class="event-card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-plus-circle"></i> Criar Novo Evento
+                </h3>
+                <p class="mb-0 opacity-75">Preencha os detalhes do seu evento</p>
+            </div>
+            <div class="event-card-body">
+                <form asp-action="Create">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="NomeEvento" class="form-label">
+                                <i class="fas fa-calendar"></i> Nome do Evento
+                            </label>
+                            <input asp-for="NomeEvento" class="form-control" placeholder="Digite o nome do evento" />
+                            <span asp-validation-for="NomeEvento" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TipoEvento" class="form-label">
+                                <i class="fas fa-tag"></i> Tipo do Evento
+                            </label>
+                            <select asp-for="TipoEvento" class="form-control">
+                                <option value="">Selecione o tipo</option>
+                                <option value="Casamento">Casamento</option>
+                                <option value="Aniversário">Aniversário</option>
+                                <option value="Corporativo">Corporativo</option>
+                                <option value="Festa">Festa</option>
+                                <option value="Conferência">Conferência</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                            <span asp-validation-for="TipoEvento" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DataEvento" class="form-label">
+                                <i class="fas fa-calendar-day"></i> Data do Evento
+                            </label>
+                            <input asp-for="DataEvento" type="date" class="form-control" />
+                            <span asp-validation-for="DataEvento" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="StatusEvento" class="form-label">
+                                <i class="fas fa-info-circle"></i> Status
+                            </label>
+                            <select asp-for="StatusEvento" class="form-control">
+                                <option value="Planejado">Planejado</option>
+                                <option value="Em Andamento">Em Andamento</option>
+                                <option value="Concluído">Concluído</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                            <span asp-validation-for="StatusEvento" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="DescricaoEvento" class="form-label">
+                            <i class="fas fa-align-left"></i> Descrição do Evento
+                        </label>
+                        <textarea asp-for="DescricaoEvento" class="form-control" rows="4" placeholder="Descreva os detalhes do seu evento..."></textarea>
+                        <span asp-validation-for="DescricaoEvento" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="HoraInicio" class="form-label">
+                                <i class="fas fa-clock"></i> Hora de Início
+                            </label>
+                            <input asp-for="HoraInicio" class="form-control" placeholder="HH:MM" />
+                            <span asp-validation-for="HoraInicio" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="HoraFim" class="form-label">
+                                <i class="fas fa-clock"></i> Hora de Fim
+                            </label>
+                            <input asp-for="HoraFim" class="form-control" placeholder="HH:MM" />
+                            <span asp-validation-for="HoraFim" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PublicoEstimado" class="form-label">
+                                <i class="fas fa-users"></i> Público Estimado
+                            </label>
+                            <input asp-for="PublicoEstimado" class="form-control" placeholder="Número de pessoas" />
+                            <span asp-validation-for="PublicoEstimado" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CustoEstimado" class="form-label">
+                                <i class="fas fa-dollar-sign"></i> Custo Estimado
+                            </label>
+                            <input asp-for="CustoEstimado" class="form-control" placeholder="0.00" />
+                            <span asp-validation-for="CustoEstimado" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Voltar para a Lista
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save"></i> Criar Evento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

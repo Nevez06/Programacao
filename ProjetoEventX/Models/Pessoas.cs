@@ -28,9 +28,9 @@ namespace ProjetoEventX.Models
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         // Relacionamentos
-        public required Fornecedor Fornecedor { get; set; }
-        public required Organizador Organizador { get; set; }
-        public required Convidado Convidado { get; set; }
+        public Fornecedor? Fornecedor { get; set; }
+        public Organizador? Organizador { get; set; }
+        public Convidado? Convidado { get; set; }
         public ICollection<TarefaEvento> TarefasResponsaveis { get; set; } = new List<TarefaEvento>();
         public ICollection<Notificacao> Notificacoes { get; set; } = new List<Notificacao>();
     }

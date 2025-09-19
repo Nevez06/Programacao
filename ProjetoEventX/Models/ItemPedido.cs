@@ -22,7 +22,7 @@ namespace ProjetoEventX.Models
         public required string CategoriaItemPedido { get; set; }
 
         [Required]
-        public int PedidoId { get; set; }
+        public Guid PedidoId { get; set; }
 
         [ForeignKey("PedidoId")]
         public required Pedido Pedido { get; set; }
