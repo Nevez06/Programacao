@@ -1,0 +1,219 @@
+﻿```cshtml
+@{
+    ViewData["Title"] = "EventX - Perfil do Organizador";
+}
+
+<!-- Referência ao CSS externo -->
+<link rel="stylesheet" href="~/css/organizer.css" />
+
+<!-- Organizer Profile Section -->
+<section class="organizer-profile-section py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="profile-card">
+                    <h2 class="text-eventx-primary mb-4">Perfil do Organizador</h2>
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="profile-info">
+                                <h5>Informações Pessoais</h5>
+                                <p><strong>Nome:</strong> <span id="organizerName">Nome do Organizador</span></p>
+                                <p><strong>Telefone:</strong> <span id="phone">(00) 00000-0000</span></p>
+                                <p><strong>Email:</strong> <span id="email">contato@organizador.com</span></p>
+                                <p><strong>Chave PIX:</strong> <span id="pixKey">chavepix@exemplo.com</span></p>
+                                <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                                    <i class="fas fa-edit"></i> Editar Perfil
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-lg-8">
+                            <div class="profile-image">
+                                <div class="image-placeholder">
+                                    <i class="fas fa-calendar-alt" style="font-size: 6rem; color: rgba(255,255,255,0.3);"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Events Section -->
+<section class="events-section py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="text-eventx-primary mb-3">Seus Eventos</h2>
+                <p class="text-muted">Gerencie os eventos que você criou</p>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                    <i class="fas fa-plus"></i> Criar Evento
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <!-- Event Card Example -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="event-card">
+                    <div class="event-icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <h5>Nome do Evento</h5>
+                    <p>Descrição breve do evento organizado.</p>
+                    <p><strong>Data:</strong> 01/01/2026</p>
+                    <div class="event-actions">
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- More event cards can be dynamically added here -->
+        </div>
+    </div>
+</section>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProfileModalLabel">Editar Perfil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-controller="Organizer" asp-action="UpdateProfile">
+                    <div class="mb-3">
+                        <label for="organizerNameInput" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="organizerNameInput" name="OrganizerName" value="Nome do Organizador">
+                    </div>
+                    <div class="mb-3">
+                        <label for="phoneInput" class="form-label">Telefone</label>
+                        <input type="text" class="form-control" id="phoneInput" name="Phone" value="(00) 00000-0000">
+                    </div>
+                    <div class="mb-3">
+                        <label for="emailInput" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="emailInput" name="Email" value="contato@organizador.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="pixKeyInput" class="form-label">Chave PIX</label>
+                        <input type="text" class="form-control" id="pixKeyInput" name="PixKey" value="chavepix@exemplo.com">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Event Modal -->
+<div class="modal fade" id="addEventModal" tabindex="-1" aria-labelledby="addEventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addEventModalLabel">Criar Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-controller="Organizer" asp-action="AddEvent">
+                    <div class="mb-3">
+                        <label for="eventName" class="form-label">Nome do Evento</label>
+                        <input type="text" class="form-control" id="eventName" name="EventName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventDescription" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="eventDescription" name="EventDescription" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventDate" class="form-label">Data</label>
+                        <input type="date" class="form-control" id="eventDate" name="EventDate" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Criar Evento</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+ <style>
+    
+    .organizer-profile-section {
+        background: var(--eventx-white);
+    }
+
+    .profile-card {
+        background: var(--eventx-white);
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px var(--eventx-shadow);
+    }
+
+    .profile-info {
+        padding: 1rem;
+    }
+
+        .profile-info p {
+            margin-bottom: 0.5rem;
+        }
+
+    .events-section {
+        background: var(--eventx-secondary);
+    }
+
+    .event-card {
+        text-align: center;
+        padding: 2rem 1rem;
+        background: var(--eventx-white);
+        border-radius: 15px;
+        box-shadow: 0 4px 15px var(--eventx-shadow);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+    .event-icon {
+        width: 60px;
+        height: 60px;
+        background: var(--eventx-primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: var(--eventx-white);
+        font-size: 1.5rem;
+    }
+
+    .event-card h5 {
+        color: var(--eventx-primary);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .event-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .profile-image {
+        text-align: center;
+    }
+
+    .image-placeholder {
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        border-radius: 20px;
+        padding: 3rem;
+        backdrop-filter: blur(10px);
+    }
+
+    
+ </style>

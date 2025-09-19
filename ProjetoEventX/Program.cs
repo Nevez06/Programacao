@@ -1,6 +1,5 @@
 using DotNetEnv;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ProjetoEventX.Hubs;
 using ProjetoEventX.Models;
@@ -19,11 +18,11 @@ catch
 }
 
 // DbContext com conexão do .env ou appsettings.json
-var dbConnection = Environment.GetEnvironmentVariable("DB_CONNECTION") 
+var dbConnection = Environment.GetEnvironmentVariable("DB_CONNECTION")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<EventXContext>(options =>
     options.UseNpgsql(dbConnection));
-    
+
 builder.Services.AddDbContext<SimpleEventXContext>(options =>
     options.UseNpgsql(dbConnection));
 
@@ -33,7 +32,7 @@ builder.Services.AddIdentity<IdentityUser<int>, IdentityRole<int>>()
     .AddDefaultTokenProviders();
 
 // Stripe
-StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") 
+StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY")
     ?? builder.Configuration["Stripe:SecretKey"];
 
 // SignalR

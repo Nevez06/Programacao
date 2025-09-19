@@ -1,0 +1,221 @@
+﻿```cshtml
+@{
+    ViewData["Title"] = "EventX - Perfil do Fornecedor";
+}
+
+<!-- Referência ao CSS externo -->
+<link rel="stylesheet" href="~/css/supplier.css" />
+
+<!-- Supplier Profile Section -->
+<section class="supplier-profile-section py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="profile-card">
+                    <h2 class="text-eventx-primary mb-4">Perfil do Fornecedor</h2>
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="profile-info">
+                                <h5>Informações da Loja</h5>
+                                <p><strong>Nome da Loja:</strong> <span id="storeName">Nome da Loja</span></p>
+                                <p><strong>CNPJ:</strong> <span id="cnpj">00.000.000/0000-00</span></p>
+                                <p><strong>Telefone:</strong> <span id="phone">(00) 00000-0000</span></p>
+                                <p><strong>Email:</strong> <span id="email">contato@loja.com</span></p>
+                                <p><strong>Chave PIX:</strong> <span id="pixKey">chavepix@exemplo.com</span></p>
+                                <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                                    <i class="fas fa-edit"></i> Editar Perfil
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-lg-8">
+                            <div class="profile-image">
+                                <div class="image-placeholder">
+                                    <i class="fas fa-store" style="font-size: 6rem; color: rgba(255,255,255,0.3);"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Products Section -->
+<section class="products-section py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="text-eventx-primary mb-3">Seus Produtos</h2>
+                <p class="text-muted">Gerencie os produtos que você oferece</p>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                    <i class="fas fa-plus"></i> Adicionar Produto
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <!-- Product Card Example -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="product-card">
+                    <div class="product-icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <h5>Nome do Produto</h5>
+                    <p>Descrição breve do produto oferecido.</p>
+                    <p><strong>Preço:</strong> R$ 99,90</p>
+                    <div class="product-actions">
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- More product cards can be dynamically added here -->
+        </div>
+    </div>
+</section>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProfileModalLabel">Editar Perfil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-controller="Supplier" asp-action="UpdateProfile">
+                    <div class="mb-3">
+                        <label for="storeNameInput" class="form-label">Nome da Loja</label>
+                        <input type="text" class="form-control" id="storeNameInput" name="StoreName" value="Nome da Loja">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cnpjInput" class="form-label">CNPJ</label>
+                        <input type="text" class="form-control" id="cnpjInput" name="CNPJ" value="00.000.000/0000-00">
+                    </div>
+                    <div class="mb-3">
+                        <label for="phoneInput" class="form-label">Telefone</label>
+                        <input type="text" class="form-control" id="phoneInput" name="Phone" value="(00) 00000-0000">
+                    </div>
+                    <div class="mb-3">
+                        <label for="emailInput" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="emailInput" name="Email" value="contato@loja.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="pixKeyInput" class="form-label">Chave PIX</label>
+                        <input type="text" class="form-control" id="pixKeyInput" name="PixKey" value="chavepix@exemplo.com">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProductModalLabel">Adicionar Produto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-controller="Supplier" asp-action="AddProduct">
+                    <div class="mb-3">
+                        <label for="productName" class="form-label">Nome do Produto</label>
+                        <input type="text" class="form-control" id="productName" name="ProductName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productDescription" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="productDescription" name="ProductDescription" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productPrice" class="form-label">Preço</label>
+                        <input type="number" class="form-control" id="productPrice" name="ProductPrice" step="0.01" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar Produto</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+```
+<style>
+    .supplier-profile-section {
+    background: var(--eventx-white);
+    }
+
+    .profile-card {
+    background: var(--eventx-white);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px var(--eventx-shadow);
+    }
+
+    .profile-info {
+    padding: 1rem;
+    }
+
+    .profile-info p {
+    margin-bottom: 0.5rem;
+    }
+
+    .products-section {
+    background: var(--eventx-secondary);
+    }
+
+    .product-card {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: var(--eventx-white);
+    border-radius: 15px;
+    box-shadow: 0 4px 15px var(--eventx-shadow);
+    transition: all 0.3s ease;
+    height: 100%;
+    }
+
+    .product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .product-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--eventx-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: var(--eventx-white);
+    font-size: 1.5rem;
+    }
+
+    .product-card h5 {
+    color: var(--eventx-primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    }
+
+    .product-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    }
+
+    .profile-image {
+    text-align: center;
+    }
+
+    .image-placeholder {
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+    border-radius: 20px;
+    padding: 3rem;
+    backdrop-filter: blur(10px);
+    }
+</style>
