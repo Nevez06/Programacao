@@ -60,5 +60,6 @@ namespace ProjetoEventX.Models
         public ICollection<Notificacao> Notificacoes { get; set; } = new List<Notificacao>();
         public ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
         public ICollection<Administracao> Administracoes { get; set; } = new List<Administracao>();
+        public ICollection<Despesa> Despesas { get; set; } = new List<Despesa>();
     }
 }

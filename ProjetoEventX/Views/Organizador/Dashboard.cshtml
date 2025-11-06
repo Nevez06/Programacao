@@ -1,0 +1,75 @@
+@model ProjetoEventX.Models.Organizador
+@{
+    ViewData["Title"] = "Dashboard - Organizador";
+}
+
+<div class="container">
+    <h1 class="mb-4" style="color: var(--eventx-primary);">Dashboard Organizador</h1>
+    
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="dashboard-card text-center">
+                <h3>@Model.Eventos.Count</h3>
+                <p>Eventos</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="dashboard-card text-center">
+                <h3>@Model.Eventos.Sum(e => e.ListasConvidados?.Count ?? 0)</h3>
+                <p>Convidados</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="dashboard-card text-center">
+                <h3>R$ @Model.Eventos.Sum(e => e.CustoEstimado).ToString("N2")</h3>
+                <p>Total Estimado</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="dashboard-card text-center">
+                <a asp-action="CriarEvento" class="btn btn-eventx-primary w-100">+ Criar Evento</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="dashboard-card">
+                <h3>Ações Rápidas</h3>
+                <div class="d-grid gap-2">
+                    <a asp-action="CriarEvento" class="btn btn-eventx-secondary">📅 Criar Evento</a>
+                    <a asp-controller="Convite" asp-action="Listar" class="btn btn-eventx-secondary">📧 Convidar Pessoas</a>
+                    <a asp-controller="Administracao" asp-action="Index" class="btn btn-eventx-secondary">💰 Gerenciar Orçamento</a>
+                    <a asp-controller="Organizador" asp-action="MeusEventos" class="btn btn-eventx-secondary">📋 Meus Eventos</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="dashboard-card">
+                <h3>Meus Eventos Recentes</h3>
+                @if (Model.Eventos.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var evento in Model.Eventos.OrderByDescending(e => e.DataEvento).Take(5))
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@evento.NomeEvento</strong><br>
+                                    <small>@evento.DataEvento.ToString("dd/MM/yyyy")</small>
+                                </div>
+                                <a asp-action="DetalhesEvento" asp-route-id="@evento.Id" class="btn btn-sm btn-eventx-primary">Ver</a>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>Nenhum evento cadastrado ainda.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

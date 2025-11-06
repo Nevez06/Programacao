@@ -1,0 +1,40 @@
+@model ProjetoEventX.Models.ListaConvidado
+@{
+    ViewData["Title"] = "Criar Convite";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card card-eventx mt-5">
+                <div class="card-body">
+                    <h2 class="mb-4" style="color: var(--eventx-primary);">Criar Convite</h2>
+                    <p class="mb-4"><strong>Evento:</strong> @ViewBag.NomeEvento</p>
+                    
+                    <form asp-action="Criar" method="post">
+                        <input type="hidden" name="eventoId" value="@ViewBag.EventoId" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Nome do Convidado</label>
+                            <input type="text" name="Convidado.Pessoa.Nome" class="form-control" required />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email do Convidado</label>
+                            <input type="email" name="Convidado.Pessoa.Email" class="form-control" required />
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-eventx-primary">Enviar Convite</button>
+                            <a asp-controller="Organizador" asp-action="DetalhesEvento" asp-route-id="@ViewBag.EventoId" class="btn btn-eventx-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

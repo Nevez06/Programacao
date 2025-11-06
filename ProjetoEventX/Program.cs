@@ -20,14 +20,20 @@ catch
 // DbContext com conexão do .env ou appsettings.json
 var dbConnection = Environment.GetEnvironmentVariable("DB_CONNECTION")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
+// Carregar variáveis do .env
+Env.Load();
+
+
+// ✅ Definição única e correta da conexão
+
 builder.Services.AddDbContext<EventXContext>(options =>
     options.UseNpgsql(dbConnection));
 
 builder.Services.AddDbContext<SimpleEventXContext>(options =>
     options.UseNpgsql(dbConnection));
 
-// Identity
-builder.Services.AddIdentity<IdentityUser<int>, IdentityRole<int>>()
+// ✅ Use apenas UMA configuração de Identity
+builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
     .AddEntityFrameworkStores<EventXContext>()
     .AddDefaultTokenProviders();
 
@@ -58,6 +64,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
 app.MapHub<ChatHub>("/chatHub");
 
 app.Run();

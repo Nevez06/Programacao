@@ -1,19 +1,19 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 using ProjetoEventX.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProjetoEventX.Controllers
 {
     public class AuthController : Controller
     {
-        private readonly UserManager<IdentityUser<int>> _userManager;
-        private readonly SignInManager<IdentityUser<int>> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly EventXContext _context;
 
         public AuthController(
-            UserManager<IdentityUser<int>> userManager,
-            SignInManager<IdentityUser<int>> signInManager,
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
             EventXContext context)
         {
             _userManager = userManager;
@@ -21,25 +21,30 @@ namespace ProjetoEventX.Controllers
             _context = context;
         }
 
-        // GET: Auth/Register
+        // ------------------- REGISTER -------------------
+
+        [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
 
-        // POST: Auth/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
-                var user = new IdentityUser<int> { UserName = model.Email, Email = model.Email };
-                var result = await _userManager.CreateAsync(user, model.Password);
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    TipoUsuario = "Organizador"
+                };
 
+                var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    // Criar pessoa
                     var pessoa = new Pessoa
                     {
                         Nome = model.Nome,
@@ -48,19 +53,20 @@ namespace ProjetoEventX.Controllers
                         Telefone = model.Telefone,
                         Cpf = model.Cpf
                     };
+
                     _context.Pessoas.Add(pessoa);
                     await _context.SaveChangesAsync();
 
-                    // Criar organizador
                     var organizador = new Organizador
                     {
                         Id = user.Id,
                         PessoaId = pessoa.Id,
-                        UserName = model.Email,
-                        Email = model.Email,
-                        EmailConfirmed = true,
-                        Pessoa = pessoa
+                        Pessoa = pessoa,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        EmailConfirmed = true
                     };
+
                     _context.Organizadores.Add(organizador);
                     await _context.SaveChangesAsync();
 
@@ -69,42 +75,40 @@ namespace ProjetoEventX.Controllers
                 }
 
                 foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
+                    ModelState.AddModelError("", error.Description);
             }
 
             return View(model);
         }
 
-        // GET: Auth/Login
-        public IActionResult Login()
+        // ------------------- LOGIN -------------------
+
+        [HttpGet]
+        public IActionResult LoginOrganizador()
         {
             return View();
         }
 
-        // POST: Auth/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> LoginOrganizador(LoginOrganizadorViewModel model)
         {
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(
-                    model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-
-                if (result.Succeeded)
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null && user.TipoUsuario == "Organizador")
                 {
-                    return RedirectToAction("Index", "Home");
+                    var result = await _signInManager.PasswordSignInAsync(user, model.Senha, false, false);
+                    if (result.Succeeded)
+                        return RedirectToAction("Dashboard", "Organizador");
                 }
 
-                ModelState.AddModelError(string.Empty, "Tentativa de login inválida.");
+                ModelState.AddModelError("", "Credenciais inválidas");
             }
 
             return View(model);
         }
 
-        // POST: Auth/Logout
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
@@ -114,19 +118,19 @@ namespace ProjetoEventX.Controllers
         }
     }
 
+    // ------------------- VIEWMODELS -------------------
+
     public class RegisterViewModel
     {
         [Required]
         [Display(Name = "Nome")]
         public string Nome { get; set; } = string.Empty;
 
-        [Required]
-        [EmailAddress]
+        [Required, EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(100, ErrorMessage = "A {0} deve ter pelo menos {2} e no máximo {1} caracteres.", MinimumLength = 6)]
+        [Required, StringLength(100, ErrorMessage = "A {0} deve ter entre {2} e {1} caracteres.", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "Senha")]
         public string Password { get; set; } = string.Empty;
@@ -149,19 +153,12 @@ namespace ProjetoEventX.Controllers
         public string Cpf { get; set; } = string.Empty;
     }
 
-    public class LoginViewModel
+    public class LoginOrganizadorViewModel
     {
-        [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
+        [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        [Required]
-        [DataType(DataType.Password)]
-        [Display(Name = "Senha")]
-        public string Password { get; set; } = string.Empty;
-
-        [Display(Name = "Lembrar-me")]
-        public bool RememberMe { get; set; }
+        [Required, DataType(DataType.Password)]
+        public string Senha { get; set; } = string.Empty;
     }
 }

@@ -1,0 +1,64 @@
+@{
+    ViewData["Title"] = "Relatório de Gastos";
+    var evento = ViewBag.Evento as ProjetoEventX.Models.Evento;
+    var despesas = ViewBag.Despesas as IEnumerable<ProjetoEventX.Models.Despesa>;
+    var total = ViewBag.Total ?? 0m;
+}
+
+<div class="container">
+    <h1 class="mb-4" style="color: var(--eventx-primary);">Relatório de Gastos - @(evento?.NomeEvento ?? "Evento")</h1>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="dashboard-card">
+                <h3>Resumo Financeiro</h3>
+                <div class="alert alert-info">
+                    <strong>Total de Gastos:</strong> R$ @total.ToString("N2")
+                </div>
+            </div>
+            
+            <div class="dashboard-card mt-4">
+                <h3>Detalhamento de Despesas</h3>
+                @if (despesas != null && despesas.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Descrição</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var despesa in despesas)
+                                {
+                                    <tr>
+                                        <td>@despesa.DataDespesa.ToString("dd/MM/yyyy")</td>
+                                        <td>@despesa.Descricao</td>
+                                        <td>R$ @despesa.Valor.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-info">
+                                    <th colspan="2">Total</th>
+                                    <th>R$ @total.ToString("N2")</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p>Nenhuma despesa registrada ainda.</p>
+                }
+            </div>
+            
+            <div class="mt-4">
+                <a asp-action="Index" asp-route-eventoId="@(evento?.Id ?? 0)" class="btn btn-eventx-secondary">← Voltar</a>
+            </div>
+        </div>
+    </div>
+</div>
+

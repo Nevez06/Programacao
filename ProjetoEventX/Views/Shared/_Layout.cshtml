@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+<<<<<<< HEAD
     <!-- Header -->
     <header class="eventx-header">
         <nav class="navbar navbar-expand-lg">
@@ -24,18 +25,34 @@
                     </div>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+=======
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="eventx-logo"></span>
+                    EventX
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+>>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-lg-inline-flex justify-content-end">
                     <ul class="navbar-nav">
                         <li class="nav-item">
+<<<<<<< HEAD
                             <a class="nav-link" asp-area="" asp-controller="Eventos" asp-action="Index">
                                 <i class="fas fa-calendar-alt"></i> Eventos
                             </a>
+=======
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+>>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
                         </li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
+<<<<<<< HEAD
                                 <a class="nav-link" href="#">
                                     <i class="fas fa-user-circle"></i> @User.Identity.Name
                                 </a>
@@ -46,11 +63,26 @@
                                         <i class="fas fa-sign-out-alt"></i> Sair
                                     </button>
                                 </form>
+=======
+                                <a class="nav-link" asp-area="" asp-controller="Organizador" asp-action="Dashboard">Dashboard</a>
+                            </li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity?.IsAuthenticated != true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Auth" asp-action="LoginOrganizador">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Auth" asp-action="RegistroOrganizador">Cadastro</a>
+>>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
+<<<<<<< HEAD
                                 <a class="nav-link" asp-controller="Auth" asp-action="Login">
                                     <i class="fas fa-user"></i> Login
                                 </a>
@@ -59,6 +91,11 @@
                                 <a class="nav-link" asp-controller="Auth" asp-action="Register">
                                     <i class="fas fa-user-plus"></i> Cadastro
                                 </a>
+=======
+                                <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="nav-link btn btn-link border-0 p-0">Sair</button>
+                                </form>
+>>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
                             </li>
                         }
                     </ul>
@@ -67,6 +104,7 @@
         </nav>
     </header>
 
+<<<<<<< HEAD
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="hero-content">
@@ -187,12 +225,19 @@
                 </div>
                 <p>&copy; 2025 - EventX - Onde organizar e amar compartilhar o seu evento é só o começo.</p>
             </div>
+=======
+    <footer class="border-top footer text-muted">
+        <div class="container text-center">
+            <div class="eventx-logo mx-auto mb-2"></div>
+            &copy; 2025 - EventX - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacidade</a>
+>>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.0/signalr.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -6,22 +6,25 @@
 <section class="hero-section">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-lg-6">
-                <div class="hero-content">
-                    <h1 class="hero-title">EVENTOS EM UM SÓ LUGAR</h1>
-                    <p class="hero-subtitle">compartilhe, planeje, convide e gerencie com facilidade</p>
-                    <div class="hero-actions">
-                        <a asp-controller="Eventos" asp-action="Create" class="btn btn-hero">
-                            <i class="fas fa-plus"></i> Criar meu evento
-                        </a>
-                    </div>
+            <div class="col-md-6">
+                <h1>compartilhe, planeje, convide e gerencie com facilidade</h1>
+                <h2 class="display-4 fw-bold">EVENTOS EM UM SÓ LUGAR</h2>
+                <div class="d-flex flex-column gap-3 mt-4">
+                    <a asp-controller="Auth" asp-action="LoginConvidado" class="btn btn-eventx-primary">Sou Convidado</a>
+                    <a asp-controller="Auth" asp-action="LoginOrganizador" class="btn btn-eventx-primary">Organizador</a>
+                    <a asp-controller="Auth" asp-action="LoginFornecedor" class="btn btn-eventx-primary">Fornecedor</a>
                 </div>
             </div>
-            <div class="col-lg-6">
+
+            <div class="col-md-6 text-center">
                 <div class="hero-image">
                     <div class="image-placeholder">
                         <i class="fas fa-calendar-alt" style="font-size: 8rem; color: rgba(255,255,255,0.3);"></i>
                     </div>
+                    <p class="lead mt-4">EventX - onde organizar e amar compartilhar o seu evento é só o começo...</p>
+                    <a asp-controller="Auth" asp-action="RegistroOrganizador" class="btn btn-eventx-secondary mt-3">
+                        <i class="bi bi-calendar"></i> Criar minha conta agora
+                    </a>
                 </div>
             </div>
         </div>
@@ -40,56 +43,102 @@
         <div class="row">
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
+                    <div class="feature-icon"><i class="fas fa-users"></i></div>
                     <h5>Convidar Pessoas</h5>
                     <p>Envie convites personalizados e gerencie sua lista de convidados com facilidade.</p>
                 </div>
             </div>
+
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-calendar-plus"></i>
-                    </div>
+                    <div class="feature-icon"><i class="fas fa-calendar-plus"></i></div>
                     <h5>Criar Eventos</h5>
                     <p>Planeje e organize eventos de qualquer tipo com nossa plataforma intuitiva.</p>
                 </div>
             </div>
+
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-handshake"></i>
-                    </div>
+                    <div class="feature-icon"><i class="fas fa-handshake"></i></div>
                     <h5>Escolher Fornecedores</h5>
                     <p>Conecte-se com os melhores fornecedores para tornar seu evento único.</p>
                 </div>
             </div>
+
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
+                    <div class="feature-icon"><i class="fas fa-chart-bar"></i></div>
                     <h5>Gerenciar Orçamento</h5>
                     <p>Controle seus gastos e mantenha seu evento dentro do orçamento planejado.</p>
                 </div>
             </div>
+
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-tasks"></i>
-                    </div>
+                    <div class="feature-icon"><i class="fas fa-tasks"></i></div>
                     <h5>Gestão Completa</h5>
                     <p>Organize tarefas, prazos e responsabilidades de forma eficiente.</p>
                 </div>
             </div>
+
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
+                    <div class="feature-icon"><i class="fas fa-check-circle"></i></div>
                     <h5>RSVP Confirmação</h5>
                     <p>Receba confirmações de presença e gerencie sua lista de convidados.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Avaliações -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-4" style="color: var(--eventx-primary);">Avaliações e Comentários</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card card-eventx">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">AS</div>
+                            <div class="ms-3">
+                                <h6 class="mb-0">Amanda Silva</h6>
+                                <div>⭐⭐⭐⭐⭐</div>
+                            </div>
+                        </div>
+                        <p>"Eu amei cada detalhe de organizar meu evento com o EventX! 💕"</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card card-eventx">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">LP</div>
+                            <div class="ms-3">
+                                <h6 class="mb-0">Lucas Pereira</h6>
+                                <div>⭐⭐⭐⭐⭐</div>
+                            </div>
+                        </div>
+                        <p>"Gerenciar nunca foi tão fácil. Obrigado, EventX! ✨"</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card card-eventx">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">CL</div>
+                            <div class="ms-3">
+                                <h6 class="mb-0">Camila Lopes</h6>
+                                <div>⭐⭐⭐⭐⭐</div>
+                            </div>
+                        </div>
+                        <p>"Até os pagamentos com fornecedores fiz pelo EventX, de forma prática e segura."</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -119,63 +168,63 @@
 </section>
 
 <style>
-.features-section {
-    background: var(--eventx-white);
-}
+    .features-section {
+        background: var(--eventx-white);
+    }
 
-.feature-card {
-    text-align: center;
-    padding: 2rem 1rem;
-    background: var(--eventx-white);
-    border-radius: 15px;
-    box-shadow: 0 4px 15px var(--eventx-shadow);
-    transition: all 0.3s ease;
-    height: 100%;
-}
+    .feature-card {
+        text-align: center;
+        padding: 2rem 1rem;
+        background: var(--eventx-white);
+        border-radius: 15px;
+        box-shadow: 0 4px 15px var(--eventx-shadow);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
 
-.feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
 
-.feature-icon {
-    width: 80px;
-    height: 80px;
-    background: var(--eventx-primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    color: var(--eventx-white);
-    font-size: 2rem;
-}
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        background: var(--eventx-primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: var(--eventx-white);
+        font-size: 2rem;
+    }
 
-.feature-card h5 {
-    color: var(--eventx-primary);
-    font-weight: 600;
-    margin-bottom: 1rem;
-}
+    .feature-card h5 {
+        color: var(--eventx-primary);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
 
-.cta-section {
-    background: var(--eventx-secondary);
-}
+    .cta-section {
+        background: var(--eventx-secondary);
+    }
 
-.cta-card {
-    background: var(--eventx-white);
-    padding: 3rem 2rem;
-    border-radius: 20px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-}
+    .cta-card {
+        background: var(--eventx-white);
+        padding: 3rem 2rem;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    }
 
-.hero-image {
-    text-align: center;
-}
+    .hero-image {
+        text-align: center;
+    }
 
-.image-placeholder {
-    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-    border-radius: 20px;
-    padding: 4rem 2rem;
-    backdrop-filter: blur(10px);
-}
+    .image-placeholder {
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        border-radius: 20px;
+        padding: 4rem 2rem;
+        backdrop-filter: blur(10px);
+    }
 </style>

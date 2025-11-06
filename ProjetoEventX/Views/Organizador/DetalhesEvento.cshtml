@@ -1,0 +1,64 @@
+@model ProjetoEventX.Models.Evento
+@{
+    ViewData["Title"] = "Detalhes do Evento";
+}
+
+<div class="container">
+    <h1 class="mb-4" style="color: var(--eventx-primary);">@Model.NomeEvento</h1>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="dashboard-card">
+                <h3>Detalhes do Evento</h3>
+                <p><strong>Data:</strong> @Model.DataEvento.ToString("dd/MM/yyyy")</p>
+                <p><strong>Tipo:</strong> @Model.TipoEvento</p>
+                <p><strong>Status:</strong> <span class="badge badge-eventx badge-pendente">@Model.StatusEvento</span></p>
+                <p><strong>Hora:</strong> @Model.HoraInicio - @Model.HoraFim</p>
+                <p><strong>Público Estimado:</strong> @Model.PublicoEstimado pessoas</p>
+                <p><strong>Custo Estimado:</strong> R$ @Model.CustoEstimado.ToString("N2")</p>
+                <p><strong>Descrição:</strong> @Model.DescricaoEvento</p>
+            </div>
+            
+            <div class="dashboard-card mt-4">
+                <h3>Convidados (@Model.ListasConvidados?.Count ?? 0)</h3>
+                @if (Model.ListasConvidados != null && Model.ListasConvidados.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var convidado in Model.ListasConvidados)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@convidado.Convidado.Pessoa.Nome</strong><br>
+                                    <small>@convidado.Convidado.Pessoa.Email</small>
+                                </div>
+                                <span class="badge badge-eventx @(convidado.ConfirmaPresenca == "Confirmado" ? "badge-confirmado" : "badge-pendente")">
+                                    @convidado.ConfirmaPresenca
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>Nenhum convidado adicionado ainda.</p>
+                }
+                <a asp-controller="Convite" asp-action="Criar" asp-route-eventoId="@Model.Id" class="btn btn-eventx-primary mt-3">Adicionar Convidado</a>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <h3>Ações</h3>
+                <div class="d-grid gap-2">
+                    <a asp-controller="Convite" asp-action="Criar" asp-route-eventoId="@Model.Id" class="btn btn-eventx-secondary">📧 Convidar Pessoas</a>
+                    <a asp-controller="Administracao" asp-action="Index" asp-route-eventoId="@Model.Id" class="btn btn-eventx-secondary">💰 Gerenciar Orçamento</a>
+                    <a asp-controller="Chat" asp-action="Chat" asp-route-eventoId="@Model.Id" class="btn btn-eventx-secondary">💬 Chat do Evento</a>
+                    <a asp-controller="IAController" asp-action="Index" class="btn btn-eventx-secondary">🤖 Assistente Virtual</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

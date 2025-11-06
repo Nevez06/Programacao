@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿namespace ProjetoEventX.Models
 {
     public class MensagemChat
@@ -15,5 +16,33 @@
         public required Pessoa Remetente { get; set; } // Organizador
         public required Pessoa Destinatario { get; set; } // Convidado ou Fornecedor
         public required Evento Evento { get; set; }
+=======
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ProjetoEventX.Models
+{
+    public class MensagemChat
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public int EventoId { get; set; }
+
+        [ForeignKey("EventoId")]
+        public Evento Evento { get; set; }
+
+        [Required]
+        public int ConvidadoId { get; set; }
+
+        [ForeignKey("ConvidadoId")]
+        public Convidado Convidado { get; set; }
+
+        [Required]
+        public string Mensagem { get; set; }
+
+        public DateTime DataEnvio { get; set; } = DateTime.Now;
+>>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
     }
 }

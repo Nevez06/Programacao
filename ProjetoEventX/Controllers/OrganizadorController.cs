@@ -1,14 +1,21 @@
+<<<<<<< HEAD
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+=======
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+>>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
 using Microsoft.EntityFrameworkCore;
 using ProjetoEventX.Models;
 
 namespace ProjetoEventX.Controllers
 {
+<<<<<<< HEAD
     public class OrganizadorController : Controller
     {
         private readonly EventXContext _context;
@@ -36,6 +43,32 @@ namespace ProjetoEventX.Controllers
             var organizador = await _context.Organizadores
                 .Include(o => o.Pessoa)
                 .FirstOrDefaultAsync(m => m.Id == id);
+=======
+    [Authorize]
+    public class OrganizadorController : Controller
+    {
+        private readonly EventXContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public OrganizadorController(EventXContext context, UserManager<ApplicationUser> userManager)
+        {
+            _context = context;
+            _userManager = userManager;
+        }
+
+        public async Task<IActionResult> Dashboard()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TipoUsuario != "Organizador")
+            {
+                return RedirectToAction("LoginOrganizador", "Auth");
+            }
+
+            var organizador = await _context.Organizadores
+                .Include(o => o.Eventos)
+                .FirstOrDefaultAsync(o => o.Id == user.Id);
+
+>>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
             if (organizador == null)
             {
                 return NotFound();
@@ -44,6 +77,7 @@ namespace ProjetoEventX.Controllers
             return View(organizador);
         }
 
+<<<<<<< HEAD
         // GET: Organizador/Create
         public IActionResult Create()
         {
@@ -125,10 +159,73 @@ namespace ProjetoEventX.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
+=======
+        [HttpGet]
+        public IActionResult CriarEvento()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CriarEvento(Evento evento)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null && user.TipoUsuario == "Organizador")
+                {
+                    var organizador = await _context.Organizadores.FirstOrDefaultAsync(o => o.Id == user.Id);
+                    if (organizador != null)
+                    {
+                        evento.OrganizadorId = organizador.Id;
+                        evento.CreatedAt = DateTime.Now;
+                        evento.UpdatedAt = DateTime.Now;
+
+                        _context.Eventos.Add(evento);
+                        await _context.SaveChangesAsync();
+
+                        return RedirectToAction("Dashboard");
+                    }
+                }
+            }
+            return View(evento);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MeusEventos()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TipoUsuario != "Organizador")
+            {
+                return RedirectToAction("LoginOrganizador", "Auth");
+            }
+
+            var eventos = await _context.Eventos
+                .Where(e => e.OrganizadorId == user.Id)
+                .OrderByDescending(e => e.DataEvento)
+                .ToListAsync();
+
+            return View(eventos);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DetalhesEvento(int id)
+        {
+            var evento = await _context.Eventos
+                .Include(e => e.Pedidos)
+                .Include(e => e.ListasConvidados)
+                .ThenInclude(l => l.Convidado)
+                .ThenInclude(c => c.Pessoa)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (evento == null)
+>>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
             {
                 return NotFound();
             }
 
+<<<<<<< HEAD
             var organizador = await _context.Organizadores
                 .Include(o => o.Pessoa)
                 .FirstOrDefaultAsync(m => m.Id == id);
@@ -161,3 +258,12 @@ namespace ProjetoEventX.Controllers
         }
     }
 }
+=======
+            return View(evento);
+        }
+    }
+}
+
+
+
+>>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
