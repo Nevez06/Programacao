@@ -16,11 +16,13 @@
                         @foreach (var msg in Model)
                         {
                             <div class="chat-message @(msg.ConvidadoId == ViewBag.CurrentUserId ? "sent" : "received")">
-                                <strong>@msg.Convidado.Pessoa.Nome</strong>
-                                <p>@msg.Mensagem</p>
+                                <strong>@(msg.Convidado?.Nome ?? "Convidado desconhecido")</strong>
+                                <p>@msg.Conteudo</p>
                                 <small>@msg.DataEnvio.ToString("dd/MM/yyyy HH:mm")</small>
                             </div>
                         }
+
+
                     </div>
                     
                     <div class="mt-3">
@@ -48,10 +50,10 @@
             connection.invoke("JoinEventGroup", @eventoId);
         });
 
-        connection.on("ReceiveMessage", (convidadoId, mensagem, nomeUsuario, dataEnvio) => {
+          connection.on("ReceiveMessage", (convidadoId, mensagem, nomeUsuario, dataEnvio) => {
             const chatMessages = document.getElementById("chatMessages");
             const messageDiv = document.createElement("div");
-            messageDiv.className = "chat-message " + (convidadoId == @ViewBag.CurrentUserId ? "sent" : "received");
+            messageDiv.className = "chat-message " + (convidadoId == "@ViewBag.CurrentUserId" ? "sent" : "received");
             messageDiv.innerHTML = `
                 <strong>${nomeUsuario}</strong>
                 <p>${mensagem}</p>
@@ -60,6 +62,7 @@
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
+
 
         document.getElementById("chatForm").addEventListener("submit", async (e) => {
             e.preventDefault();

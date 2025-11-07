@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using ProjetoEventX.Data;
 using ProjetoEventX.Models;
 using System.ComponentModel.DataAnnotations;
 
@@ -81,7 +82,7 @@ namespace ProjetoEventX.Controllers
             return View(model);
         }
 
-        // ------------------- LOGIN -------------------
+        // ------------------- LOGIN ORGANIZADOR -------------------
 
         [HttpGet]
         public IActionResult LoginOrganizador()
@@ -91,7 +92,7 @@ namespace ProjetoEventX.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoginOrganizador(LoginOrganizadorViewModel model)
+        public async Task<IActionResult> LoginOrganizador(LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -103,11 +104,69 @@ namespace ProjetoEventX.Controllers
                         return RedirectToAction("Dashboard", "Organizador");
                 }
 
-                ModelState.AddModelError("", "Credenciais inválidas");
+                ModelState.AddModelError("", "Credenciais inválidas para organizador.");
             }
 
             return View(model);
         }
+
+        // ------------------- LOGIN CONVIDADO -------------------
+
+        [HttpGet]
+        public IActionResult LoginConvidado()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginConvidado(LoginViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null && user.TipoUsuario == "Convidado")
+                {
+                    var result = await _signInManager.PasswordSignInAsync(user, model.Senha, false, false);
+                    if (result.Succeeded)
+                        return RedirectToAction("Dashboard", "Convidado");
+                }
+
+                ModelState.AddModelError("", "Credenciais inválidas para convidado.");
+            }
+
+            return View(model);
+        }
+
+        // ------------------- LOGIN FORNECEDOR -------------------
+
+        [HttpGet]
+        public IActionResult LoginFornecedor()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginFornecedor(LoginViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null && user.TipoUsuario == "Fornecedor")
+                {
+                    var result = await _signInManager.PasswordSignInAsync(user, model.Senha, false, false);
+                    if (result.Succeeded)
+                        return RedirectToAction("Dashboard", "Fornecedor");
+                }
+
+                ModelState.AddModelError("", "Credenciais inválidas para fornecedor.");
+            }
+
+            return View(model);
+        }
+
+        // ------------------- LOGOUT -------------------
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -153,7 +212,7 @@ namespace ProjetoEventX.Controllers
         public string Cpf { get; set; } = string.Empty;
     }
 
-    public class LoginOrganizadorViewModel
+    public class LoginViewModel
     {
         [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;

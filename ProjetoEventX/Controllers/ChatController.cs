@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using ProjetoEventX.Models;
-using ProjetoEventX.Hubs;
-
+using ProjetoEventX.Data;
+using ProjetoEventX.Models; // ✅ usa o ChatHub correto
 namespace ProjetoEventX.Controllers
 {
     public class ChatController : Controller
@@ -26,46 +25,53 @@ namespace ProjetoEventX.Controllers
                 return NotFound();
             }
 
-            var mensagens = await _context.MensagensChat
-                .Include(m => m.Convidado)
-                .ThenInclude(c => c.Pessoa)
+            var mensagens = await _context.MensagemChats
+                .Include(m => m.Remetente)
+                .Include(m => m.Destinatario)
                 .Where(m => m.EventoId == eventoId)
                 .OrderBy(m => m.DataEnvio)
                 .ToListAsync();
 
             ViewBag.EventoId = eventoId;
             ViewBag.NomeEvento = evento.NomeEvento;
-            ViewBag.CurrentUserId = 0; // Será atualizado quando houver autenticação de convidado
+            ViewBag.CurrentUserId = 0; // Substituir depois pelo ID do usuário logado
+
             return View(mensagens);
         }
 
         [HttpPost]
-        public async Task<IActionResult> EnviarMensagem(int eventoId, int convidadoId, string mensagem)
+        public async Task<IActionResult> EnviarMensagem(int eventoId, int remetenteId, int destinatarioId, string conteudo)
         {
-            if (string.IsNullOrWhiteSpace(mensagem))
+            if (string.IsNullOrWhiteSpace(conteudo))
             {
                 return BadRequest();
+            }
+
+            var evento = await _context.Eventos.FindAsync(eventoId);
+            if (evento == null)
+            {
+                return NotFound();
             }
 
             var mensagemChat = new MensagemChat
             {
                 EventoId = eventoId,
-                ConvidadoId = convidadoId,
-                Mensagem = mensagem,
-                DataEnvio = DateTime.Now
+                RemetenteId = remetenteId,
+                DestinatarioId = destinatarioId,
+                TipoDestinatario = "Convidado",
+                Conteudo = conteudo,
+                DataEnvio = DateTime.Now,
+                EhRespostaAssistente = false
             };
 
-            _context.MensagensChat.Add(mensagemChat);
+            _context.MensagemChats.Add(mensagemChat);
             await _context.SaveChangesAsync();
 
-            var convidado = await _context.Convidados
-                .Include(c => c.Pessoa)
-                .FirstOrDefaultAsync(c => c.Id == convidadoId);
+            var remetente = await _context.Pessoas.FindAsync(remetenteId);
+            var nomeUsuario = remetente?.Nome ?? "Usuário";
 
-            var nomeUsuario = convidado?.Pessoa?.Nome ?? "Anônimo";
-
-            await _hubContext.Clients.Group($"Evento_{eventoId}").SendAsync("ReceiveMessage", 
-                convidadoId, mensagem, nomeUsuario, DateTime.Now);
+            await _hubContext.Clients.Group($"Evento_{eventoId}")
+                .SendAsync("ReceiveMessage", remetenteId, conteudo, nomeUsuario, DateTime.Now);
 
             return Ok();
         }
@@ -78,7 +84,7 @@ namespace ProjetoEventX.Controllers
                 {
                     e.Id,
                     e.NomeEvento,
-                    MensagensNaoLidas = _context.MensagensChat.Count(m => m.EventoId == e.Id)
+                    MensagensNaoLidas = _context.MensagemChats.Count(m => m.EventoId == e.Id)
                 })
                 .ToListAsync();
 
@@ -86,4 +92,3 @@ namespace ProjetoEventX.Controllers
         }
     }
 }
-

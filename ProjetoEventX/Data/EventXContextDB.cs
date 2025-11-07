@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-
-namespace ProjetoEventX.Models
+using ProjetoEventX.Models;
+namespace ProjetoEventX.Data
 {
     public class EventXContext : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>
     {
@@ -119,7 +119,7 @@ namespace ProjetoEventX.Models
 
             // Restrições para status
             builder.Entity<Evento>().Property(e => e.StatusEvento).HasDefaultValue("Planejado");
-            builder.Entity<Pedido>().Property(p => p.Status).HasDefaultValue("Pendente");
+            builder.Entity<Pedido>().Property(p => p.StatusPedido).HasDefaultValue("Pendente");
             builder.Entity<Pagamento>().Property(p => p.StatusPagamento).HasDefaultValue("Pendente");
             builder.Entity<TarefaEvento>().Property(t => t.StatusConclusao).HasDefaultValue("Pendente");
 

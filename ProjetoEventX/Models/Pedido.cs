@@ -1,28 +1,24 @@
-﻿using Stripe;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProjetoEventX.Models
 {
     public class Pedido
     {
+        [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
         public int EventoId { get; set; }
 
         [ForeignKey("EventoId")]
-<<<<<<< HEAD:ProjetoEventX/Models/Pedido.cs
-        public required Evento Evento { get; set; }
-=======
-        public Evento Evento { get; set; }
->>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views):ProjetoEventX/Models/Pedidos.cs
+        public Evento? Evento { get; set; } // ✅ Tornado anulável (ou use = default!)
 
         [Required]
         public Guid ProdutoId { get; set; }
 
         [ForeignKey("ProdutoId")]
-        public required Produto Produto { get; set; }
+        public Produto? Produto { get; set; }
 
         [Required]
         [Range(1, 1000)]

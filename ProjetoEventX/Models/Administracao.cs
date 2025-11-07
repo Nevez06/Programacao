@@ -1,5 +1,4 @@
-﻿
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProjetoEventX.Models
@@ -10,13 +9,16 @@ namespace ProjetoEventX.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int IdAdministrar { get; set; }
 
+        [Range(0, 999999999)]
         public decimal ValorTotal { get; set; }
 
+        [Range(0, 999999999)]
         public decimal Orcamento { get; set; }
 
+        [Required]
         public int IdEvento { get; set; }
 
         [ForeignKey("IdEvento")]
-        public required Evento Evento { get; set; }
+        public Evento? Evento { get; set; } // ✅ Agora opcional — sem erro
     }
 }

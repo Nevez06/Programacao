@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ProjetoEventX.Data;
 using ProjetoEventX.Models;
-
 namespace ProjetoEventX.Controllers
 {
     [Authorize]
@@ -21,7 +21,7 @@ namespace ProjetoEventX.Controllers
         [HttpGet]
         public async Task<IActionResult> Criar(int eventoId)
         {
-            var evento = await _context.Eventos.FindAsync(eventoId);
+            var evento = await _context.Eventos.Include(e => e.Local).FirstOrDefaultAsync(e => e.Id == eventoId);
             if (evento == null)
             {
                 return NotFound();
@@ -29,7 +29,53 @@ namespace ProjetoEventX.Controllers
 
             ViewBag.EventoId = eventoId;
             ViewBag.NomeEvento = evento.NomeEvento;
-            return View();
+            ViewBag.EnderecoLocal = evento.Local?.EnderecoLocal ?? "Local não informado";
+
+            var listaConvidado = new ListaConvidado
+            {
+                Evento = new Evento
+                {
+                    NomeEvento = evento.NomeEvento,
+                    DescricaoEvento = evento.DescricaoEvento ?? "Descrição não informada",
+                    TipoEvento = evento.TipoEvento ?? "Outro",
+                    DataEvento = evento.DataEvento,
+                    Local = evento.Local ?? new Local
+                    {
+                        NomeLocal = "Local não informado",
+                        EnderecoLocal = "Endereço não informado",
+                        Capacidade = 0,
+                        TipoLocal = "Outro",
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    },
+                    HoraInicio = !string.IsNullOrEmpty(evento.HoraInicio) ? evento.HoraInicio : DateTime.Now.ToString("HH:mm"),
+                    HoraFim = !string.IsNullOrEmpty(evento.HoraFim) ? evento.HoraFim : DateTime.Now.AddHours(1).ToString("HH:mm"),
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                },
+                Convidado = new Convidado
+                {
+                    Pessoa = new Pessoa
+                    {
+                        Nome = "Nome temporário",
+                        Email = "email@temporario.com",
+                        Cpf = "00000000000",
+                        Endereco = "Endereço não informado",
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    },
+                    UserName = "tempUser",
+                    Email = "email@temporario.com",
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                },
+                DataInclusao = DateTime.Now,
+                ConfirmaPresenca = "Pendente",
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            return View(listaConvidado);
         }
 
         [HttpPost]
@@ -38,7 +84,7 @@ namespace ProjetoEventX.Controllers
         {
             if (ModelState.IsValid)
             {
-                var evento = await _context.Eventos.FindAsync(eventoId);
+                var evento = await _context.Eventos.Include(e => e.Local).FirstOrDefaultAsync(e => e.Id == eventoId);
                 if (evento == null)
                 {
                     return NotFound();
@@ -49,15 +95,13 @@ namespace ProjetoEventX.Controllers
                 var emailConvidado = Request.Form["Convidado.Pessoa.Email"].ToString();
 
                 // Verificar se o convidado já existe
-                var pessoa = await _context.Pessoas
-                    .FirstOrDefaultAsync(p => p.Email == emailConvidado);
+                var pessoa = await _context.Pessoas.FirstOrDefaultAsync(p => p.Email == emailConvidado);
 
-                Convidado? convidado;
+                Convidado? convidado = null;
                 if (pessoa != null)
                 {
-                    convidado = await _context.Convidados
-                        .FirstOrDefaultAsync(c => c.PessoaId == pessoa.Id);
-                    
+                    convidado = await _context.Convidados.FirstOrDefaultAsync(c => c.PessoaId == pessoa.Id);
+
                     if (convidado == null)
                     {
                         // Criar convidado para pessoa existente
@@ -79,6 +123,7 @@ namespace ProjetoEventX.Controllers
                                 UserName = user.UserName,
                                 Email = user.Email,
                                 PessoaId = pessoa.Id,
+                                Pessoa = pessoa,
                                 CreatedAt = DateTime.Now,
                                 UpdatedAt = DateTime.Now
                             };
@@ -95,7 +140,9 @@ namespace ProjetoEventX.Controllers
                         Nome = nomeConvidado,
                         Email = emailConvidado,
                         CreatedAt = DateTime.Now,
-                        UpdatedAt = DateTime.Now
+                        UpdatedAt = DateTime.Now,
+                        Cpf = "00000000000",
+                        Endereco = "Endereço não informado"
                     };
                     _context.Pessoas.Add(pessoa);
                     await _context.SaveChangesAsync();
@@ -118,6 +165,7 @@ namespace ProjetoEventX.Controllers
                             UserName = user.UserName,
                             Email = user.Email,
                             PessoaId = pessoa.Id,
+                            Pessoa = pessoa,
                             CreatedAt = DateTime.Now,
                             UpdatedAt = DateTime.Now
                         };
@@ -129,7 +177,46 @@ namespace ProjetoEventX.Controllers
                         ModelState.AddModelError("", "Erro ao criar convidado");
                         ViewBag.EventoId = eventoId;
                         ViewBag.NomeEvento = evento.NomeEvento;
-                        return View(new ListaConvidado());
+
+                        return View(new ListaConvidado
+                        {
+                            Evento = new Evento
+                            {
+                                NomeEvento = evento.NomeEvento,
+                                DescricaoEvento = evento.DescricaoEvento ?? "Descrição não informada",
+                                TipoEvento = evento.TipoEvento ?? "Outro",
+                                DataEvento = evento.DataEvento,
+                                Local = evento.Local ?? new Local
+                                {
+                                    NomeLocal = "Local não informado",
+                                    EnderecoLocal = "Endereço não informado",
+                                    Capacidade = 0,
+                                    TipoLocal = "Outro",
+                                    CreatedAt = DateTime.Now,
+                                    UpdatedAt = DateTime.Now
+                                },
+                                HoraInicio = evento.HoraInicio,
+                                HoraFim = evento.HoraFim,
+                                CreatedAt = DateTime.Now,
+                                UpdatedAt = DateTime.Now
+                            },
+                            Convidado = new Convidado
+                            {
+                                Pessoa = new Pessoa
+                                {
+                                    Nome = "Nome temporário",
+                                    Email = "email@temporario.com",
+                                    Cpf = "00000000000",
+                                    Endereco = "Endereço não informado",
+                                    CreatedAt = DateTime.Now,
+                                    UpdatedAt = DateTime.Now
+                                },
+                                UserName = "tempUser",
+                                Email = "email@temporario.com",
+                                CreatedAt = DateTime.Now,
+                                UpdatedAt = DateTime.Now
+                            }
+                        });
                     }
                 }
 
@@ -138,14 +225,54 @@ namespace ProjetoEventX.Controllers
                     ModelState.AddModelError("", "Erro ao criar ou encontrar convidado");
                     ViewBag.EventoId = eventoId;
                     ViewBag.NomeEvento = evento.NomeEvento;
-                    return View(new ListaConvidado());
+
+                    return View(new ListaConvidado
+                    {
+                        Evento = new Evento
+                        {
+                            NomeEvento = evento.NomeEvento,
+                            DescricaoEvento = evento.DescricaoEvento ?? "Descrição não informada",
+                            TipoEvento = evento.TipoEvento ?? "Outro",
+                            DataEvento = evento.DataEvento,
+                            Local = evento.Local ?? new Local
+                            {
+                                NomeLocal = "Local não informado",
+                                EnderecoLocal = "Endereço não informado",
+                                Capacidade = 0,
+                                TipoLocal = "Outro",
+                                CreatedAt = DateTime.Now,
+                                UpdatedAt = DateTime.Now
+                            },
+                            HoraInicio = evento.HoraInicio,
+                            HoraFim = evento.HoraFim,
+                            CreatedAt = DateTime.Now,
+                            UpdatedAt = DateTime.Now
+                        },
+                        Convidado = new Convidado
+                        {
+                            Pessoa = new Pessoa
+                            {
+                                Nome = "Nome temporário",
+                                Email = "email@temporario.com",
+                                Cpf = "00000000000",
+                                Endereco = "Endereço não informado",
+                                CreatedAt = DateTime.Now,
+                                UpdatedAt = DateTime.Now
+                            },
+                            UserName = "tempUser",
+                            Email = "email@temporario.com",
+                            CreatedAt = DateTime.Now,
+                            UpdatedAt = DateTime.Now
+                        }
+                    });
                 }
 
-                // Criar lista de convidado
                 var listaConvidado = new ListaConvidado
                 {
                     EventoId = eventoId,
                     ConvidadoId = convidado.Id,
+                    Evento = evento,
+                    Convidado = convidado,
                     DataInclusao = DateTime.Now,
                     ConfirmaPresenca = "Pendente",
                     CreatedAt = DateTime.Now,
@@ -159,9 +286,48 @@ namespace ProjetoEventX.Controllers
             }
 
             ViewBag.EventoId = eventoId;
-            var eventoParaView = await _context.Eventos.FindAsync(eventoId);
+            var eventoParaView = await _context.Eventos.Include(e => e.Local).FirstOrDefaultAsync(e => e.Id == eventoId);
             ViewBag.NomeEvento = eventoParaView?.NomeEvento ?? "Evento";
-            return View(new ListaConvidado());
+
+            return View(new ListaConvidado
+            {
+                Evento = new Evento
+                {
+                    NomeEvento = eventoParaView?.NomeEvento ?? "Novo Evento",
+                    DescricaoEvento = eventoParaView?.DescricaoEvento ?? "Descrição padrão",
+                    TipoEvento = eventoParaView?.TipoEvento ?? "Outro",
+                    DataEvento = eventoParaView?.DataEvento ?? DateTime.Today,
+                    Local = eventoParaView?.Local ?? new Local
+                    {
+                        NomeLocal = "Local não informado",
+                        EnderecoLocal = "Endereço não informado",
+                        Capacidade = 0,
+                        TipoLocal = "Outro",
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    },
+                    HoraInicio = !string.IsNullOrEmpty(eventoParaView?.HoraInicio) ? eventoParaView.HoraInicio : DateTime.Now.ToString("HH:mm"),
+                    HoraFim = !string.IsNullOrEmpty(eventoParaView?.HoraFim) ? eventoParaView.HoraFim : DateTime.Now.AddHours(1).ToString("HH:mm"),
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                },
+                Convidado = new Convidado
+                {
+                    Pessoa = new Pessoa
+                    {
+                        Nome = "Convidado temporário",
+                        Email = "email@temporario.com",
+                        Cpf = "00000000000",
+                        Endereco = "Endereço não informado",
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    },
+                    UserName = "tempUser",
+                    Email = "email@temporario.com",
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                }
+            });
         }
 
         [HttpGet]
@@ -178,4 +344,3 @@ namespace ProjetoEventX.Controllers
         }
     }
 }
-

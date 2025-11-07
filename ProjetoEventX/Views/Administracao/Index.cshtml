@@ -36,7 +36,7 @@
             <div class="dashboard-card">
                 <h3>Adicionar Despesa</h3>
                 <form asp-action="AdicionarDespesa" method="post">
-                    <input type="hidden" name="eventoId" value="@evento.Id" />
+                    <input type="hidden" name="eventoId" value="@evento?.Id" />
                     <div class="mb-3">
                         <label class="form-label">Descrição</label>
                         <input type="text" name="Descricao" class="form-control" required />
@@ -84,8 +84,10 @@
             <div class="dashboard-card">
                 <h3>Ações</h3>
                 <div class="d-grid gap-2">
-                    <a asp-action="RelatorioGastos" asp-route-eventoId="@evento.Id" class="btn btn-eventx-secondary">📊 Relatório de Gastos</a>
-                    <a asp-controller="Organizador" asp-action="DetalhesEvento" asp-route-id="@evento.Id" class="btn btn-eventx-secondary">← Voltar ao Evento</a>
+                    <input type="hidden" name="eventoId" value="@evento?.Id" />
+                    <a asp-action="RelatorioGastos" asp-route-eventoId="@evento?.Id" class="btn btn-eventx-secondary">📊 Relatório de Gastos</a>
+                    <a asp-controller="Organizador" asp-action="DetalhesEvento" asp-route-id="@evento?.Id" class="btn btn-eventx-secondary">← Voltar ao Evento</a>
+
                 </div>
             </div>
         </div>
