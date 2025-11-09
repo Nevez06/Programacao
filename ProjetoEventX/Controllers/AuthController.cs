@@ -82,6 +82,153 @@ namespace ProjetoEventX.Controllers
             return View(model);
         }
 
+        // ------------------- REGISTRO ORGANIZADOR -------------------
+
+        // GET: Exibir o formulário
+        [HttpGet]
+        public IActionResult RegistroOrganizador()
+        {
+            // Se houver mensagem no TempData (ex: sucesso), podemos passar para a ViewBag para mostrar na view
+            if (TempData["MensagemSucesso"] != null)
+            {
+                ViewBag.MensagemSucesso = TempData["MensagemSucesso"];
+            }
+            if (TempData["MensagemErro"] != null)
+            {
+                ViewBag.MensagemErro = TempData["MensagemErro"];
+            }
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegistroOrganizador(RegistroOrganizadorViewModel model)
+        {
+
+            if (ModelState.IsValid)
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    TipoUsuario = "Organizador"
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Senha);
+                if (result.Succeeded)
+                {
+                    // Cria pessoa vinculada ao organizador
+                    var pessoa = new Pessoa
+                    {
+                        Nome = model.NomeCompleto,
+                        Email = model.Email,
+                        Endereco = model.Endereco,
+                        Cpf = model.Cpf,
+                        Telefone = model.Telefone
+                    };
+
+                    _context.Pessoas.Add(pessoa);
+                    await _context.SaveChangesAsync();
+
+                    // Cria organizador
+                    var organizador = new Organizador
+                    {
+                        Id = user.Id, // 🔹 ADICIONE ISSO
+                        PessoaId = pessoa.Id,
+                        Pessoa = pessoa,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        EmailConfirmed = true,
+
+                    };
+
+                    _context.Organizadores.Add(organizador);
+                    await _context.SaveChangesAsync();
+
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+
+                    // Mensagem de sucesso? Como vai para Dashboard, melhor não usar aqui.
+                    // Se quiser mostrar, faça no Dashboard (não recomendado geralmente).
+                    return RedirectToAction("Dashboard", "Organizador");
+                }
+
+                // Adiciona erros para aparecer no ValidationSummary
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error.Description);
+
+                // Não usar TempData para erro aqui
+            }
+
+            // Se ModelState inválido, retorna a view com os erros para o usuário corrigir.
+            return View(model);
+        }
+
+
+        // ------------------- REGISTRO FORNECEDOR -------------------
+        // GET: Exibir o formulário
+        [HttpGet]
+        public IActionResult RegistroFornecedor()
+        {
+            return View();
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegistroFornecedor(RegistroFornecedorViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    TipoUsuario = "Fornecedor"
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Senha);
+                if (result.Succeeded)
+                {
+                    // Cria pessoa vinculada ao fornecedor
+                    var pessoa = new Pessoa
+                    {
+                        Nome = model.NomeLoja,
+                        Email = model.Email,
+                        Endereco = model.Endereco,
+                        Cpf = model.Cpf,
+                        Telefone = model.Telefone
+                    };
+
+                    _context.Pessoas.Add(pessoa);
+                    await _context.SaveChangesAsync();
+
+                    // Cria fornecedor
+                    var fornecedor = new Fornecedor
+                    {
+                        PessoaId = pessoa.Id,
+                        Pessoa = pessoa,
+                        Cnpj = model.Cnpj,
+                        TipoServico = model.TipoServico,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        EmailConfirmed = true
+                    };
+
+                    _context.Fornecedores.Add(fornecedor);
+                    await _context.SaveChangesAsync();
+
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return RedirectToAction("Dashboard", "Fornecedor");
+                }
+
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error.Description);
+            }
+
+            return View(model);
+        }
+
+
+
+
         // ------------------- LOGIN ORGANIZADOR -------------------
 
         [HttpGet]

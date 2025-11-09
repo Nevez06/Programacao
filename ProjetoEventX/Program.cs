@@ -15,8 +15,7 @@ var dbConnection = Environment.GetEnvironmentVariable("DB_CONNECTION")
 builder.Services.AddDbContext<EventXContext>(options =>
     options.UseNpgsql(dbConnection));
 
-builder.Services.AddDbContext<SimpleEventXContext>(options =>
-    options.UseNpgsql(dbConnection));
+
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
     .AddEntityFrameworkStores<EventXContext>()

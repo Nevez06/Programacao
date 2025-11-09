@@ -5,6 +5,7 @@ using ProjetoEventX.Models;
 namespace ProjetoEventX.Data
 {
     public class EventXContext : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>
+
     {
         public EventXContext(DbContextOptions<EventXContext> options) : base(options) { }
 
@@ -50,9 +51,7 @@ namespace ProjetoEventX.Data
 
             // Manter navegações essenciais de Organizador
 
-            // Configurar chaves int para Identity
-            builder.Entity<IdentityUser<int>>().ToTable("AspNetUsers").HasKey(u => u.Id);
-            builder.Entity<IdentityRole<int>>().ToTable("AspNetRoles").HasKey(r => r.Id);
+
 
             // Configurar herança/composição para usuários com navegações inversas explícitas
             builder.Entity<Fornecedor>()
