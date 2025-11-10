@@ -3,31 +3,34 @@
 }
 
 <!-- HERO -->
-<section class="hero d-flex align-items-center text-black">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6 text-center text-lg-start">
-                <h1 class="fw-bold text-uppercase mb-3">EventX</h1>
-                <h4 class="fw-normal">Compartilhe, planeje, convide e gerencie com facilidade</h4>
-                <h2 class="display-6 fw-bold text-uppercase mt-3" style="color:#992008;">
-                    Eventos em um só lugar
-                </h2>
+<section class="hero text-center text-white position-relative overflow-hidden">
 
-                <div class="d-flex flex-column flex-md-row gap-3 mt-4 justify-content-center justify-content-lg-start">
-                    <a asp-controller="Auth" asp-action="LoginConvidado" class="btn btn-eventx-primary">Sou Convidado</a>
-                    <a asp-controller="Auth" asp-action="LoginOrganizador" class="btn btn-eventx-primary">Organizador</a>
-                    <a asp-controller="Auth" asp-action="LoginFornecedor" class="btn btn-eventx-primary">Fornecedor</a>
-                </div>
+    <!-- Imagem superior -->
+    <div class="hero-section top-section position-relative">
+        <img src="@Url.Content("~/Images/bg-top.png")" alt="Imagem superior" class="hero-img rounded-5 shadow-lg">
+        <div class="hero-content position-absolute top-50 start-50 translate-middle text-center">
+            <h4 class="fw-normal">Compartilhe, planeje, convide e gerencie com facilidade</h4>
+            <h1 class="fw-bold text-uppercase mt-2">EVENTOS EM UM SÓ LUGAR</h1>
 
-                <a asp-controller="Auth" asp-action="RegistroOrganizador" class="btn btn-eventx-secondary mt-4">
-                    Criar minha conta agora
-                </a>
+            <div class="d-flex flex-column flex-md-row gap-3 mt-4 justify-content-center">
+                <a asp-controller="Auth" asp-action="LoginConvidado" class="btn btn-eventx-primary">Sou Convidado</a>
+                <a asp-controller="Auth" asp-action="LoginOrganizador" class="btn btn-eventx-primary">Organizador</a>
+                <a asp-controller="Auth" asp-action="LoginFornecedor" class="btn btn-eventx-primary">Fornecedor</a>
             </div>
+        </div>
+    </div>
 
-            <div class="col-lg-6 text-center mt-5 mt-lg-0">
-                <img src="~/images/hero-eventx.png" alt="Evento" class="img-fluid rounded-4 shadow-lg">
-                <p class="lead mt-3 fw-semibold">Onde organizar e amar compartilhar o seu evento é só o começo...</p>
-            </div>
+    <!-- Imagem inferior -->
+    <div class="hero-section bottom-section position-relative mt-5">
+        <img src="@Url.Content("~/Images/bg-bottom.png")" alt="Imagem inferior" class="hero-img rounded-5 shadow-lg">
+        <div class="hero-content position-absolute top-50 start-50 translate-middle text-center">
+            <img src="@Url.Content("~/Images/Logo_com_nome.png")" alt="Logo EventX" class="mb-3" style="width:200px;">
+            <h2 class="fw-bold text-uppercase">EventX</h2>
+            <p class="lead fw-semibold">Onde organizar e amar compartilhar o seu evento é só o começo.</p>
+
+            <a asp-controller="Auth" asp-action="RegistroOrganizador" class="btn btn-eventx-secondary mt-3 d-inline-flex align-items-center gap-2">
+                <i class="fas fa-calendar-alt"></i> Criar minha conta agora
+            </a>
         </div>
     </div>
 </section>
@@ -41,13 +44,14 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body text-start">
                         <div class="d-flex align-items-center mb-3">
-                            <img src="~/images/user1.jpg" class="rounded-circle me-3" width="50" height="50">
+                            <img src="@Url.Content("~/Images/img_avaliacao.png")" class="rounded-circle me-3" width="50" height="50">
                             <div>
                                 <h6 class="mb-0 fw-bold">Amanda Silva</h6>
-                                <div class="text-warning">★★★★★</div>
+                                <img src="@Url.Content("~/Images/icon-estrela.png")" alt="Estrelas" style="height:20px;">
                             </div>
                         </div>
                         <p>Eu amei cada detalhe de organizar meu evento com o EventX! 💕</p>
+                        <img src="@Url.Content("~/Images/icon-coracao.png")" alt="Coração" style="height:20px;">
                     </div>
                 </div>
             </div>
@@ -56,13 +60,14 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body text-start">
                         <div class="d-flex align-items-center mb-3">
-                            <img src="~/images/user2.jpg" class="rounded-circle me-3" width="50" height="50">
+                            <img src="@Url.Content("~/Images/img_avaliacao_2.png")" class="rounded-circle me-3" width="50" height="50">
                             <div>
                                 <h6 class="mb-0 fw-bold">Lucas Pereira</h6>
-                                <div class="text-warning">★★★★★</div>
+                                <img src="@Url.Content("~/Images/icon-estrela.png")" alt="Estrelas" style="height:20px;">
                             </div>
                         </div>
                         <p>Gerenciar nunca foi tão fácil. Obrigado, EventX! ✨</p>
+                        <img src="@Url.Content("~/Images/icon-coracao.png")" alt="Coração" style="height:20px;">
                     </div>
                 </div>
             </div>
@@ -71,13 +76,14 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body text-start">
                         <div class="d-flex align-items-center mb-3">
-                            <img src="~/images/user3.jpg" class="rounded-circle me-3" width="50" height="50">
+                            <img src="@Url.Content("~/Images/img_avaliacao_3.png")" class="rounded-circle me-3" width="50" height="50">
                             <div>
                                 <h6 class="mb-0 fw-bold">Camila Lopes</h6>
-                                <div class="text-warning">★★★★★</div>
+                                <img src="@Url.Content("~/Images/icon-estrela.png")" alt="Estrelas" style="height:20px;">
                             </div>
                         </div>
                         <p>Até os pagamentos com fornecedores fiz pelo EventX, de forma prática e segura.</p>
+                        <img src="@Url.Content("~/Images/icon-coracao.png")" alt="Coração" style="height:20px;">
                     </div>
                 </div>
             </div>
@@ -87,40 +93,39 @@
     </div>
 </section>
 
-<!-- CTA -->
-<section class="cta py-5 text-center">
-    <div class="container">
-        <div class="p-5 rounded-4 shadow-lg bg-light">
-            <h3 class="fw-bold mb-3" style="color:#992008;">Pronto para começar?</h3>
-            <p class="mb-4">Crie seu primeiro evento e descubra como é fácil organizar com o EventX.</p>
-            <div class="d-flex justify-content-center gap-3">
-                <a asp-controller="Eventos" asp-action="Create" class="btn btn-eventx-primary px-4 py-2">
-                    <i class="fas fa-plus"></i> Criar Evento
-                </a>
-                <a asp-controller="Eventos" asp-action="Index" class="btn btn-outline-dark px-4 py-2">
-                    <i class="fas fa-eye"></i> Ver Eventos
-                </a>
-            </div>
-        </div>
-    </div>
-</section>
-
 <style>
     :root {
         --eventx-primary: #992008;
-        --eventx-light: #fff5f2;
-        --eventx-text: #000000;
+        --eventx-text: #000;
     }
 
     body {
         color: var(--eventx-text);
         font-family: 'Poppins', sans-serif;
-        background-color: #fff;
     }
 
-    .hero {
-        background: var(--eventx-light);
-        padding: 6rem 0;
+    /* HERO */
+    .hero-section {
+        position: relative;
+        margin-bottom: 3rem;
+    }
+
+    .hero-img {
+        width: 100%;
+        max-width: 1100px;
+        height: auto;
+        border-radius: 40px;
+        object-fit: cover;
+    }
+
+    .hero-content {
+        z-index: 2;
+        color: #fff;
+        text-shadow: 0px 2px 10px rgba(0,0,0,0.4);
+    }
+
+    .hero h1, .hero h2 {
+        color: #fff;
     }
 
     .btn-eventx-primary {
@@ -130,7 +135,7 @@
         border-radius: 30px;
         padding: 0.8rem 1.8rem;
         font-weight: 600;
-        transition: all 0.3s ease;
+        transition: 0.3s ease;
     }
 
         .btn-eventx-primary:hover {
@@ -145,7 +150,7 @@
         border-radius: 30px;
         padding: 0.8rem 1.8rem;
         font-weight: 600;
-        transition: all 0.3s ease;
+        transition: 0.3s ease;
     }
 
         .btn-eventx-secondary:hover {
@@ -153,35 +158,20 @@
             color: #fff;
         }
 
-    .avaliacoes .card {
-        border-radius: 20px;
-        transition: transform 0.3s;
-    }
-
-        .avaliacoes .card:hover {
-            transform: translateY(-5px);
-        }
-
-    .cta {
-        background-color: var(--eventx-primary);
-        color: #fff;
-    }
-
-        .cta .bg-light {
-            background-color: #fff;
-            color: var(--eventx-text);
-        }
-
-    @@media (max-width: 768px) {
-        .hero
+    /* Responsivo */
+    @@media (max-width: 991px) {
+        .hero-img
 
     {
-        text-align: center;
-        padding: 4rem 1rem;
+        max-width: 90%;
     }
 
-    .hero img {
-        max-width: 80%;
+    .hero-content h1 {
+        font-size: 1.6rem;
+    }
+
+    .hero-content h4 {
+        font-size: 1rem;
     }
 
     .btn-eventx-primary,
