@@ -1,8 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
+using ProjetoEventX.Data;
 using ProjetoEventX.Models;
-
 namespace ProjetoEventX.Controllers
 {
     [Authorize]
@@ -58,7 +58,7 @@ namespace ProjetoEventX.Controllers
                 {
                     evento.OrganizadorId = userId;
                 }
-                
+
                 _context.Add(evento);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));

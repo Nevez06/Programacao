@@ -1,0 +1,41 @@
+@model IEnumerable<ProjetoEventX.Models.Evento>
+@{
+    ViewData["Title"] = "Meus Eventos";
+}
+
+<div class="container">
+    <h1 class="mb-4" style="color: var(--eventx-primary);">Meus Eventos</h1>
+    
+    <div class="event-grid">
+        @foreach (var evento in Model)
+        {
+            <div class="card card-eventx">
+                <div class="card-body">
+                    <h5 class="card-title">@evento.NomeEvento</h5>
+                    <p class="card-text">
+                        <strong>Data:</strong> @evento.DataEvento.ToString("dd/MM/yyyy")<br>
+                        <strong>Tipo:</strong> @evento.TipoEvento<br>
+                        <strong>Status:</strong> <span class="badge badge-eventx badge-pendente">@evento.StatusEvento</span>
+                    </p>
+                    <p class="card-text">@evento.DescricaoEvento</p>
+                    <div class="d-flex gap-2">
+                        <a asp-action="DetalhesEvento" asp-route-id="@evento.Id" class="btn btn-sm btn-eventx-primary">Ver Detalhes</a>
+                        <a asp-controller="Convite" asp-action="Criar" asp-route-eventoId="@evento.Id" class="btn btn-sm btn-eventx-secondary">Convidar</a>
+                        <a asp-controller="Administracao" asp-action="Index" asp-route-eventoId="@evento.Id" class="btn btn-sm btn-eventx-secondary">Administração</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    
+    @if (!Model.Any())
+    {
+        <div class="text-center mt-5">
+            <p class="lead">Você ainda não tem eventos cadastrados.</p>
+            <a asp-action="CriarEvento" class="btn btn-eventx-primary">Criar Primeiro Evento</a>
+        </div>
+    }
+</div>
+
+
+

@@ -5,19 +5,20 @@ namespace ProjetoEventX.Models
 {
     public class Pedido
     {
+        [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
         public int EventoId { get; set; }
 
         [ForeignKey("EventoId")]
-        public required Evento Evento { get; set; }
+        public Evento? Evento { get; set; } // ✅ Tornado anulável (ou use = default!)
 
         [Required]
         public Guid ProdutoId { get; set; }
 
         [ForeignKey("ProdutoId")]
-        public required Produto Produto { get; set; }
+        public Produto? Produto { get; set; }
 
         [Required]
         [Range(1, 1000)]
@@ -28,7 +29,7 @@ namespace ProjetoEventX.Models
         public decimal PrecoTotal { get; set; }
 
         [StringLength(50)]
-        public string Status { get; set; } = "Pendente"; // Pendente, Pago, Entregue
+        public string StatusPedido { get; set; } = "Pendente"; // Pendente, Pago, Entregue
 
         public DateTime DataPedido { get; set; } = DateTime.Now;
     }

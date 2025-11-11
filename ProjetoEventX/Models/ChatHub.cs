@@ -1,19 +1,13 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using ProjetoEventX.Models;
-
-namespace ProjetoEventX.Hubs
+using ProjetoEventX.Data;
+using System.Security.Claims;
+namespace ProjetoEventX.Models
 {
     [Authorize]
-    public class ChatHub : Hub
+    public class ChatHub(EventXContext _context) : Hub
     {
-        private readonly EventXContext _context;
 
-        public ChatHub(EventXContext context)
-        {
-            _context = context;
-        }
 
         // Enviar mensagem do Organizador para Convidado ou Fornecedor
         public async Task SendMessage(int remetenteId, int destinatarioId, string tipoDestinatario, string conteudo, int eventoId)
@@ -60,7 +54,7 @@ namespace ProjetoEventX.Hubs
             }
 
             // Chama o Assistente Virtual
-            var respostaAssistente = CallAssistantVirtual(remetenteId, conteudo, eventoId);
+            var respostaAssistente = CallAssistantVirtual(conteudo, eventoId);
 
             var mensagem = new MensagemChat
             {
@@ -105,7 +99,7 @@ namespace ProjetoEventX.Hubs
         }
 
         // Método para chamar o Assistente Virtual (síncrono até integração real)
-        private string CallAssistantVirtual(int remetenteId, string conteudo, int eventoId)
+        private string CallAssistantVirtual(string conteudo, int eventoId)
         {
             // Buscar o Assistente Virtual no banco
             var assistente = _context.AssistentesVirtuais.FirstOrDefault();

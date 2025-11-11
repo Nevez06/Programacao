@@ -27,6 +27,7 @@ namespace ProjetoEventX.Models
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         // Relacionamentos
+        public ICollection<Produto> Produtos { get; set; } = new List<Produto>();
         public ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
         public ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
     }

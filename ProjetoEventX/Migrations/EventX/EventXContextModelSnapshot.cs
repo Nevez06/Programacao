@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using ProjetoEventX.Models;
+using ProjetoEventX.Data;
 
 #nullable disable
 
@@ -73,82 +73,6 @@ namespace ProjetoEventX.Migrations.EventX
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetRoleClaims", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser<int>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(21)
-                        .HasColumnType("character varying(21)");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("NormalizedEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("NormalizedUserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("UserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
-
-                    b.HasIndex("NormalizedUserName")
-                        .IsUnique()
-                        .HasDatabaseName("UserNameIndex");
-
-                    b.ToTable("AspNetUsers", (string)null);
-
-                    b.HasDiscriminator().HasValue("IdentityUser<int>");
-
-                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
@@ -259,6 +183,76 @@ namespace ProjetoEventX.Migrations.EventX
                     b.ToTable("Administracoes");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.ApplicationUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TipoUsuario")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.ToTable("AspNetUsers", (string)null);
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.AssistenteVirtual", b =>
                 {
                     b.Property<int>("Id")
@@ -293,6 +287,106 @@ namespace ProjetoEventX.Migrations.EventX
                     b.HasIndex("EventoId");
 
                     b.ToTable("AssistentesVirtuais");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.Convidado", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ConfirmaPresenca")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasColumnType("text");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PessoaId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PessoaId")
+                        .IsUnique();
+
+                    b.ToTable("Convidados");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.Despesa", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DataDespesa")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("EventoId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Valor")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventoId");
+
+                    b.ToTable("Despesas");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.Evento", b =>
@@ -412,6 +506,89 @@ namespace ProjetoEventX.Migrations.EventX
                     b.HasIndex("FornecedorId");
 
                     b.ToTable("Feedbacks");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.Fornecedor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("AvaliacaoMedia")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Cnpj")
+                        .IsRequired()
+                        .HasMaxLength(18)
+                        .HasColumnType("character varying(18)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasColumnType("text");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PessoaId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TipoServico")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PessoaId")
+                        .IsUnique();
+
+                    b.ToTable("Fornecedores");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.ItemPedido", b =>
@@ -566,7 +743,7 @@ namespace ProjetoEventX.Migrations.EventX
 
                     b.HasIndex("RemetenteId");
 
-                    b.ToTable("MensagemChats");
+                    b.ToTable("MensagemChat");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.Notificacao", b =>
@@ -616,6 +793,76 @@ namespace ProjetoEventX.Migrations.EventX
                     b.HasIndex("EventoId");
 
                     b.ToTable("Notificacoes");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.Organizador", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasColumnType("text");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PessoaId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PessoaId")
+                        .IsUnique();
+
+                    b.ToTable("Organizadores");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.Pagamento", b =>
@@ -689,7 +936,7 @@ namespace ProjetoEventX.Migrations.EventX
                     b.Property<int>("Quantidade")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Status")
+                    b.Property<string>("StatusPedido")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
@@ -779,7 +1026,7 @@ namespace ProjetoEventX.Migrations.EventX
 
                     b.HasIndex("FornecedorId");
 
-                    b.ToTable("Produto");
+                    b.ToTable("Produtos");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.TarefaEvento", b =>
@@ -869,138 +1116,6 @@ namespace ProjetoEventX.Migrations.EventX
                     b.ToTable("TemplatesEventos");
                 });
 
-            modelBuilder.Entity("ProjetoEventX.Models.Convidado", b =>
-                {
-                    b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser<int>");
-
-                    b.Property<string>("ConfirmaPresenca")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("PessoaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("PessoaId1")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasIndex("PessoaId")
-                        .IsUnique();
-
-                    b.HasIndex("PessoaId1")
-                        .IsUnique();
-
-                    b.HasDiscriminator().HasValue("Convidado");
-                });
-
-            modelBuilder.Entity("ProjetoEventX.Models.Fornecedor", b =>
-                {
-                    b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser<int>");
-
-                    b.Property<decimal>("AvaliacaoMedia")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("Cnpj")
-                        .IsRequired()
-                        .HasMaxLength(18)
-                        .HasColumnType("character varying(18)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("PessoaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("PessoaId1")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TipoServico")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasIndex("PessoaId")
-                        .IsUnique();
-
-                    b.HasIndex("PessoaId1")
-                        .IsUnique();
-
-                    b.ToTable("AspNetUsers", t =>
-                        {
-                            t.Property("CreatedAt")
-                                .HasColumnName("Fornecedor_CreatedAt");
-
-                            t.Property("PessoaId")
-                                .HasColumnName("Fornecedor_PessoaId");
-
-                            t.Property("PessoaId1")
-                                .HasColumnName("Fornecedor_PessoaId1");
-
-                            t.Property("UpdatedAt")
-                                .HasColumnName("Fornecedor_UpdatedAt");
-                        });
-
-                    b.HasDiscriminator().HasValue("Fornecedor");
-                });
-
-            modelBuilder.Entity("ProjetoEventX.Models.Organizador", b =>
-                {
-                    b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser<int>");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("PessoaId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("PessoaId1")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasIndex("PessoaId")
-                        .IsUnique();
-
-                    b.HasIndex("PessoaId1")
-                        .IsUnique();
-
-                    b.ToTable("AspNetUsers", t =>
-                        {
-                            t.Property("CreatedAt")
-                                .HasColumnName("Organizador_CreatedAt");
-
-                            t.Property("DataCadastro")
-                                .HasColumnName("Organizador_DataCadastro");
-
-                            t.Property("PessoaId")
-                                .HasColumnName("Organizador_PessoaId");
-
-                            t.Property("PessoaId1")
-                                .HasColumnName("Organizador_PessoaId1");
-
-                            t.Property("UpdatedAt")
-                                .HasColumnName("Organizador_UpdatedAt");
-                        });
-
-                    b.HasDiscriminator().HasValue("Organizador");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
@@ -1012,7 +1127,7 @@ namespace ProjetoEventX.Migrations.EventX
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser<int>", null)
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1021,7 +1136,7 @@ namespace ProjetoEventX.Migrations.EventX
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser<int>", null)
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1036,7 +1151,7 @@ namespace ProjetoEventX.Migrations.EventX
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser<int>", null)
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1045,7 +1160,7 @@ namespace ProjetoEventX.Migrations.EventX
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser<int>", null)
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1071,6 +1186,28 @@ namespace ProjetoEventX.Migrations.EventX
                 {
                     b.HasOne("ProjetoEventX.Models.Evento", "Evento")
                         .WithMany("AssistentesVirtuais")
+                        .HasForeignKey("EventoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Evento");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.Convidado", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Pessoa", "Pessoa")
+                        .WithOne("Convidado")
+                        .HasForeignKey("ProjetoEventX.Models.Convidado", "PessoaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Pessoa");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.Despesa", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Evento", "Evento")
+                        .WithMany("Despesas")
                         .HasForeignKey("EventoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1114,6 +1251,17 @@ namespace ProjetoEventX.Migrations.EventX
                     b.Navigation("Evento");
 
                     b.Navigation("Fornecedor");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.Fornecedor", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Pessoa", "Pessoa")
+                        .WithOne("Fornecedor")
+                        .HasForeignKey("ProjetoEventX.Models.Fornecedor", "PessoaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Pessoa");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.ItemPedido", b =>
@@ -1190,6 +1338,17 @@ namespace ProjetoEventX.Migrations.EventX
                     b.Navigation("Evento");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.Organizador", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Pessoa", "Pessoa")
+                        .WithOne("Organizador")
+                        .HasForeignKey("ProjetoEventX.Models.Organizador", "PessoaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Pessoa");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.Pagamento", b =>
                 {
                     b.HasOne("ProjetoEventX.Models.Pedido", "Pedido")
@@ -1206,7 +1365,7 @@ namespace ProjetoEventX.Migrations.EventX
                     b.HasOne("ProjetoEventX.Models.Evento", "Evento")
                         .WithMany("Pedidos")
                         .HasForeignKey("EventoId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ProjetoEventX.Models.Fornecedor", null)
@@ -1216,7 +1375,7 @@ namespace ProjetoEventX.Migrations.EventX
                     b.HasOne("ProjetoEventX.Models.Produto", "Produto")
                         .WithMany("Pedidos")
                         .HasForeignKey("ProdutoId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Evento");
@@ -1227,9 +1386,9 @@ namespace ProjetoEventX.Migrations.EventX
             modelBuilder.Entity("ProjetoEventX.Models.Produto", b =>
                 {
                     b.HasOne("ProjetoEventX.Models.Fornecedor", "Fornecedor")
-                        .WithMany()
+                        .WithMany("Produtos")
                         .HasForeignKey("FornecedorId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Fornecedor");
@@ -1254,47 +1413,7 @@ namespace ProjetoEventX.Migrations.EventX
 
             modelBuilder.Entity("ProjetoEventX.Models.Convidado", b =>
                 {
-                    b.HasOne("ProjetoEventX.Models.Pessoa", "Pessoa")
-                        .WithOne()
-                        .HasForeignKey("ProjetoEventX.Models.Convidado", "PessoaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ProjetoEventX.Models.Pessoa", null)
-                        .WithOne("Convidado")
-                        .HasForeignKey("ProjetoEventX.Models.Convidado", "PessoaId1");
-
-                    b.Navigation("Pessoa");
-                });
-
-            modelBuilder.Entity("ProjetoEventX.Models.Fornecedor", b =>
-                {
-                    b.HasOne("ProjetoEventX.Models.Pessoa", "Pessoa")
-                        .WithOne()
-                        .HasForeignKey("ProjetoEventX.Models.Fornecedor", "PessoaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ProjetoEventX.Models.Pessoa", null)
-                        .WithOne("Fornecedor")
-                        .HasForeignKey("ProjetoEventX.Models.Fornecedor", "PessoaId1");
-
-                    b.Navigation("Pessoa");
-                });
-
-            modelBuilder.Entity("ProjetoEventX.Models.Organizador", b =>
-                {
-                    b.HasOne("ProjetoEventX.Models.Pessoa", "Pessoa")
-                        .WithOne()
-                        .HasForeignKey("ProjetoEventX.Models.Organizador", "PessoaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ProjetoEventX.Models.Pessoa", null)
-                        .WithOne("Organizador")
-                        .HasForeignKey("ProjetoEventX.Models.Organizador", "PessoaId1");
-
-                    b.Navigation("Pessoa");
+                    b.Navigation("ListasConvidados");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.Evento", b =>
@@ -1302,6 +1421,8 @@ namespace ProjetoEventX.Migrations.EventX
                     b.Navigation("Administracoes");
 
                     b.Navigation("AssistentesVirtuais");
+
+                    b.Navigation("Despesas");
 
                     b.Navigation("Feedbacks");
 
@@ -1314,8 +1435,24 @@ namespace ProjetoEventX.Migrations.EventX
                     b.Navigation("TarefasEventos");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.Fornecedor", b =>
+                {
+                    b.Navigation("Feedbacks");
+
+                    b.Navigation("Pedidos");
+
+                    b.Navigation("Produtos");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.Local", b =>
                 {
+                    b.Navigation("Eventos");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.Organizador", b =>
+                {
+                    b.Navigation("Administracoes");
+
                     b.Navigation("Eventos");
                 });
 
@@ -1339,25 +1476,6 @@ namespace ProjetoEventX.Migrations.EventX
 
             modelBuilder.Entity("ProjetoEventX.Models.TemplateEvento", b =>
                 {
-                    b.Navigation("Eventos");
-                });
-
-            modelBuilder.Entity("ProjetoEventX.Models.Convidado", b =>
-                {
-                    b.Navigation("ListasConvidados");
-                });
-
-            modelBuilder.Entity("ProjetoEventX.Models.Fornecedor", b =>
-                {
-                    b.Navigation("Feedbacks");
-
-                    b.Navigation("Pedidos");
-                });
-
-            modelBuilder.Entity("ProjetoEventX.Models.Organizador", b =>
-                {
-                    b.Navigation("Administracoes");
-
                     b.Navigation("Eventos");
                 });
 #pragma warning restore 612, 618

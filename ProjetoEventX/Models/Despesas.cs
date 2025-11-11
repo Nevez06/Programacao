@@ -5,7 +5,8 @@ namespace ProjetoEventX.Models
 {
     public class Despesa
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        [Key]
+        public int Id { get; set; }
 
         [Required]
         public int EventoId { get; set; }

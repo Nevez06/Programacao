@@ -1,0 +1,87 @@
+@model IEnumerable<ProjetoEventX.Models.MensagemChat>
+@{
+    ViewData["Title"] = "Chat do Evento";
+    var eventoId = ViewBag.EventoId;
+    var eventoNome = ViewBag.NomeEvento;
+}
+
+<div class="container">
+    <h1 class="mb-4" style="color: var(--eventx-primary);">Chat - @eventoNome</h1>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-eventx">
+                <div class="card-body">
+                    <div id="chatMessages" class="chat-container">
+                        @foreach (var msg in Model)
+                        {
+                            <div class="chat-message @(msg.ConvidadoId == ViewBag.CurrentUserId ? "sent" : "received")">
+                                <strong>@(msg.Convidado?.Nome ?? "Convidado desconhecido")</strong>
+                                <p>@msg.Conteudo</p>
+                                <small>@msg.DataEnvio.ToString("dd/MM/yyyy HH:mm")</small>
+                            </div>
+                        }
+
+
+                    </div>
+                    
+                    <div class="mt-3">
+                        <form id="chatForm" class="d-flex gap-2">
+                            <input type="hidden" id="eventoId" value="@eventoId" />
+                            <input type="hidden" id="convidadoId" value="@ViewBag.CurrentUserId" />
+                            <input type="text" id="mensagemInput" class="form-control" placeholder="Digite sua mensagem..." />
+                            <button type="submit" class="btn btn-eventx-primary">Enviar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.0/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .build();
+
+        connection.start().then(() => {
+            connection.invoke("JoinEventGroup", @eventoId);
+        });
+
+          connection.on("ReceiveMessage", (convidadoId, mensagem, nomeUsuario, dataEnvio) => {
+            const chatMessages = document.getElementById("chatMessages");
+            const messageDiv = document.createElement("div");
+            messageDiv.className = "chat-message " + (convidadoId == "@ViewBag.CurrentUserId" ? "sent" : "received");
+            messageDiv.innerHTML = `
+                <strong>${nomeUsuario}</strong>
+                <p>${mensagem}</p>
+                <small>${new Date(dataEnvio).toLocaleString('pt-BR')}</small>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+
+        document.getElementById("chatForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const mensagem = document.getElementById("mensagemInput").value;
+            const eventoId = document.getElementById("eventoId").value;
+            const convidadoId = document.getElementById("convidadoId").value;
+
+            if (mensagem.trim()) {
+                await fetch('/Chat/EnviarMensagem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `eventoId=${eventoId}&convidadoId=${convidadoId}&mensagem=${encodeURIComponent(mensagem)}`
+                });
+
+                document.getElementById("mensagemInput").value = '';
+            }
+        });
+    </script>
+}
+

@@ -1,0 +1,65 @@
+@model ProjetoEventX.Models.RegistroFornecedorViewModel
+@{
+    ViewData["Title"] = "Cadastro - Fornecedor";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card card-eventx mt-5">
+                <div class="card-body">
+                    <h2 class="text-center mb-4" style="color: var(--eventx-primary);">Cadastro Fornecedor</h2>
+                    
+                    <form asp-action="RegistroFornecedor" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Cpf" class="form-label"></label>
+                            <input asp-for="Cpf" class="form-control" placeholder="000.000.000-00" />
+                            <span asp-validation-for="Cpf" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="NomeLoja" class="form-label"></label>
+                            <input asp-for="NomeLoja" class="form-control" />
+                            <span asp-validation-for="NomeLoja" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Senha" class="form-label"></label>
+                            <input asp-for="Senha" class="form-control" />
+                            <span asp-validation-for="Senha" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="ConfirmarSenha" class="form-label"></label>
+                            <input asp-for="ConfirmarSenha" class="form-control" />
+                            <span asp-validation-for="ConfirmarSenha" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-eventx-primary">Cadastrar</button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-3">
+                        <p>Já tem conta? <a asp-action="LoginFornecedor">Faça login aqui</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+
+
