@@ -12,6 +12,7 @@ namespace ProjetoEventX.Models
         [Required(ErrorMessage = "Senha é obrigatória")]
         [DataType(DataType.Password)]
         public string Senha { get; set; } = string.Empty;
+
     }
 
     // REGISTRO ORGANIZADOR
@@ -32,7 +33,8 @@ namespace ProjetoEventX.Models
 
         [Required(ErrorMessage = "Telefone é obrigatório")]
         [Display(Name = "Telefone")]
-        public int Telefone { get; set; }
+        public string Telefone { get; set; } = string.Empty;
+
 
         [Required(ErrorMessage = "Email é obrigatório")]
         [EmailAddress(ErrorMessage = "Email inválido")]
@@ -101,7 +103,8 @@ namespace ProjetoEventX.Models
 
         [Required(ErrorMessage = "Telefone é obrigatório")]
         [Display(Name = "Telefone")]
-        public int Telefone { get; set; }
+        public string Telefone { get; set; } = string.Empty;
+
 
         [Required(ErrorMessage = "Email é obrigatório")]
         [EmailAddress(ErrorMessage = "Email inválido")]
