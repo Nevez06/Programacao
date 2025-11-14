@@ -22,65 +22,7 @@ namespace ProjetoEventX.Controllers
             _context = context;
         }
 
-        // ------------------- REGISTER -------------------
 
-        [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                var user = new ApplicationUser
-                {
-                    UserName = model.Email,
-                    Email = model.Email,
-                    TipoUsuario = "Organizador"
-                };
-
-                var result = await _userManager.CreateAsync(user, model.Password);
-                if (result.Succeeded)
-                {
-                    var pessoa = new Pessoa
-                    {
-                        Nome = model.Nome,
-                        Email = model.Email,
-                        Endereco = model.Endereco,
-                        Telefone = model.Telefone,
-                        Cpf = model.Cpf
-                    };
-
-                    _context.Pessoas.Add(pessoa);
-                    await _context.SaveChangesAsync();
-
-                    var organizador = new Organizador
-                    {
-                        Id = user.Id,
-                        PessoaId = pessoa.Id,
-                        Pessoa = pessoa,
-                        UserName = user.UserName,
-                        Email = user.Email,
-                        EmailConfirmed = true
-                    };
-
-                    _context.Organizadores.Add(organizador);
-                    await _context.SaveChangesAsync();
-
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "Home");
-                }
-
-                foreach (var error in result.Errors)
-                    ModelState.AddModelError("", error.Description);
-            }
-
-            return View(model);
-        }
 
         // ------------------- REGISTRO ORGANIZADOR -------------------
 

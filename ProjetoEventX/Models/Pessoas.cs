@@ -14,7 +14,7 @@ namespace ProjetoEventX.Models
         [StringLength(255)]
         public required string Endereco { get; set; }
 
-        public int Telefone { get; set; }
+        public string Telefone { get; set; } = string.Empty;
 
         [StringLength(14)]
         public required string Cpf { get; set; }
