@@ -1,96 +1,174 @@
 @model ProjetoEventX.Models.RegistroOrganizadorViewModel
 @{
-    ViewData["Title"] = "Cadastro - Organizador";
+    ViewData["Title"] = "Cadastro Organizador";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="login-container">
+    <div class="login-card">
 
-@if (TempData["MensagemSucesso"] != null)
-{
-    <div class="alert alert-success">
-        @TempData["MensagemSucesso"]
-    </div>
-}
-
-@if (TempData["MensagemErro"] != null)
-{
-    <div class="alert alert-danger">
-        @TempData["MensagemErro"]
-    </div>
-}
-
-
-
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card card-eventx mt-5">
-                <div class="card-body">
-                    <h2 class="text-center mb-4" style="color: var(--eventx-primary);">Cadastro Organizador</h2>
-                    
-                    <form asp-action="RegistroOrganizador" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                        
-                        <div class="mb-3">
-                            <label asp-for="NomeCompleto" class="form-label"></label>
-                            <input asp-for="NomeCompleto" class="form-control" />
-                            <span asp-validation-for="NomeCompleto" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Cpf" class="form-label"></label>
-                            <input asp-for="Cpf" class="form-control" />
-                            <span asp-validation-for="Cpf" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Endereco" class="form-label"></label>
-                            <input asp-for="Endereco" class="form-control" />
-                            <span asp-validation-for="Endereco" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Telefone" class="form-label"></label>
-                            <input asp-for="Telefone" class="form-control" />
-                            <span asp-validation-for="Telefone" class="text-danger"></span>
-                        </div>
-
-                        
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" class="form-control" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label asp-for="Senha" class="form-label"></label>
-                            <input asp-for="Senha" class="form-control" />
-                            <span asp-validation-for="Senha" class="text-danger"></span>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label asp-for="ConfirmarSenha" class="form-label"></label>
-                            <input asp-for="ConfirmarSenha" class="form-control" />
-                            <span asp-validation-for="ConfirmarSenha" class="text-danger"></span>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-eventx-primary">Cadastrar</button>
-                        </div>
-                    </form>
-                    
-                    <div class="text-center mt-3">
-                        <p>Já tem conta? <a asp-action="LoginOrganizador">Faça login aqui</a></p>
-                    </div>
-                </div>
-            </div>
+        <div class="logo-area text-center mb-3">
+            <img class="logo" src="@Url.Content("~/Images/Logo-removebg-preview.png")" alt="Logo EventX">
+            <img class="nome-logo mt-2" src="@Url.Content("~/Images/Logo_so_nome.png")" alt="Nome EventX">
         </div>
+
+        <h2 class="title">Cadastro Organizador</h2>
+
+        <form asp-action="RegistroOrganizador" method="post">
+
+            <div class="input-group">
+                <label for="NomeCompleto">Nome completo</label>
+                <input asp-for="NomeCompleto" placeholder="Digite seu nome completo" />
+                <span asp-validation-for="NomeCompleto" class="text-danger small"></span>
+            </div>
+
+            <div class="input-group">
+                <label for="Cpf">CPF</label>
+                <input asp-for="Cpf" placeholder="000.000.000-00" />
+                <span asp-validation-for="Cpf" class="text-danger small"></span>
+            </div>
+
+            <div class="input-group">
+                <label for="Endereco">Endereço</label>
+                <input asp-for="Endereco" placeholder="Digite seu endereço" />
+                <span asp-validation-for="Endereco" class="text-danger small"></span>
+            </div>
+
+            <div class="input-group">
+                <label for="Telefone">Telefone</label>
+                <input asp-for="Telefone" placeholder="(00) 0 0000-0000" />
+                <span asp-validation-for="Telefone" class="text-danger small"></span>
+            </div>
+
+            <div class="input-group">
+                <label for="Email">Email</label>
+                <input asp-for="Email" placeholder="Digite seu email" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+
+            <div class="input-group">
+                <label for="Senha">Senha</label>
+                <input asp-for="Senha" type="password" placeholder="Digite sua senha" />
+                <span asp-validation-for="Senha" class="text-danger small"></span>
+            </div>
+
+            <div class="input-group">
+                <label for="ConfirmarSenha">Confirmar senha</label>
+                <input asp-for="ConfirmarSenha" type="password" placeholder="Confirme sua senha" />
+                <span asp-validation-for="ConfirmarSenha" class="text-danger small"></span>
+            </div>
+
+            <button type="submit" class="btn-login">Cadastrar</button>
+
+            <p class="cadastro-text">
+                Já tem conta?
+                <a asp-action="LoginOrganizador">Entrar</a>
+            </p>
+
+        </form>
     </div>
 </div>
 
+<style>
+
+    /* Área da logo */
+    .logo-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .logo {
+        width: 120px;
+    }
+
+    .nome-logo {
+        width: 150px;
+    }
+
+    /* Fundo cinza com centralização */
+    .login-container {
+        width: 100%;
+        height: 100vh;
+        background: #f3f3f3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10%;
+        margin-bottom:15%;
+    }
+
+    /* Card */
+    .login-card {
+        background: white;
+        width: 35%;
+        padding: 35px 40px;
+        border-radius: 18px;
+        box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
+    }
+
+    /* Título */
+    .title {
+        text-align: center;
+        margin-bottom: 25px;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    /* Inputs */
+    .input-group {
+        margin-bottom: 18px;
+    }
+
+        .input-group label {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2.5px solid var(--eventx-primary);
+            margin-top: 5px;
+            font-size: 16px;
+            border-radius: 30px !important;
+        }
+
+    /* Botão vermelho */
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        margin-top: 15px;
+        background: var(--eventx-primary);
+        color: white;
+        border: none;
+        border-radius: 30px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        .btn-login:hover {
+            background: var(--eventx-primary);
+            opacity: 0.9;
+        }
+
+    /* Link de já tem conta */
+    .cadastro-text {
+        text-align: center;
+        margin-top: 15px;
+    }
+
+        .cadastro-text a {
+            color: var(--eventx-primary);
+            font-weight: bold;
+        }
+
+</style>
+
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
-
-
-
