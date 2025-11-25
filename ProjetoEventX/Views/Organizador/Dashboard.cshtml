@@ -3,73 +3,237 @@
     ViewData["Title"] = "Dashboard - Organizador";
 }
 
-<div class="container">
-    <h1 class="mb-4" style="color: var(--eventx-primary);">Dashboard Organizador</h1>
-    
-    <div class="row">
-        <div class="col-md-3 mb-4">
-            <div class="dashboard-card text-center">
-                <h3>@Model.Eventos.Count</h3>
-                <p>Eventos</p>
+<div class="container mt-4 organizer-wrapper">
+
+    <!-- 🔥 TÍTULO -->
+    <h2 class="fw-bold mb-4 text-center title-main">Bem-vindo, Organizador! 🎉</h2>
+
+    <!-- 🔥 BANNER -->
+    <section class="hero-wrapper">
+        <img src="~/Images/bg-top.png" class="hero-banner">
+
+        <div class="hero-text">
+            <h4 class="subtitle">Gerencie seus eventos com praticidade</h4>
+            <h1 class="title">EVENTOS EM UM SÓ LUGAR</h1>
+            <a asp-action="CriarEvento" class="btn-create-main">Criar meu evento</a>
+        </div>
+    </section>
+
+    <!-- 🔥 MENU SUPERIOR (4 BOTÕES REDONDOS) -->
+    <!-- CONTAINER GERAL -->
+    <div class="dashboard-container">
+
+        <!-- ============================= -->
+        <!-- RETÂNGULOS SUPERIORES (MAIORES) -->
+        <!-- ============================= -->
+        <div class="top-actions">
+            <div class="action-card">
+                <img src="icone1.png" alt="">
+                <span>Convidar<br>Pessoas</span>
+            </div>
+
+            <div class="action-card">
+                <img src="icone2.png" alt="">
+                <span>Criar<br>Evento</span>
+            </div>
+
+            <div class="action-card">
+                <img src="icone3.png" alt="">
+                <span>Escolher<br>Fornecedores</span>
+            </div>
+
+            <div class="action-card">
+                <img src="icone4.png" alt="">
+                <span>Gerenciar<br>Orçamento</span>
             </div>
         </div>
-        <div class="col-md-3 mb-4">
-            <div class="dashboard-card text-center">
-                <h3>@Model.Eventos.Sum(e => e.ListasConvidados?.Count ?? 0)</h3>
-                <p>Convidados</p>
-            </div>
+
+        <!-- BOTÃO EXPLORAR FORNECEDORES -->
+        <div class="explorar-btn">
+            <img src="estrela.png" alt="">
+            <p>Explorar Fornecedores</p>
         </div>
-        <div class="col-md-3 mb-4">
-            <div class="dashboard-card text-center">
-                <h3>R$ @Model.Eventos.Sum(e => e.CustoEstimado).ToString("N2")</h3>
-                <p>Total Estimado</p>
+
+
+        <!-- ============================= -->
+        <!-- 6 CARDS CIRCULARES (3 EM CIMA, 3 EM BAIXO) -->
+        <!-- ============================= -->
+        <div class="fornecedores-grid">
+
+            <div class="circle-card">
+                <img src="convites.png">
+                <span>Convites</span>
             </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="dashboard-card text-center">
-                <a asp-action="CriarEvento" class="btn btn-eventx-primary w-100">+ Criar Evento</a>
+
+            <div class="circle-card">
+                <img src="decoracao.png">
+                <span>Decoração</span>
             </div>
+
+            <div class="circle-card">
+                <img src="espacos.png">
+                <span>Espaços</span>
+            </div>
+
+            <div class="circle-card">
+                <img src="foto.png">
+                <span>Fotografia</span>
+            </div>
+
+            <div class="circle-card">
+                <img src="musica.png">
+                <span>Música</span>
+            </div>
+
+            <div class="circle-card">
+                <img src="lembranca.png">
+                <span>Lembrancinhas</span>
+            </div>
+
         </div>
+
     </div>
-    
-    <div class="row mt-4">
-        <div class="col-md-6 mb-4">
-            <div class="dashboard-card">
-                <h3>Ações Rápidas</h3>
-                <div class="d-grid gap-2">
-                    <a asp-action="CriarEvento" class="btn btn-eventx-secondary">📅 Criar Evento</a>
-                    <a asp-controller="Convite" asp-action="Listar" class="btn btn-eventx-secondary">📧 Convidar Pessoas</a>
-                    <a asp-controller="Administracao" asp-action="Index" class="btn btn-eventx-secondary">💰 Gerenciar Orçamento</a>
-                    <a asp-controller="Organizador" asp-action="MeusEventos" class="btn btn-eventx-secondary">📋 Meus Eventos</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-4">
-            <div class="dashboard-card">
-                <h3>Meus Eventos Recentes</h3>
-                @if (Model.Eventos.Any())
-                {
-                    <ul class="list-group">
-                        @foreach (var evento in Model.Eventos.OrderByDescending(e => e.DataEvento).Take(5))
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>@evento.NomeEvento</strong><br>
-                                    <small>@evento.DataEvento.ToString("dd/MM/yyyy")</small>
-                                </div>
-                                <a asp-action="DetalhesEvento" asp-route-id="@evento.Id" class="btn btn-sm btn-eventx-primary">Ver</a>
-                            </li>
-                        }
-                    </ul>
-                }
-                else
-                {
-                    <p>Nenhum evento cadastrado ainda.</p>
-                }
-            </div>
-        </div>
-    </div>
-</div>
 
 
 
+<!-- ============= 🎨 CSS COMPLETO ============= -->
+<style>
+
+    :root {
+        --eventx-main: #992008;
+        --eventx-bg: #FFF8F2;
+    }
+
+    /* ==================== BANNER ==================== */
+    .hero-wrapper {
+        position: relative;
+        text-align: center;
+    }
+
+    .hero-banner {
+        width: 100%;
+        max-width: 1000px;
+        height: 360px;
+        border-radius: 35px;
+        object-fit: cover;
+        display: block;
+        margin: auto;
+        box-shadow: 0px 4px 16px rgba(0,0,0,0.25);
+    }
+
+    .hero-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    }
+
+    /* ==================== MENU SUPERIOR (RETÂNGULOS) ==================== */
+        .dashboard-container {
+            width: 100%;
+            padding: 40px 20px;
+            background: #F5F5EE;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ============================= */
+        /* RETÂNGULOS DE CIMA (MAIS LARGOS) */
+        /* ============================= */
+
+        .top-actions {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .action-card {
+            width: 140px; /* AQUI aumentei como você pediu */
+            height: 150px;
+            background: #8A1A00;
+            border-radius: 20px;
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            padding-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+            .action-card img {
+                width: 40px;
+                height: 40px;
+                margin: 0 auto;
+            }
+
+        /* ============================= */
+        /* BOTÃO EXPLORAR FORNECEDORES */
+        /* ============================= */
+
+        .explorar-btn {
+            width: 420px; /* MAIS LARGO para ficar rente ao layout */
+            background: white;
+            padding: 16px 20px;
+            border-radius: 14px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.12);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0 40px 0;
+            cursor: pointer;
+        }
+
+            .explorar-btn img {
+                width: 25px;
+                height: 25px;
+            }
+
+        /* ============================= */
+        /* 6 CARDS CIRCULARES (TAMANHO MÉDIO) */
+        /* ============================= */
+
+        .fornecedores-grid {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            row-gap: 40px;
+            justify-items: center;
+        }
+
+        .circle-card {
+            width: 150px; /* Tamanho MÉDIO */
+            height: 150px;
+            background: #8A1A00;
+            border-radius: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-align: center;
+            font-size: 14px;
+        }
+
+            .circle-card img {
+                width: 45px;
+                height: 45px;
+            }
+
+
+    .category-item span {
+        margin-top: 6px;
+        display: block;
+        font-size: 14px;
+    }
+
+</style>

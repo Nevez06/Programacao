@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* EventX Modern Styles */
 :root {
     --eventx-primary: #8B4513;
@@ -10,6 +9,11 @@
     --eventx-gray: #6C757D;
     --eventx-white: #FFFFFF;
     --eventx-shadow: rgba(0, 0, 0, 0.1);
+       --eventx-primary: #8B0000; /* Maroon/Dark Red */
+    --eventx-secondary: #D4C5B9; /* Light Beige */
+    --eventx-dark: #2C2C2C; /* Dark Grey */
+    --eventx-light: #F5F5F0; /* Off-white */
+    --eventx-accent: #A52A2A; /* Lighter maroon */
 }
 
 * {
@@ -68,14 +72,8 @@ body {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--eventx-primary);
-=======
-:root {
-    --eventx-primary: #8B0000; /* Maroon/Dark Red */
-    --eventx-secondary: #D4C5B9; /* Light Beige */
-    --eventx-dark: #2C2C2C; /* Dark Grey */
-    --eventx-light: #F5F5F0; /* Off-white */
-    --eventx-accent: #A52A2A; /* Lighter maroon */
-}
+
+
 
 html {
     font-size: 14px;
@@ -105,13 +103,11 @@ body {
     font-weight: bold;
     color: var(--eventx-primary) !important;
     font-size: 1.5rem;
->>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
 }
 
 .nav-link {
     color: var(--eventx-primary) !important;
     font-weight: 500;
-<<<<<<< HEAD
     padding: 0.5rem 1rem !important;
     border-radius: 8px;
     transition: all 0.3s ease;
@@ -370,7 +366,6 @@ body {
 .btn-outline-primary:hover {
     background: var(--eventx-primary);
     border-color: var(--eventx-primary);
-=======
 }
 
 .nav-link:hover {
@@ -421,33 +416,8 @@ body {
 .card-eventx:hover {
     box-shadow: 0 4px 16px rgba(139, 0, 0, 0.2);
     transform: translateY(-2px);
->>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
 }
 
-/* Forms */
-.form-control {
-    border-radius: 8px;
-<<<<<<< HEAD
-    border: 2px solid #e9ecef;
-    padding: 0.75rem 1rem;
-    transition: all 0.3s ease;
-=======
-    border: 1px solid var(--eventx-secondary);
-    padding: 0.75rem;
->>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
-}
-
-.form-control:focus {
-    border-color: var(--eventx-primary);
-<<<<<<< HEAD
-    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
-}
-
-.form-label {
-    font-weight: 500;
-    color: var(--eventx-primary);
-    margin-bottom: 0.5rem;
-}
 
 /* Tables */
 .table {
@@ -561,7 +531,6 @@ body {
 
 .rounded-eventx {
     border-radius: 15px !important;
-=======
     box-shadow: 0 0 0 0.2rem rgba(139, 0, 0, 0.25);
 }
 
@@ -698,5 +667,14 @@ body {
 .badge-cancelado {
     background-color: #DC3545;
     color: white;
->>>>>>> 9c557d6 (feat: adiciona controladores e atualiza modelos e views)
 }
+
+
+/*Formulario Logins*/
+
+/* =======================
+   FORMULÁRIOS EVENTX (NOVO)
+   ======================= */
+/* ===========================
+   EventX Auth Forms - Protótipo
+   =========================== */
