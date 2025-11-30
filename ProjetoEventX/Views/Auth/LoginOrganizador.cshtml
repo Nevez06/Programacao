@@ -1,47 +1,142 @@
-@model ProjetoEventX.Models.LoginOrganizadorViewModel
 @{
-    ViewData["Title"] = "Login - Organizador";
+    ViewData["Title"] = "Login Organizador";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card card-eventx mt-5">
-                <div class="card-body">
-                    <h2 class="text-center mb-4" style="color: var(--eventx-primary);">Login Organizador</h2>
-                    
-                    <form asp-action="LoginOrganizador" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                        
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" class="form-control" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label asp-for="Senha" class="form-label"></label>
-                            <input asp-for="Senha" class="form-control" />
-                            <span asp-validation-for="Senha" class="text-danger"></span>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-eventx-primary">Entrar</button>
-                        </div>
-                    </form>
-                    
-                    <div class="text-center mt-3">
-                        <p>Não tem conta? <a asp-action="RegistroOrganizador">Cadastre-se aqui</a></p>
-                    </div>
-                </div>
-            </div>
+
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="logo-area text-center mb-3">
+            <img class="logo" src="@Url.Content("~/Images/Logo-removebg-preview.png")" alt="Logo EventX">
+            <img class="nome-logo mt-2" src="@Url.Content("~/Images/Logo_so_nome.png")" alt="Nome EventX">
         </div>
+
+        <h2 class="title">Organizador</h2>
+
+        <form method="post">
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="Digite seu email" required />
+            </div>
+
+            <div class="input-group">
+                <label for="senha">Senha</label>
+                <input id="senha" name="senha" type="password" placeholder="Digite sua senha" required />
+            </div>
+
+            <button type="submit" class="btn-login">Entrar</button>
+
+            <p class="cadastro-text">
+                Não tem conta?
+                <a asp-action="RegistroOrganizador">Cadastre-se aqui</a>
+            </p>
+        </form>
     </div>
 </div>
+<style>
 
+    /* Área da logo */
+    .logo-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Logo principal */
+    .logo {
+        width: 120px; /* ajuste se quiser maior ou menor */
+    }
+
+    /* Nome da logo */
+    .nome-logo {
+        width: 150px; /* ajuste se quiser maior ou menor */
+    }
+
+
+    /* Fundo cinza com centralização */
+    .login-container {
+        width: 100%;
+        height: 100vh;
+        background: #f3f3f3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: -5%;
+
+    }
+
+    /* Card branco com sombra e borda arredondada */
+    .login-card {
+        background: white;
+        width: 35%;
+        padding: 35px 40px;
+        border-radius: 18px;
+        box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
+    }
+
+    /* Título */
+    .title {
+        text-align: center;
+        margin-bottom: 25px;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    /* Inputs */
+    .input-group {
+        margin-bottom: 18px;
+        
+    }
+
+        .input-group label {
+            font-size: 15px;
+            font-weight: 600;
+
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2.5px solid var(--eventx-primary); /* vermelho do protótipo */
+            margin-top: 5px;
+            font-size: 16px;
+            border-radius: 30px !important;
+        }
+
+    /* Botão vermelho */
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        margin-top: 15px;
+        background: var(--eventx-primary);
+        color: white;
+        border: none;
+        border-radius: 30px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        .btn-login:hover {
+            background: var(--eventx-primary);
+        }
+
+    /* Texto de cadastro */
+    .cadastro-text {
+        text-align: center;
+        margin-top: 15px;
+    }
+
+        .cadastro-text a {
+            color: var(--eventx-primary);
+            font-weight: bold;
+        }
+
+</style>
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
-
-
-

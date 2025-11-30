@@ -6,7 +6,7 @@
 <section class="hero text-center text-white position-relative overflow-hidden">
 
     <!-- Imagem superior -->
-    <div class="hero-section top-section position-relative">
+    <div class="hero-section bottom-section position-relative mt-5 text-center">
         <img src="@Url.Content("~/Images/bg-top.png")" alt="Imagem superior" class="hero-img rounded-5 shadow-lg">
         <div class="hero-content position-absolute top-50 start-50 translate-middle text-center">
             <h4 class="fw-normal">Compartilhe, planeje, convide e gerencie com facilidade</h4>
@@ -21,25 +21,52 @@
     </div>
 
     <!-- Imagem inferior -->
-    <div class="hero-section bottom-section position-relative mt-5">
-        <img src="@Url.Content("~/Images/bg-bottom.png")" alt="Imagem inferior" class="hero-img rounded-5 shadow-lg">
-        <div class="hero-content position-absolute top-50 start-50 translate-middle text-center">
-            <img src="@Url.Content("~/Images/Logo_com_nome.png")" alt="Logo EventX" class="mb-3" style="width:200px;">
-            <h2 class="fw-bold text-uppercase">EventX</h2>
-            <p class="lead fw-semibold">Onde organizar e amar compartilhar o seu evento é só o começo.</p>
+    <!-- Imagem inferior -->
+    <div class="hero-section bottom-section position-relative mt-5 text-center">
 
-            <a asp-controller="Auth" asp-action="RegistroOrganizador" class="btn btn-eventx-secondary mt-3 d-inline-flex align-items-center gap-2">
+        <img src="@Url.Content("~/Images/bg-bottom.png")"
+             alt="Imagem inferior"
+             class="hero-img rounded-5 shadow-lg mx-auto d-block">
+
+        <!-- CONTEÚDO CENTRALIZADO -->
+        <div class="hero-content position-absolute text-start" style="left: 20%; top: 40%;">
+
+            <h2 class="fw-bold text-uppercase mb-2">EventX</h2>
+
+            <p class="lead fw-semibold">
+                Onde organizar e amar compartilhar o seu evento é só o começo.
+            </p>
+
+            <a asp-controller="Auth" asp-action="RegistroOrganizador"
+               class="btn btn-eventx-secondary mt-3 d-inline-flex align-items-center gap-2"
+               style="font-size: 18px; padding: 12px 28px;">
                 <i class="fas fa-calendar-alt"></i> Criar minha conta agora
             </a>
+
         </div>
+
     </div>
+
+
 </section>
 
 <!-- AVALIAÇÕES -->
 <section class="avaliacoes py-5">
     <div class="container text-center">
         <h2 class="fw-bold mb-4" style="color:#992008;">Avaliações e Comentários</h2>
+
+        <!-- 🔥 ABA DEPENDENDO DO PROTÓTIPO -->
+        <!-- 🔥 ABA DEPENDENDO DO PROTÓTIPO -->
+        <div class="depoimentos-wrapper">
+            <div class="depo-tabs">
+                <button class="tab-btn active"><i class="fas fa-check"></i> Depoimentos</button>
+                <button class="tab-btn">Depoimentos</button>
+            </div>
+        </div>
+
+
         <div class="row g-4">
+
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body text-start">
@@ -47,11 +74,11 @@
                             <img src="@Url.Content("~/Images/img_avaliacao.png")" class="rounded-circle me-3" width="50" height="50">
                             <div>
                                 <h6 class="mb-0 fw-bold">Amanda Silva</h6>
-                                <img src="@Url.Content("~/Images/icon-estrela.png")" alt="Estrelas" style="height:20px;">
+                                <img src="@Url.Content("~/Images/icon-estrela.png")" style="height:20px;">
                             </div>
                         </div>
                         <p>Eu amei cada detalhe de organizar meu evento com o EventX! 💕</p>
-                        <img src="@Url.Content("~/Images/icon-coracao.png")" alt="Coração" style="height:20px;">
+                        <img src="@Url.Content("~/Images/icon-coracao.png")" style="height:20px;">
                     </div>
                 </div>
             </div>
@@ -63,11 +90,11 @@
                             <img src="@Url.Content("~/Images/img_avaliacao_2.png")" class="rounded-circle me-3" width="50" height="50">
                             <div>
                                 <h6 class="mb-0 fw-bold">Lucas Pereira</h6>
-                                <img src="@Url.Content("~/Images/icon-estrela.png")" alt="Estrelas" style="height:20px;">
+                                <img src="@Url.Content("~/Images/icon-estrela.png")" style="height:20px;">
                             </div>
                         </div>
-                        <p>Gerenciar nunca foi tão fácil. Obrigado, EventX! ✨</p>
-                        <img src="@Url.Content("~/Images/icon-coracao.png")" alt="Coração" style="height:20px;">
+                        <p>Amei gerenciar nunca foi tão fácil. Obrigada, EventX! ✨</p>
+                        <img src="@Url.Content("~/Images/icon-coracao.png")" style="height:20px;">
                     </div>
                 </div>
             </div>
@@ -79,17 +106,22 @@
                             <img src="@Url.Content("~/Images/img_avaliacao_3.png")" class="rounded-circle me-3" width="50" height="50">
                             <div>
                                 <h6 class="mb-0 fw-bold">Camila Lopes</h6>
-                                <img src="@Url.Content("~/Images/icon-estrela.png")" alt="Estrelas" style="height:20px;">
+                                <img src="@Url.Content("~/Images/icon-estrela.png")" style="height:20px;">
                             </div>
                         </div>
                         <p>Até os pagamentos com fornecedores fiz pelo EventX, de forma prática e segura.</p>
-                        <img src="@Url.Content("~/Images/icon-coracao.png")" alt="Coração" style="height:20px;">
+                        <img src="@Url.Content("~/Images/icon-coracao.png")" style="height:20px;">
                     </div>
                 </div>
             </div>
+
         </div>
 
-        <a href="#" class="btn btn-outline-dark mt-4 px-5 rounded-pill">Ver mais</a>
+        <!-- 🔥 BOTÃO VIEW 231 DO PROTÓTIPO -->
+        <div class="mt-4">
+            <button class="view-btn">View 231</button>
+        </div>
+
     </div>
 </section>
 
@@ -105,29 +137,39 @@
     }
 
     /* HERO */
-    .hero-section {
-        position: relative;
-        margin-bottom: 3rem;
-    }
-
     .hero-img {
-        width: 100%;
-        max-width: 1100px;
-        height: auto;
-        border-radius: 40px;
+        width: 70%;
+        height: 450px;
         object-fit: cover;
+        border-radius: 40px;
+        display: block;
+        margin-bottom:10%;
     }
 
     .hero-content {
         z-index: 2;
         color: #fff;
         text-shadow: 0px 2px 10px rgba(0,0,0,0.4);
+        
     }
 
-    .hero h1, .hero h2 {
-        color: #fff;
+    /* Centralizar imagem bottom e conteúdo */
+    .bottom-section {
+        position: relative;
     }
 
+        .bottom-section .hero-img {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .bottom-section .hero-content {
+            width: 100%;
+            text-align: center;
+        }
+
+
+    /* BOTÕES */
     .btn-eventx-primary {
         background-color: var(--eventx-primary);
         color: #fff;
@@ -144,17 +186,97 @@
         }
 
     .btn-eventx-secondary {
-        background-color: transparent;
-        color: var(--eventx-primary);
+        background-color: #fff;
         border: 2px solid var(--eventx-primary);
         border-radius: 30px;
         padding: 0.8rem 1.8rem;
         font-weight: 600;
         transition: 0.3s ease;
+        color: #000;
     }
+
+        .btn-eventx-secondary i {
+            color: var(--eventx-primary);
+        }
 
         .btn-eventx-secondary:hover {
             background-color: var(--eventx-primary);
+            color: #fff;
+        }
+
+            .btn-eventx-secondary:hover i {
+                color: #fff;
+            }
+   /* WRAPPER CENTRALIZADO — igual largura das imagens */
+.depoimentos-wrapper{
+    width: 1100px;              /* largura exata solicitada */
+    height: 60px;               /* altura exata solicitada */
+    margin: 0 auto;             /* centraliza */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 60px;
+}
+
+/* CONTAINER DA ABA */
+.depo-tabs {
+    width: 100%;                /* ocupa toda a largura do wrapper */
+    height: 100%;               /* ocupa 80px de altura */
+    border: 2px solid var(--eventx-primary);
+    border-radius: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    background: #fff;           /* agora pega a área inteira */
+    overflow: hidden;
+}
+
+/* BOTÕES */
+.tab-btn {
+    flex: 1;
+    height: 100%;               /* botão ocupa a altura inteira */
+    border: none;
+    background: transparent;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--eventx-primary);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ESTADO ATIVO */
+.tab-btn.active {
+    background: var(--eventx-primary);
+    color: #fff !important;
+}
+
+.tab-btn.active i {
+    margin-right: 8px;
+    color: #fff;
+}
+
+/* MELHOR VISIBILIDADE */
+.depo-tabs button:hover {
+    filter: brightness(0.95);
+}
+    /* 🔥 BOTÃO VIEW 231 */ .view-btn {
+        background: #fff;
+        border: 2px solid var(--eventx-primary);
+        border-radius: 40px;
+        padding: 10px 40px;
+        font-weight: 600;
+        font-size: 16px;
+        color: var(--eventx-primary);
+        cursor: pointer;
+        transition: 0.3s;
+        width:800px;
+        height: 60px;
+    }
+
+        .view-btn:hover {
+            background: var(--eventx-primary);
             color: #fff;
         }
 
@@ -163,19 +285,10 @@
         .hero-img
 
     {
-        max-width: 90%;
+        height: 300px;
     }
 
-    .hero-content h1 {
-        font-size: 1.6rem;
-    }
-
-    .hero-content h4 {
-        font-size: 1rem;
-    }
-
-    .btn-eventx-primary,
-    .btn-eventx-secondary {
+    .btn-eventx-primary, .btn-eventx-secondary {
         width: 100%;
     }
 
