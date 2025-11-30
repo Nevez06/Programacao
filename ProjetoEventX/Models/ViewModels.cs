@@ -101,6 +101,16 @@ namespace ProjetoEventX.Models
         [StringLength(255)]
         public string Endereco { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Cidade é obrigatória")]
+        [Display(Name = "Cidade")]
+        [StringLength(100)]
+        public string Cidade { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "UF é obrigatório")]
+        [Display(Name = "UF")]
+        [StringLength(2)]
+        public string UF { get; set; } = string.Empty;
+
         [Required(ErrorMessage = "Telefone é obrigatório")]
         [Display(Name = "Telefone")]
         public string Telefone { get; set; } = string.Empty;

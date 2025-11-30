@@ -2,21 +2,18 @@
 
 #nullable disable
 
-namespace ProjetoEventX.Migrations.EventX
+namespace ProjetoEventX.Migrations
 {
-    /// <inheritdoc />
-    public partial class AjusteDateTimeUTC : Migration
+    public partial class MigracaoInicial : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-
+            // Migracao vazia - banco ja existe
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-
+            // Migracao vazia - banco ja existe
         }
     }
 }

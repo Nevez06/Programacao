@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProjetoEventX.Data;
 using ProjetoEventX.Models;
+using ProjetoEventX.Services; // Certifique-se que GeminiEventService está aqui
 using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,7 +27,6 @@ catch (Exception ex)
 var dbConnection = Environment.GetEnvironmentVariable("DB_CONNECTION")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Mostrar no console para diagnóstico
 Console.WriteLine("🔍 Conexão usada:");
 Console.WriteLine(dbConnection);
 
@@ -35,8 +35,8 @@ Console.WriteLine(dbConnection);
 // ================================
 builder.Services.AddDbContext<EventXContext>(options =>
     options.UseNpgsql(dbConnection)
-           .EnableSensitiveDataLogging()   // logs detalhados
-           .EnableDetailedErrors());       // mostra erro real do banco
+           .EnableSensitiveDataLogging()
+           .EnableDetailedErrors());
 
 // ================================
 // 🔹 Identity (usuários e login)
@@ -44,6 +44,26 @@ builder.Services.AddDbContext<EventXContext>(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
     .AddEntityFrameworkStores<EventXContext>()
     .AddDefaultTokenProviders();
+
+// ================================
+// 🔹 SESSÃO (Para Limitações de Chat) - NOVO 🆕
+// ================================
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Sessão dura 30min
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// ================================
+// 🔹 HttpClient e Serviços de IA - ATUALIZADO 🆕
+// ================================
+// Registra o serviço do Gemini e já injeta o HttpClient nele automaticamente
+builder.Services.AddHttpClient<GeminiEventService>();
+
+// Se você ainda for usar o antigo, mantenha, senão pode remover:
+// builder.Services.AddScoped<EventBotService>(); 
 
 // ================================
 // 🔹 Stripe
@@ -73,9 +93,14 @@ if (!app.Environment.IsDevelopment())
 // ================================
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+// 🆕 O UseSession DEVE ficar DEPOIS de UseRouting e ANTES dos Controllers
+app.UseSession();
 
 // ================================
 // 🔹 Rotas MVC e Hub do Chat

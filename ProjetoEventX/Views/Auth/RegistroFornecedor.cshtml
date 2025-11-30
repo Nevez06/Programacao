@@ -5,42 +5,133 @@
 
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-md-8">
             <div class="card card-eventx mt-5">
                 <div class="card-body">
                     <h2 class="text-center mb-4" style="color: var(--eventx-primary);">Cadastro Fornecedor</h2>
                     
                     <form asp-action="RegistroFornecedor" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
                         
-                        <div class="mb-3">
-                            <label asp-for="Cpf" class="form-label"></label>
-                            <input asp-for="Cpf" class="form-control" placeholder="000.000.000-00" />
-                            <span asp-validation-for="Cpf" class="text-danger"></span>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="NomeCompleto" class="form-label"></label>
+                                <input asp-for="NomeCompleto" class="form-control" placeholder="Seu nome completo" />
+                                <span asp-validation-for="NomeCompleto" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="NomeLoja" class="form-label"></label>
+                                <input asp-for="NomeLoja" class="form-control" placeholder="Nome da sua loja/empresa" />
+                                <span asp-validation-for="NomeLoja" class="text-danger"></span>
+                            </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label asp-for="NomeLoja" class="form-label"></label>
-                            <input asp-for="NomeLoja" class="form-control" />
-                            <span asp-validation-for="NomeLoja" class="text-danger"></span>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Cpf" class="form-label"></label>
+                                <input asp-for="Cpf" class="form-control" placeholder="000.000.000-00" />
+                                <span asp-validation-for="Cpf" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Cnpj" class="form-label"></label>
+                                <input asp-for="Cnpj" class="form-control" placeholder="00.000.000/0000-00" />
+                                <span asp-validation-for="Cnpj" class="text-danger"></span>
+                            </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" class="form-control" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label"></label>
+                                <input asp-for="Email" class="form-control" type="email" placeholder="email@exemplo.com" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Telefone" class="form-label"></label>
+                                <input asp-for="Telefone" class="form-control" placeholder="(00) 00000-0000" />
+                                <span asp-validation-for="Telefone" class="text-danger"></span>
+                            </div>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label asp-for="Senha" class="form-label"></label>
-                            <input asp-for="Senha" class="form-control" />
-                            <span asp-validation-for="Senha" class="text-danger"></span>
+                            <label asp-for="TipoServico" class="form-label"></label>
+                            <select asp-for="TipoServico" class="form-control">
+                                <option value="">Selecione o tipo de serviço</option>
+                                <option value="Buffet">Buffet</option>
+                                <option value="Decoração">Decoração</option>
+                                <option value="Fotografia">Fotografia</option>
+                                <option value="Música">Música/DJ</option>
+                                <option value="Iluminação">Iluminação</option>
+                                <option value="Locação">Locação de Espaço</option>
+                                <option value="Segurança">Segurança</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                            <span asp-validation-for="TipoServico" class="text-danger"></span>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label asp-for="ConfirmarSenha" class="form-label"></label>
-                            <input asp-for="ConfirmarSenha" class="form-control" />
-                            <span asp-validation-for="ConfirmarSenha" class="text-danger"></span>
+                            <label asp-for="Endereco" class="form-label"></label>
+                            <input asp-for="Endereco" class="form-control" placeholder="Rua, número, bairro" />
+                            <span asp-validation-for="Endereco" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="Cidade" class="form-label"></label>
+                                <input asp-for="Cidade" class="form-control" placeholder="Sua cidade" />
+                                <span asp-validation-for="Cidade" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="UF" class="form-label"></label>
+                                <select asp-for="UF" class="form-control">
+                                    <option value="">UF</option>
+                                    <option value="AC">AC</option>
+                                    <option value="AL">AL</option>
+                                    <option value="AP">AP</option>
+                                    <option value="AM">AM</option>
+                                    <option value="BA">BA</option>
+                                    <option value="CE">CE</option>
+                                    <option value="DF">DF</option>
+                                    <option value="ES">ES</option>
+                                    <option value="GO">GO</option>
+                                    <option value="MA">MA</option>
+                                    <option value="MT">MT</option>
+                                    <option value="MS">MS</option>
+                                    <option value="MG">MG</option>
+                                    <option value="PA">PA</option>
+                                    <option value="PB">PB</option>
+                                    <option value="PR">PR</option>
+                                    <option value="PE">PE</option>
+                                    <option value="PI">PI</option>
+                                    <option value="RJ">RJ</option>
+                                    <option value="RN">RN</option>
+                                    <option value="RS">RS</option>
+                                    <option value="RO">RO</option>
+                                    <option value="RR">RR</option>
+                                    <option value="SC">SC</option>
+                                    <option value="SP">SP</option>
+                                    <option value="SE">SE</option>
+                                    <option value="TO">TO</option>
+                                </select>
+                                <span asp-validation-for="UF" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Senha" class="form-label"></label>
+                                <input asp-for="Senha" class="form-control" type="password" />
+                                <span asp-validation-for="Senha" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ConfirmarSenha" class="form-label"></label>
+                                <input asp-for="ConfirmarSenha" class="form-control" type="password" />
+                                <span asp-validation-for="ConfirmarSenha" class="text-danger"></span>
+                            </div>
                         </div>
                         
                         <div class="d-grid">

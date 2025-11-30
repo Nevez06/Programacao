@@ -24,6 +24,12 @@ namespace ProjetoEventX.Models
         [EmailAddress]
         public required string Email { get; set; }
 
+        [StringLength(100)]
+        public string Cidade { get; set; } = string.Empty;
+
+        [StringLength(2)]
+        public string UF { get; set; } = string.Empty;
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 

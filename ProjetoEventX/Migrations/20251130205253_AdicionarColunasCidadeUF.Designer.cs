@@ -9,11 +9,11 @@ using ProjetoEventX.Data;
 
 #nullable disable
 
-namespace ProjetoEventX.Migrations.EventX
+namespace ProjetoEventX.Migrations
 {
     [DbContext(typeof(EventXContext))]
-    [Migration("20251108204910_InitialClean")]
-    partial class InitialClean
+    [Migration("20251130205253_AdicionarColunasCidadeUF")]
+    partial class AdicionarColunasCidadeUF
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -525,6 +525,11 @@ namespace ProjetoEventX.Migrations.EventX
                     b.Property<decimal>("AvaliacaoMedia")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("Cidade")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Cnpj")
                         .IsRequired()
                         .HasMaxLength(18)
@@ -579,6 +584,11 @@ namespace ProjetoEventX.Migrations.EventX
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("UF")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -965,6 +975,11 @@ namespace ProjetoEventX.Migrations.EventX
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Cidade")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Cpf")
                         .IsRequired()
                         .HasMaxLength(14)
@@ -988,8 +1003,14 @@ namespace ProjetoEventX.Migrations.EventX
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<int>("Telefone")
-                        .HasColumnType("integer");
+                    b.Property<string>("Telefone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UF")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");

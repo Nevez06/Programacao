@@ -19,6 +19,16 @@ namespace ProjetoEventX.Models
         [StringLength(255)]
         public required string TipoServico { get; set; }
 
+        
+        [Required]
+        [StringLength(100)]
+        public required string Cidade { get; set; }
+
+        [Required]
+        [StringLength(2)] 
+        public required string UF { get; set; }
+        // ------------------------------------
+
         public decimal AvaliacaoMedia { get; set; } = 0.0m;
 
         public DateTime DataCadastro { get; set; } = DateTime.Now;

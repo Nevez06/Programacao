@@ -107,12 +107,12 @@ namespace ProjetoEventX.Controllers
 
 
         // ------------------- REGISTRO FORNECEDOR -------------------
-        // GET: Exibir o formulário
         [HttpGet]
         public IActionResult RegistroFornecedor()
         {
             return View();
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegistroFornecedor(RegistroFornecedorViewModel model)
@@ -130,11 +130,12 @@ namespace ProjetoEventX.Controllers
                 if (result.Succeeded)
                 {
                     // Cria pessoa vinculada ao fornecedor
+                    // DICA: Você pode salvar a Cidade na Pessoa também se quiser
                     var pessoa = new Pessoa
                     {
                         Nome = model.NomeLoja,
                         Email = model.Email,
-                        Endereco = model.Endereco,
+                        Endereco = model.Endereco, // Endereço completo (Rua, num)
                         Cpf = model.Cpf,
                         Telefone = model.Telefone
                     };
@@ -149,6 +150,12 @@ namespace ProjetoEventX.Controllers
                         Pessoa = pessoa,
                         Cnpj = model.Cnpj,
                         TipoServico = model.TipoServico,
+
+                        // --- AQUI ESTAVA O ERRO (Adicione isto) ---
+                        Cidade = model.Cidade,
+                        UF = model.UF.ToUpper(), // Força maiúsculo (sp -> SP)
+                        // ------------------------------------------
+
                         UserName = user.UserName,
                         Email = user.Email,
                         EmailConfirmed = true
@@ -167,7 +174,6 @@ namespace ProjetoEventX.Controllers
 
             return View(model);
         }
-
 
 
 

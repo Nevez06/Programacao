@@ -3,24 +3,74 @@
 }
 
 <div class="container">
-    <h1 class="mb-4" style="color: var(--eventx-primary);">Assistente Virtual EventX</h1>
+    <h1 class="mb-4" style="color: var(--eventx-primary);">🤖 Assistente Virtual EventX</h1>
     
     <div class="row">
         <div class="col-md-8">
             <div class="card card-eventx">
+                <div class="card-header">
+                    <h5 class="mb-0">💬 Chat com Assistente</h5>
+                </div>
                 <div class="card-body">
-                    <div id="chatMessages" class="chat-container">
+                    <div id="chatMessages" class="chat-container mb-3" style="height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
                         <div class="chat-message received">
-                            <strong>Assistente Virtual</strong>
-                            <p>Olá! Sou seu assistente virtual do EventX. Como posso ajudá-lo hoje?</p>
+                            <div class="d-flex align-items-center mb-2">
+                                <strong class="text-primary">🤖 Assistente Virtual</strong>
+                                <small class="text-muted ms-2">agora</small>
+                            </div>
+                            <p class="mb-0">Olá! Sou seu assistente virtual do EventX. Como posso ajudá-lo hoje?</p>
+                            <small class="text-muted">Você pode me perguntar sobre seus eventos, pedir sugestões ou análises!</small>
                         </div>
                     </div>
                     
-                    <div class="mt-3">
-                        <form id="aiForm" class="d-flex gap-2">
-                            <input type="text" id="perguntaInput" class="form-control" placeholder="Faça sua pergunta..." />
-                            <button type="submit" class="btn btn-eventx-primary">Enviar</button>
-                        </form>
+                    <div class="input-group">
+                        <select id="eventoSelect" class="form-select" style="max-width: 200px;">
+                            <option value="">Selecionar Evento</option>
+                        </select>
+                        <input type="text" id="perguntaInput" class="form-control" placeholder="Faça sua pergunta sobre eventos..." />
+                        <button type="button" id="enviarBtn" class="btn btn-eventx-primary">
+                            <i class="fas fa-paper-plane"></i> Enviar
+                        </button>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <small class="text-muted">💡 Dicas: Pergunte sobre organização, orçamento, tarefas, convidados...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card card-eventx">
+                <div class="card-header">
+                    <h6 class="mb-0">🎯 Ações Rápidas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" id="sugestaoBtn" class="btn btn-outline-primary btn-sm" disabled>
+                            <i class="fas fa-lightbulb"></i> Gerar Sugestões
+                        </button>
+                        <button type="button" id="orcamentoBtn" class="btn btn-outline-success btn-sm" disabled>
+                            <i class="fas fa-chart-pie"></i> Analisar Orçamento
+                        </button>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="text-muted">📋 Perguntas Sugeridas:</h6>
+                    <div class="d-grid gap-1">
+                        <button type="button" class="btn btn-link btn-sm text-start pergunta-sugerida" data-pergunta="Como está o progresso do meu evento?">
+                            📊 Progresso do evento
+                        </button>
+                        <button type="button" class="btn btn-link btn-sm text-start pergunta-sugerida" data-pergunta="Quantos convidados confirmaram presença?">
+                            👥 Status dos convidados
+                        </button>
+                        <button type="button" class="btn btn-link btn-sm text-start pergunta-sugerida" data-pergunta="Quais tarefas estão pendentes?">
+                            ✅ Tarefas pendentes
+                        </button>
+                        <button type="button" class="btn btn-link btn-sm text-start pergunta-sugerida" data-pergunta="Como posso economizar no orçamento?">
+                            💰 Dicas de economia
+                        </button>
                     </div>
                 </div>
             </div>
@@ -30,38 +80,62 @@
 
 @section Scripts {
     <script>
-        document.getElementById("aiForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const pergunta = document.getElementById("perguntaInput").value;
+        let eventoSelecionado = null;
+        
+        // Carregar eventos do usuário
+        async function carregarEventos() {
+            try {
+                const response = await fetch('/Eventos');
+                // Implementar chamada para buscar eventos do usuário
+                // Por enquanto, deixamos vazio
+            } catch (error) {
+                console.error('Erro ao carregar eventos:', error);
+            }
+        }
+        
+        // Enviar pergunta
+        async function enviarPergunta(pergunta) {
             const chatMessages = document.getElementById("chatMessages");
-
+            
             if (pergunta.trim()) {
                 // Adicionar mensagem do usuário
                 const userMessage = document.createElement("div");
-                userMessage.className = "chat-message sent";
+                userMessage.className = "chat-message sent mb-3";
                 userMessage.innerHTML = `
-                    <strong>Você</strong>
-                    <p>${pergunta}</p>
+                    <div class="d-flex align-items-center mb-2">
+                        <strong class="text-success">👤 Você</strong>
+                        <small class="text-muted ms-2">${new Date().toLocaleTimeString()}</small>
+                    </div>
+                    <p class="mb-0 bg-primary text-white p-2 rounded">${pergunta}</p>
                 `;
                 chatMessages.appendChild(userMessage);
 
-                // Limpar input
-                document.getElementById("perguntaInput").value = '';
-
                 // Mostrar loading
                 const loadingMessage = document.createElement("div");
-                loadingMessage.className = "chat-message received";
-                loadingMessage.innerHTML = '<p>Pensando...</p>';
+                loadingMessage.className = "chat-message received mb-3";
+                loadingMessage.innerHTML = `
+                    <div class="d-flex align-items-center mb-2">
+                        <strong class="text-primary">🤖 Assistente Virtual</strong>
+                        <small class="text-muted ms-2">digitando...</small>
+                    </div>
+                    <p class="mb-0">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Analisando sua pergunta...
+                    </p>
+                `;
                 chatMessages.appendChild(loadingMessage);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
                 try {
-                    const response = await fetch('/IAController/Perguntar', {
+                    const formData = new FormData();
+                    formData.append('pergunta', pergunta);
+                    if (eventoSelecionado) {
+                        formData.append('eventoId', eventoSelecionado);
+                    }
+                    
+                    const response = await fetch('/IA/Perguntar', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `pergunta=${encodeURIComponent(pergunta)}`
+                        body: formData
                     });
 
                     const data = await response.json();
@@ -71,27 +145,151 @@
 
                     // Adicionar resposta
                     const aiMessage = document.createElement("div");
-                    aiMessage.className = "chat-message received";
+                    aiMessage.className = "chat-message received mb-3";
                     aiMessage.innerHTML = `
-                        <strong>Assistente Virtual</strong>
-                        <p>${data.resposta}</p>
+                        <div class="d-flex align-items-center mb-2">
+                            <strong class="text-primary">🤖 Assistente Virtual</strong>
+                            <small class="text-muted ms-2">${new Date().toLocaleTimeString()}</small>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            <p class="mb-0">${data.resposta}</p>
+                        </div>
                     `;
                     chatMessages.appendChild(aiMessage);
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 } catch (error) {
                     loadingMessage.remove();
                     const errorMessage = document.createElement("div");
-                    errorMessage.className = "chat-message received";
+                    errorMessage.className = "chat-message received mb-3";
                     errorMessage.innerHTML = `
-                        <strong>Assistente Virtual</strong>
-                        <p>Desculpe, ocorreu um erro ao processar sua pergunta.</p>
+                        <div class="d-flex align-items-center mb-2">
+                            <strong class="text-danger">❌ Erro</strong>
+                            <small class="text-muted ms-2">${new Date().toLocaleTimeString()}</small>
+                        </div>
+                        <p class="mb-0 text-danger">Desculpe, ocorreu um erro ao processar sua pergunta. Tente novamente.</p>
                     `;
                     chatMessages.appendChild(errorMessage);
                 }
             }
+        }
+        
+        // Event listeners
+        document.getElementById("enviarBtn").addEventListener("click", () => {
+            const pergunta = document.getElementById("perguntaInput").value;
+            if (pergunta.trim()) {
+                enviarPergunta(pergunta);
+                document.getElementById("perguntaInput").value = '';
+            }
         });
+        
+        document.getElementById("perguntaInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                const pergunta = e.target.value;
+                if (pergunta.trim()) {
+                    enviarPergunta(pergunta);
+                    e.target.value = '';
+                }
+            }
+        });
+        
+        document.getElementById("eventoSelect").addEventListener("change", (e) => {
+            eventoSelecionado = e.target.value || null;
+            const sugestaoBtn = document.getElementById("sugestaoBtn");
+            const orcamentoBtn = document.getElementById("orcamentoBtn");
+            
+            if (eventoSelecionado) {
+                sugestaoBtn.disabled = false;
+                orcamentoBtn.disabled = false;
+            } else {
+                sugestaoBtn.disabled = true;
+                orcamentoBtn.disabled = true;
+            }
+        });
+        
+        document.getElementById("sugestaoBtn").addEventListener("click", async () => {
+            if (eventoSelecionado) {
+                try {
+                    const response = await fetch('/IA/GerarSugestao', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `eventoId=${eventoSelecionado}`
+                    });
+                    const data = await response.json();
+                    
+                    if (data.sucesso) {
+                        enviarPergunta("Gerar sugestões para melhorar meu evento");
+                        // A resposta será mostrada no chat automaticamente
+                    }
+                } catch (error) {
+                    console.error('Erro ao gerar sugestão:', error);
+                }
+            }
+        });
+        
+        document.getElementById("orcamentoBtn").addEventListener("click", async () => {
+            if (eventoSelecionado) {
+                try {
+                    const response = await fetch('/IA/AnalisarOrcamento', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `eventoId=${eventoSelecionado}`
+                    });
+                    const data = await response.json();
+                    
+                    if (data.sucesso) {
+                        enviarPergunta("Analisar o orçamento do meu evento");
+                    }
+                } catch (error) {
+                    console.error('Erro ao analisar orçamento:', error);
+                }
+            }
+        });
+        
+        // Perguntas sugeridas
+        document.querySelectorAll(".pergunta-sugerida").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const pergunta = e.target.getAttribute("data-pergunta");
+                document.getElementById("perguntaInput").value = pergunta;
+            });
+        });
+        
+        // Carregar dados iniciais
+        carregarEventos();
     </script>
 }
+
+<style>
+.chat-message {
+    margin-bottom: 15px;
+}
+
+.chat-message.sent {
+    text-align: right;
+}
+
+.chat-message.received {
+    text-align: left;
+}
+
+.pergunta-sugerida {
+    font-size: 0.9em;
+    padding: 0.25rem 0.5rem;
+    text-decoration: none !important;
+}
+
+.pergunta-sugerida:hover {
+    background-color: rgba(0,123,255,0.1);
+}
+
+.btn-eventx-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.card-eventx {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+</style>
 
 
 
