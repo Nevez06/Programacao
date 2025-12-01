@@ -59,11 +59,12 @@ builder.Services.AddSession(options =>
 // ================================
 // 🔹 HttpClient e Serviços de IA - ATUALIZADO 🆕
 // ================================
-// Registra o serviço do Gemini e já injeta o HttpClient nele automaticamente
-builder.Services.AddHttpClient<GeminiEventService>();
+// Registra o HttpClient
+builder.Services.AddHttpClient();
 
-// Se você ainda for usar o antigo, mantenha, senão pode remover:
-// builder.Services.AddScoped<EventBotService>(); 
+// Registra os serviços de IA
+builder.Services.AddHttpClient<GeminiEventService>();
+builder.Services.AddScoped<EventBotService>();
 
 // ================================
 // 🔹 Stripe
@@ -109,7 +110,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapHub<ChatHub>("/chatHub");
+app.MapHub<ProjetoEventX.Models.ChatHub>("/chatHub");
 
 // ================================
 // 🔹 Rodar aplicação

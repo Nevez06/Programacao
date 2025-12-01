@@ -1,239 +1,212 @@
 @model ProjetoEventX.Models.Organizador
 @{
     ViewData["Title"] = "Dashboard - Organizador";
+    Layout = "_Layout";
 }
 
-<div class="container mt-4 organizer-wrapper">
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
 
-    <!-- 🔥 TÍTULO -->
-    <h2 class="fw-bold mb-4 text-center title-main">Bem-vindo, Organizador! 🎉</h2>
+<!-- CONTAINER RESPONSIVO -->
+<div class="dashboard-wrapper">
+    
+    <!-- HEADER MOBILE (visível apenas em mobile) -->
+    <header class="mobile-header">
+        <div class="time-status">9:30</div>
+        <div class="signal-battery">
+            <div class="signal-bars">
+                <div class="signal-bar"></div>
+                <div class="signal-bar"></div>
+                <div class="signal-bar"></div>
+                <div class="signal-bar active"></div>
+            </div>
+            <div class="battery-icon">
+                <div class="battery-level"></div>
+            </div>
+        </div>
+    </header>
 
-    <!-- 🔥 BANNER -->
-    <section class="hero-wrapper">
-        <img src="~/Images/bg-top.png" class="hero-banner">
+    <!-- NAVBAR MOBILE (visível apenas em mobile) -->
+    <nav class="mobile-nav">
+        <div class="nav-left">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2ZM2 17L12 22L22 17M2 12L12 17L22 12" fill="#992008"/>
+                    </svg>
+                </div>
+                <span class="brand-name">EventX</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <a href="#" class="nav-link">Login</a>
+            <a href="#" class="nav-link">Cadastro</a>
+        </div>
+    </nav>
 
-        <div class="hero-text">
-            <h4 class="subtitle">Gerencie seus eventos com praticidade</h4>
-            <h1 class="title">EVENTOS EM UM SÓ LUGAR</h1>
-            <a asp-action="CriarEvento" class="btn-create-main">Criar meu evento</a>
+    <!-- TÍTULO DESKTOP (visível apenas em desktop) -->
+    <div class="desktop-title">
+        <h1 class="welcome-title">Bem-vindo, Organizador! 🎉</h1>
+        <p class="welcome-subtitle">Gerencie seus eventos com praticidade e eficiência</p>
+    </div>
+
+    <!-- BANNER PRINCIPAL -->
+    <section class="hero-banner-section">
+        <img src="~/Images/bg-top.png" alt="Evento" class="banner-image">
+        <div class="banner-overlay">
+            <div class="banner-content">
+                <p class="banner-subtitle">Compartilhe, planeje, convide e gerencie com facilidade</p>
+                <h1 class="banner-title">EVENTOS EM UM SÓ LUGAR</h1>
+                <button class="btn-criar-evento" onclick="window.location.href='@Url.Action("CriarEvento", "Organizador")'">Criar meu evento</button>
+            </div>
         </div>
     </section>
 
-    <!-- 🔥 MENU SUPERIOR (4 BOTÕES REDONDOS) -->
-    <!-- CONTAINER GERAL -->
-    <div class="dashboard-container">
-
-        <!-- ============================= -->
-        <!-- RETÂNGULOS SUPERIORES (MAIORES) -->
-        <!-- ============================= -->
-        <div class="top-actions">
-            <div class="action-card">
-                <img src="icone1.png" alt="">
-                <span>Convidar<br>Pessoas</span>
+    <!-- BOTÕES PRINCIPAIS -->
+    <section class="main-actions">
+        <div class="actions-grid">
+            <div class="action-item" onclick="window.location.href='@Url.Action("Index", "Convite")'">
+                <div class="action-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="white"/>
+                    </svg>
+                </div>
+                <div class="action-text">
+                    <span class="action-main">Convidar</span>
+                    <span class="action-sub">Pessoas</span>
+                </div>
             </div>
 
-            <div class="action-card">
-                <img src="icone2.png" alt="">
-                <span>Criar<br>Evento</span>
+            <div class="action-item" onclick="window.location.href='@Url.Action("CriarEvento", "Organizador")'">
+                <div class="action-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 3H18V1H16V3H8V1H6V3H5C3.89 3 3.01 3.9 3.01 5L3 19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V8H19V19ZM7 10H12V15H7V10Z" fill="white"/>
+                    </svg>
+                </div>
+                <div class="action-text">
+                    <span class="action-main">Criar</span>
+                    <span class="action-sub">Evento</span>
+                </div>
             </div>
 
-            <div class="action-card">
-                <img src="icone3.png" alt="">
-                <span>Escolher<br>Fornecedores</span>
+            <div class="action-item" onclick="window.location.href='@Url.Action("Index", "Fornecedor")'">
+                <div class="action-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 7.5V9M15 11V9.5L21 9V11M7 12C7.56 12 8 12.44 8 13S7.56 14 7 14 6 13.56 6 13 6.44 12 7 12M12 12C12.56 12 13 12.44 13 13S12.56 14 12 14 11 13.56 11 13 11.44 12 12 12M17 12C17.56 12 18 12.44 18 13S17.56 14 17 14 16 13.56 16 13 16.44 12 17 12M12 20.5C7 20.5 2.73 16.39 2 11H22C21.27 16.39 17 20.5 12 20.5Z" fill="white"/>
+                    </svg>
+                </div>
+                <div class="action-text">
+                    <span class="action-main">Escolher</span>
+                    <span class="action-sub">Fornecedores</span>
+                </div>
             </div>
 
-            <div class="action-card">
-                <img src="icone4.png" alt="">
-                <span>Gerenciar<br>Orçamento</span>
+            <div class="action-item" onclick="window.location.href='@Url.Action("Index", "Administracao")'">
+                <div class="action-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5ZM9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17Z" fill="white"/>
+                    </svg>
+                </div>
+                <div class="action-text">
+                    <span class="action-main">Gerenciar</span>
+                    <span class="action-sub">Orçamento</span>
+                </div>
             </div>
         </div>
+    </section>
 
-        <!-- BOTÃO EXPLORAR FORNECEDORES -->
-        <div class="explorar-btn">
-            <img src="estrela.png" alt="">
-            <p>Explorar Fornecedores</p>
+    <!-- EXPLORAR FORNECEDORES -->
+    <section class="explore-section">
+        <div class="explore-card" onclick="window.location.href='@Url.Action("Index", "Fornecedor")'">
+            <div class="explore-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z" fill="#992008"/>
+                </svg>
+            </div>
+            <span class="explore-text">Explorar Fornecedores</span>
         </div>
+    </section>
 
-
-        <!-- ============================= -->
-        <!-- 6 CARDS CIRCULARES (3 EM CIMA, 3 EM BAIXO) -->
-        <!-- ============================= -->
-        <div class="fornecedores-grid">
-
-            <div class="circle-card">
-                <img src="convites.png">
-                <span>Convites</span>
+    <!-- CATEGORIAS CIRCULARES -->
+    <section class="categories-section">
+        <div class="categories-grid">
+            <div class="category-circle" onclick="window.location.href='@Url.Action("Index", "Convite")'">
+                <div class="circle-bg">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="white"/>
+                    </svg>
+                </div>
+                <span class="category-label">Convites</span>
             </div>
 
-            <div class="circle-card">
-                <img src="decoracao.png">
-                <span>Decoração</span>
+            <div class="category-circle">
+                <div class="circle-bg">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L13.09 8.26L20 9L14 14L16.18 22L10 18.27L3.82 22L6 14L0 9L6.91 8.26L8 2L12 2Z" fill="white"/>
+                    </svg>
+                </div>
+                <span class="category-label">Decoração</span>
             </div>
 
-            <div class="circle-card">
-                <img src="espacos.png">
-                <span>Espaços</span>
+            <div class="category-circle">
+                <div class="circle-bg">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2ZM2 17L12 22L22 17M2 12L12 17L22 12" fill="white"/>
+                    </svg>
+                </div>
+                <span class="category-label">Espaços</span>
             </div>
 
-            <div class="circle-card">
-                <img src="foto.png">
-                <span>Fotografia</span>
+            <div class="category-circle">
+                <div class="circle-bg">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 2L7.17 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4H16.83L15 2H9Z" fill="white"/>
+                    </svg>
+                </div>
+                <span class="category-label">Fotografia</span>
             </div>
 
-            <div class="circle-card">
-                <img src="musica.png">
-                <span>Música</span>
+            <div class="category-circle">
+                <div class="circle-bg">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 3V13.55C11.41 13.21 10.73 13 10 13C7.79 13 6 14.79 6 17S7.79 21 10 21S14 19.21 14 17V7H18V3H12Z" fill="white"/>
+                    </svg>
+                </div>
+                <span class="category-label">Música</span>
             </div>
 
-            <div class="circle-card">
-                <img src="lembranca.png">
-                <span>Lembrancinhas</span>
+            <div class="category-circle">
+                <div class="circle-bg">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 6H16L14 4H10L8 6H4C2.9 6 2 6.9 2 8V19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6Z" fill="white"/>
+                    </svg>
+                </div>
+                <span class="category-label">Lembrancinhas</span>
             </div>
-
         </div>
+    </section>
 
+    <!-- FOOTER MOBILE (visível apenas em mobile) -->
+    <footer class="mobile-footer">
+        <div class="footer-logo">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2ZM2 17L12 22L22 17M2 12L12 17L22 12" fill="#992008"/>
+            </svg>
+        </div>
+        <div class="footer-indicator"></div>
+    </footer>
+
+</div>
+
+<!-- BOTÃO FLUTUANTE CHAT IA -->
+<div class="floating-ai-btn" onclick="window.location.href='@Url.Action("Index", "IA")'">
+    <div class="ai-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 15C21 15.5 20.8 16 20.5 16.4L16.4 20.5C16 20.8 15.5 21 15 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H19C20.1 3 21 3.9 21 5V15Z" fill="white"/>
+            <circle cx="9" cy="9" r="1.5" fill="#4CAF50"/>
+            <circle cx="15" cy="9" r="1.5" fill="#4CAF50"/>
+        </svg>
     </div>
-
-
-
-<!-- ============= 🎨 CSS COMPLETO ============= -->
-<style>
-
-    :root {
-        --eventx-main: #992008;
-        --eventx-bg: #FFF8F2;
-    }
-
-    /* ==================== BANNER ==================== */
-    .hero-wrapper {
-        position: relative;
-        text-align: center;
-    }
-
-    .hero-banner {
-        width: 100%;
-        max-width: 1000px;
-        height: 360px;
-        border-radius: 35px;
-        object-fit: cover;
-        display: block;
-        margin: auto;
-        box-shadow: 0px 4px 16px rgba(0,0,0,0.25);
-    }
-
-    .hero-text {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        text-shadow: 0 4px 12px rgba(0,0,0,0.6);
-    }
-
-    /* ==================== MENU SUPERIOR (RETÂNGULOS) ==================== */
-        .dashboard-container {
-            width: 100%;
-            padding: 40px 20px;
-            background: #F5F5EE;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* ============================= */
-        /* RETÂNGULOS DE CIMA (MAIS LARGOS) */
-        /* ============================= */
-
-        .top-actions {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-
-        .action-card {
-            width: 140px; /* AQUI aumentei como você pediu */
-            height: 150px;
-            background: #8A1A00;
-            border-radius: 20px;
-            color: white;
-            font-size: 13px;
-            font-weight: bold;
-            text-align: center;
-            padding-top: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-            .action-card img {
-                width: 40px;
-                height: 40px;
-                margin: 0 auto;
-            }
-
-        /* ============================= */
-        /* BOTÃO EXPLORAR FORNECEDORES */
-        /* ============================= */
-
-        .explorar-btn {
-            width: 420px; /* MAIS LARGO para ficar rente ao layout */
-            background: white;
-            padding: 16px 20px;
-            border-radius: 14px;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.12);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin: 20px 0 40px 0;
-            cursor: pointer;
-        }
-
-            .explorar-btn img {
-                width: 25px;
-                height: 25px;
-            }
-
-        /* ============================= */
-        /* 6 CARDS CIRCULARES (TAMANHO MÉDIO) */
-        /* ============================= */
-
-        .fornecedores-grid {
-            margin-top: 20px;
-            width: 100%;
-            max-width: 900px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            row-gap: 40px;
-            justify-items: center;
-        }
-
-        .circle-card {
-            width: 150px; /* Tamanho MÉDIO */
-            height: 150px;
-            background: #8A1A00;
-            border-radius: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            color: white;
-            text-align: center;
-            font-size: 14px;
-        }
-
-            .circle-card img {
-                width: 45px;
-                height: 45px;
-            }
-
-
-    .category-item span {
-        margin-top: 6px;
-        display: block;
-        font-size: 14px;
-    }
-
-</style>
+    <span>Chat IA</span>
+</div>

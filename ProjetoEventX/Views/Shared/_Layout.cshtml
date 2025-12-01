@@ -7,12 +7,40 @@
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/forms.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ProjetoEventX.styles.css" asp-append-version="true" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 
 <body>
+    <!-- Mostrar mensagens de alerta globais -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show m-3" role="alert">
+            <i class="fas fa-info-circle"></i> @TempData["InfoMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     <!-- Header -->
     <header class="eventx-header">
         <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow mb-3">
@@ -21,7 +49,6 @@
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
                     <div class="eventx-logo">
                         <img src="~/Images/Logo_com_nome.png" alt="Logo EventX" class="mb-4" style="width:180px;">
-
                     </div>
                 </a>
 
@@ -51,24 +78,48 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
-                                    <button type="submit" class="nav-link btn btn-link border-0 p-0">
-                                        <i class="fas fa-sign-out-alt"></i> Sair
-                                    </button>
-                                </form>
+                                <a class="nav-link" asp-controller="IA" asp-action="Index">
+                                    <i class="fas fa-robot"></i> Assistente IA
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-circle"></i> @User.Identity.Name
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="Organizador" asp-action="Profile"><i class="fas fa-user"></i> Perfil</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Eventos" asp-action="Index"><i class="fas fa-calendar"></i> Meus Eventos</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="fas fa-sign-out-alt"></i> Sair
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </li>
                         }
                         else
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Auth" asp-action="LoginOrganizador">
-                                    <i class="fas fa-user"></i> Login
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-sign-in-alt"></i> Entrar
                                 </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="Auth" asp-action="LoginOrganizador"><i class="fas fa-user-tie"></i> Organizador</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Auth" asp-action="LoginFornecedor"><i class="fas fa-store"></i> Fornecedor</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Auth" asp-action="LoginConvidado"><i class="fas fa-users"></i> Convidado</a></li>
+                                </ul>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Auth" asp-action="RegistroOrganizador">
-                                    <i class="fas fa-user-plus"></i> Cadastro
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-plus"></i> Cadastrar
                                 </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="Auth" asp-action="RegistroOrganizador"><i class="fas fa-user-tie"></i> Organizador</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Auth" asp-action="RegistroFornecedor"><i class="fas fa-store"></i> Fornecedor</a></li>
+                                </ul>
                             </li>
                         }
                     </ul>
@@ -77,27 +128,45 @@
         </nav>
     </header>
 
-  
-
     <!-- Main -->
     @RenderBody()
-
 
     <!-- Footer -->
     <footer class="eventx-footer border-top text-muted mt-5 py-3">
         <div class="container text-center">
             <div class="footer-logo mb-2">
                 <img src="~/Images/Logo_com_nome.png" alt="Logo EventX" class="mb-4" style="width:180px;">
-
+            </div>
             <p>&copy; 2025 - EventX - Onde organizar e amar compartilhar o seu evento é só o começo.</p>
-        </div>
+            <p class="small">
+                <span class="text-muted">Versão 2.0 com IA</span> | 
+                <a href="#" class="text-muted">Suporte</a> | 
+                <a href="#" class="text-muted">Privacidade</a>
+            </p>
         </div>
     </footer>
 
+    <!-- Scripts principais -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/formatacao.js" asp-append-version="true"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.0/signalr.min.js"></script>
+    
+    <!-- Auto-dismiss alerts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-dismiss success alerts after 5 seconds
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert-success');
+                alerts.forEach(alert => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,0 +1,423 @@
+@{
+    ViewData["Title"] = "Assistente Virtual EventX";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/chat-ia.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}
+
+<div class="container-fluid ia-container">
+    <div class="row">
+        <!-- SIDEBAR COM INFORMAÇÕES -->
+        <div class="col-md-3 ia-sidebar">
+            <div class="sidebar-content">
+                <div class="ia-header">
+                    <div class="ia-avatar">
+                        <i class="fas fa-robot" style="color: white; font-size: 2.2rem;"></i>
+                    </div>
+                    <h3>Assistente IA</h3>
+                    <p class="subtitle">Seu parceiro inteligente para eventos</p>
+                </div>
+
+                <div class="event-selector">
+                    <label for="eventoSelect" class="form-label">
+                        <i class="fas fa-calendar-alt"></i> Selecionar Evento:
+                    </label>
+                    <select id="eventoSelect" class="form-select event-select">
+                        <option value="">Todos os eventos</option>
+                        <!-- Eventos serão carregados via JavaScript -->
+                    </select>
+                </div>
+
+                <div class="quick-actions">
+                    <h6 class="actions-title">
+                        <i class="fas fa-bolt"></i> <strong>Ações Rápidas</strong>
+                    </h6>
+                    <div class="action-buttons">
+                        <button type="button" id="sugestaoBtn" class="action-btn" disabled>
+                            <i class="fas fa-lightbulb"></i>
+                            <span><strong>Gerar Sugestões</strong></span>
+                        </button>
+                        <button type="button" id="orcamentoBtn" class="action-btn" disabled>
+                            <i class="fas fa-chart-pie"></i>
+                            <span><strong>Analisar Orçamento</strong></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="suggested-questions">
+                    <h6 class="questions-title">
+                        <i class="fas fa-question-circle"></i> <strong>Perguntas Sugeridas</strong>
+                    </h6>
+                    <div class="question-list">
+                        <button type="button" class="question-btn pergunta-sugerida" data-pergunta="Como está o progresso do meu evento?">
+                            <i class="fas fa-chart-line"></i> <strong>Progresso do evento</strong>
+                        </button>
+                        <button type="button" class="question-btn pergunta-sugerida" data-pergunta="Quantos convidados confirmaram presença?">
+                            <i class="fas fa-users"></i> <strong>Status dos convidados</strong>
+                        </button>
+                        <button type="button" class="question-btn pergunta-sugerida" data-pergunta="Quais tarefas estão pendentes?">
+                            <i class="fas fa-tasks"></i> <strong>Tarefas pendentes</strong>
+                        </button>
+                        <button type="button" class="question-btn pergunta-sugerida" data-pergunta="Como posso economizar no orçamento?">
+                            <i class="fas fa-piggy-bank"></i> <strong>Dicas de economia</strong>
+                        </button>
+                        <button type="button" class="question-btn pergunta-sugerida" data-pergunta="Preciso contratar mais fornecedores?">
+                            <i class="fas fa-store"></i> <strong>Fornecedores</strong>
+                        </button>
+                        <button type="button" class="question-btn pergunta-sugerida" data-pergunta="Crie um orçamento personalizado para meu evento">
+                            <i class="fas fa-calculator"></i> <strong>Criar orçamento</strong>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ÁREA PRINCIPAL DO CHAT -->
+        <div class="col-md-9 chat-main">
+            <div class="chat-header">
+                <div class="header-content">
+                    <h2 class="chat-title">
+                        <i class="fas fa-comments"></i>
+                        <strong>Chat com Assistente Virtual</strong>
+                    </h2>
+                    <div class="header-actions">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="limparChat()">
+                            <i class="fas fa-trash"></i> Limpar Chat
+                        </button>
+                        <a href="@Url.Action("Dashboard", "Organizador")" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-body">
+                <div id="chatMessages" class="chat-messages">
+                    <div class="message bot-message">
+                        <div class="message-avatar">
+                            <i class="fas fa-robot" style="color: white; font-size: 1.5rem;"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="sender-name"><strong>Assistente Virtual EventX</strong></span>
+                                <span class="message-time">agora</span>
+                            </div>
+                            <div class="message-text">
+                                 <strong>Olá! Bem-vindo ao seu Assistente Virtual EventX!</strong> 
+                                <br><br>
+                                 Sou especializado em gestão de eventos e estou aqui para tornar sua organização mais fácil e eficiente!
+                                <br><br>
+                                <strong>O que posso fazer por você:</strong>
+                                <ul>
+                                    <li><strong>Analisar o progresso</strong> dos seus eventos</li>
+                                    <li><strong>Verificar status</strong> de convidados e confirmações</li>
+                                    <li><strong>Criar orçamentos inteligentes</strong> com base em fornecedores reais</li>
+                                    <li><strong>Acompanhar tarefas</strong> pendentes e concluídas</li>
+                                    <li><strong>Sugerir melhorias</strong> e otimizações</li>
+                                    <li><strong>Recomendar fornecedores</strong> ideais para seu evento</li>
+                                </ul>
+                                
+                                <strong>Dica:</strong> Selecione um evento específico na barra lateral para obter análises personalizadas!
+                                <br><br>
+                                Como posso ajudá-lo hoje? 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <input type="text" id="perguntaInput" class="form-control chat-input" 
+                               placeholder="Digite sua pergunta sobre eventos..." />
+                        <button type="button" id="enviarBtn" class="btn send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="input-hint">
+                        <strong>Experimente:</strong> "Crie um orçamento para meu evento", "Analise meus gastos", "Quais fornecedores recomendam?"
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let eventoSelecionado = null;
+        let isTyping = false;
+        
+        // Carregar eventos do usuário
+        async function carregarEventos() {
+            try {
+                const response = await fetch('/IA/MeusEventos');
+                const data = await response.json();
+                
+                const select = document.getElementById("eventoSelect");
+                
+                if (data.sucesso && data.eventos && data.eventos.length > 0) {
+                    data.eventos.forEach(evento => {
+                        const option = document.createElement("option");
+                        option.value = evento.id;
+                        option.textContent = `${evento.nome} (${evento.data}) - ${evento.status}`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement("option");
+                    option.value = "";
+                    option.textContent = "Nenhum evento encontrado";
+                    option.disabled = true;
+                    select.appendChild(option);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar eventos:', error);
+                const select = document.getElementById("eventoSelect");
+                const option = document.createElement("option");
+                option.value = "";
+                option.textContent = "Erro ao carregar eventos";
+                option.disabled = true;
+                select.appendChild(option);
+            }
+        }
+        
+        // Enviar pergunta
+        async function enviarPergunta(pergunta) {
+            if (isTyping) return;
+            
+            const chatMessages = document.getElementById("chatMessages");
+            const enviarBtn = document.getElementById("enviarBtn");
+            
+            if (pergunta.trim()) {
+                isTyping = true;
+                enviarBtn.disabled = true;
+                
+                // Adicionar mensagem do usuário
+                const userMessage = createUserMessage(pergunta);
+                chatMessages.appendChild(userMessage);
+                scrollToBottom();
+
+                // Mostrar indicador de digitação
+                const typingIndicator = createTypingIndicator();
+                chatMessages.appendChild(typingIndicator);
+                scrollToBottom();
+
+                try {
+                    const formData = new FormData();
+                    formData.append('pergunta', pergunta);
+                    if (eventoSelecionado) {
+                        formData.append('eventoId', eventoSelecionado);
+                    }
+                    
+                    const response = await fetch('/IA/Perguntar', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    
+                    // Remover indicador de digitação
+                    typingIndicator.remove();
+
+                    // Adicionar resposta do bot (processando Markdown)
+                    const resposta = data.resposta || "Desculpe, não consegui processar sua pergunta.";
+                    const botMessage = createBotMessage(resposta);
+                    chatMessages.appendChild(botMessage);
+                    
+                } catch (error) {
+                    typingIndicator.remove();
+                    const errorMessage = createBotMessage("? Desculpe, ocorreu um erro. Tente novamente em alguns instantes.");
+                    chatMessages.appendChild(errorMessage);
+                    console.error('Erro:', error);
+                } finally {
+                    isTyping = false;
+                    enviarBtn.disabled = false;
+                    scrollToBottom();
+                }
+            }
+        }
+        
+        // Executar ações rápidas
+        async function executarAcaoRapida(acao) {
+            if (!eventoSelecionado || isTyping) return;
+            
+            const perguntas = {
+                'sugestao': 'Gere sugestões inteligentes para melhorar meu evento',
+                'orcamento': 'Analise o orçamento do meu evento e faça recomendações detalhadas'
+            };
+            
+            await enviarPergunta(perguntas[acao]);
+        }
+        
+        function createUserMessage(text) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = "message user-message";
+            messageDiv.innerHTML = `
+                <div class="message-content user-content">
+                    <div class="message-header">
+                        <span class="sender-name"><strong>Você</strong></span>
+                        <span class="message-time">${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}</span>
+                    </div>
+                    <div class="message-text">${escapeHtml(text)}</div>
+                </div>
+                <div class="message-avatar user-avatar">
+                    <i class="fas fa-user" style="color: white;"></i>
+                </div>
+            `;
+            return messageDiv;
+        }
+        
+        function createBotMessage(text) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = "message bot-message";
+            
+            // Processar texto para Markdown básico
+            const processedText = processMarkdown(text);
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-robot" style="color: white; font-size: 1.5rem;"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="sender-name"><strong>Assistente Virtual EventX</strong></span>
+                        <span class="message-time">${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}</span>
+                    </div>
+                    <div class="message-text">${processedText}</div>
+                </div>
+            `;
+            return messageDiv;
+        }
+        
+        function createTypingIndicator() {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = "message bot-message typing-indicator";
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-robot" style="color: white; font-size: 1.5rem;"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-text">
+                        <div class="typing-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <span class="typing-text"><strong>Analisando...</strong></span>
+                    </div>
+                </div>
+            `;
+            return messageDiv;
+        }
+        
+        // Função para processar Markdown básico
+        function processMarkdown(text) {
+            if (!text) return '';
+            
+            return text
+                // Títulos
+                .replace(/^### (.*$)/gim, '<h5><strong>$1</strong></h5>')
+                .replace(/^## (.*$)/gim, '<h4><strong>$1</strong></h4>')
+                .replace(/^# (.*$)/gim, '<h3><strong>$1</strong></h3>')
+                // Negrito
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                // Itálico
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                // Links (básico)
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+                // Quebras de linha
+                .replace(/\n/g, '<br>')
+                // Tabelas simples (detectar e converter)
+                .replace(/\|(.+)\|/g, function(match, content) {
+                    if (content.includes('---')) {
+                        return '<hr class="table-separator">'; // Separador de cabeçalho
+                    }
+                    const cells = content.split('|').map(cell => cell.trim()).filter(cell => cell);
+                    const isHeader = content.includes('**') || content.includes('Categoria') || content.includes('Fornecedor');
+                    const tag = isHeader ? 'th' : 'td';
+                    return `<tr>${cells.map(cell => `<${tag}><strong>${cell}</strong></${tag}>`).join('')}</tr>`;
+                });
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function scrollToBottom() {
+            const chatMessages = document.getElementById("chatMessages");
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 100);
+        }
+        
+        function limparChat() {
+            const chatMessages = document.getElementById("chatMessages");
+            // Manter apenas a mensagem de boas-vindas
+            const welcomeMessage = chatMessages.querySelector('.bot-message:first-child');
+            chatMessages.innerHTML = '';
+            if (welcomeMessage) {
+                chatMessages.appendChild(welcomeMessage);
+            }
+        }
+        
+        // Event Listeners
+        document.getElementById("enviarBtn").addEventListener("click", () => {
+            const pergunta = document.getElementById("perguntaInput").value;
+            if (pergunta.trim() && !isTyping) {
+                enviarPergunta(pergunta);
+                document.getElementById("perguntaInput").value = '';
+            }
+        });
+        
+        document.getElementById("perguntaInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter" && !isTyping) {
+                const pergunta = e.target.value;
+                if (pergunta.trim()) {
+                    enviarPergunta(pergunta);
+                    e.target.value = '';
+                }
+            }
+        });
+        
+        document.getElementById("eventoSelect").addEventListener("change", (e) => {
+            eventoSelecionado = e.target.value || null;
+            const sugestaoBtn = document.getElementById("sugestaoBtn");
+            const orcamentoBtn = document.getElementById("orcamentoBtn");
+            
+            if (eventoSelecionado) {
+                sugestaoBtn.disabled = false;
+                orcamentoBtn.disabled = false;
+            } else {
+                sugestaoBtn.disabled = true;
+                orcamentoBtn.disabled = true;
+            }
+        });
+        
+        document.getElementById("sugestaoBtn").addEventListener("click", () => {
+            executarAcaoRapida('sugestao');
+        });
+        
+        document.getElementById("orcamentoBtn").addEventListener("click", () => {
+            executarAcaoRapida('orcamento');
+        });
+        
+        // Perguntas sugeridas
+        document.querySelectorAll(".pergunta-sugerida").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const pergunta = e.currentTarget.getAttribute("data-pergunta");
+                document.getElementById("perguntaInput").value = pergunta;
+                document.getElementById("perguntaInput").focus();
+            });
+        });
+        
+        // Carregar dados iniciais
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarEventos();
+        });
+    </script>
+}

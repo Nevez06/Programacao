@@ -60,9 +60,9 @@ namespace ProjetoEventX.Controllers
     // Classe simples para receber os dados do Front-end (React/HTML)
     public class PedidoRequest
     {
-        public string CidadeUsuario { get; set; }
-        public string DescricaoEvento { get; set; } // ex: "Aniversário Infantil"
+        public required string CidadeUsuario { get; set; }
+        public required string DescricaoEvento { get; set; } // ex: "Aniversário Infantil"
         public decimal Orcamento { get; set; }
-        public string Detalhes { get; set; }
+        public required string Detalhes { get; set; }
     }
 }

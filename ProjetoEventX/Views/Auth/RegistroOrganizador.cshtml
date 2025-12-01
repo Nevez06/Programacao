@@ -14,65 +14,96 @@
 
         <h2 class="title">Cadastro Organizador</h2>
 
-        <form asp-action="RegistroOrganizador" method="post">
+        <form asp-action="RegistroOrganizador" method="post" id="registroForm">
             
             <div asp-validation-summary="All" class="text-danger small mb-3"></div>
 
             <div class="input-group">
-                <label for="NomeCompleto">Nome completo</label>
-                <input asp-for="NomeCompleto" placeholder="Digite seu nome completo" />
+                <label for="NomeCompleto">
+                    <i class="fas fa-user"></i> Nome completo
+                </label>
+                <input asp-for="NomeCompleto" class="form-control" placeholder="Digite seu nome completo" />
                 <span asp-validation-for="NomeCompleto" class="text-danger small"></span>
             </div>
 
             <div class="input-group">
-                <label for="Cpf">CPF</label>
-                <input asp-for="Cpf" placeholder="000.000.000-00" />
+                <label for="Cpf">
+                    <i class="fas fa-id-card"></i> CPF
+                </label>
+                <input asp-for="Cpf" class="form-control cpf-input" placeholder="000.000.000-00" maxlength="14" />
                 <span asp-validation-for="Cpf" class="text-danger small"></span>
+                <small class="form-text text-muted">Formato: 000.000.000-00</small>
             </div>
 
             <div class="input-group">
-                <label for="Endereco">Endereço</label>
-                <input asp-for="Endereco" placeholder="Digite seu endereço" />
+                <label for="Endereco">
+                    <i class="fas fa-map-marker-alt"></i> Endereço
+                </label>
+                <input asp-for="Endereco" class="form-control" placeholder="Digite seu endereço completo" />
                 <span asp-validation-for="Endereco" class="text-danger small"></span>
             </div>
 
             <div class="input-group">
-                <label for="Telefone">Telefone</label>
-                <input asp-for="Telefone" placeholder="(00) 0 0000-0000" />
+                <label for="Telefone">
+                    <i class="fas fa-phone"></i> Telefone
+                </label>
+                <input asp-for="Telefone" class="form-control telefone-input" placeholder="(00) 00000-0000" maxlength="15" />
                 <span asp-validation-for="Telefone" class="text-danger small"></span>
+                <small class="form-text text-muted">Formato: (00) 00000-0000</small>
             </div>
 
             <div class="input-group">
-                <label for="Email">Email</label>
-                <input asp-for="Email" placeholder="Digite seu email" />
+                <label for="Email">
+                    <i class="fas fa-envelope"></i> Email
+                </label>
+                <input asp-for="Email" type="email" class="form-control" placeholder="Digite seu email" />
                 <span asp-validation-for="Email" class="text-danger small"></span>
             </div>
 
             <div class="input-group">
-                <label for="Senha">Senha</label>
-                <input asp-for="Senha" type="password" placeholder="Digite sua senha" />
+                <label for="Senha">
+                    <i class="fas fa-lock"></i> Senha
+                </label>
+                <div class="password-container">
+                    <input asp-for="Senha" type="password" class="form-control" placeholder="Digite sua senha (mín. 6 caracteres)" />
+                    <button type="button" class="btn-toggle-password" onclick="togglePassword('Senha')">
+                        <i class="fas fa-eye" id="toggleIcon-Senha"></i>
+                    </button>
+                </div>
                 <span asp-validation-for="Senha" class="text-danger small"></span>
+                <small class="form-text text-muted">Mínimo de 6 caracteres</small>
             </div>
 
             <div class="input-group">
-                <label for="ConfirmarSenha">Confirmar senha</label>
-                <input asp-for="ConfirmarSenha" type="password" placeholder="Confirme sua senha" />
+                <label for="ConfirmarSenha">
+                    <i class="fas fa-lock"></i> Confirmar senha
+                </label>
+                <div class="password-container">
+                    <input asp-for="ConfirmarSenha" type="password" class="form-control" placeholder="Confirme sua senha" />
+                    <button type="button" class="btn-toggle-password" onclick="togglePassword('ConfirmarSenha')">
+                        <i class="fas fa-eye" id="toggleIcon-ConfirmarSenha"></i>
+                    </button>
+                </div>
                 <span asp-validation-for="ConfirmarSenha" class="text-danger small"></span>
             </div>
 
-            <button type="submit" class="btn-login">Cadastrar</button>
+            <button type="submit" class="btn-login">
+                <i class="fas fa-user-plus"></i> Cadastrar
+            </button>
 
             <p class="cadastro-text">
                 Já tem conta?
-                <a asp-action="LoginOrganizador">Entrar</a>
+                <a asp-action="LoginOrganizador">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </a>
             </p>
 
         </form>
     </div>
 </div>
 
+@section Styles {
 <style>
-
     /* Área da logo */
     .logo-area {
         display: flex;
@@ -91,22 +122,23 @@
     /* Fundo cinza com centralização */
     .login-container {
         width: 100%;
-        height: 100vh;
+        min-height: 100vh;
         background: #f3f3f3;
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 10%;
-        margin-bottom:15%;
+        padding: 20px 0;
     }
 
     /* Card */
     .login-card {
         background: white;
-        width: 35%;
+        width: 100%;
+        max-width: 500px;
         padding: 35px 40px;
         border-radius: 18px;
         box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
+        margin: 20px;
     }
 
     /* Título */
@@ -115,6 +147,7 @@
         margin-bottom: 25px;
         font-size: 28px;
         font-weight: bold;
+        color: var(--eventx-primary);
     }
 
     /* Inputs */
@@ -122,54 +155,212 @@
         margin-bottom: 18px;
     }
 
-        .input-group label {
-            font-size: 15px;
-            font-weight: 600;
-        }
+    .input-group label {
+        font-size: 15px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 5px;
+        display: block;
+    }
 
-        .input-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2.5px solid var(--eventx-primary);
-            margin-top: 5px;
-            font-size: 16px;
-            border-radius: 30px !important;
-        }
+    .input-group label i {
+        margin-right: 8px;
+        color: var(--eventx-primary);
+    }
 
-    /* Botão vermelho */
+    .input-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2.5px solid #e0e0e0;
+        font-size: 16px;
+        border-radius: 8px;
+        transition: border-color 0.3s;
+    }
+
+    .input-group input:focus {
+        border-color: var(--eventx-primary);
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .input-group input.is-invalid {
+        border-color: #dc3545;
+    }
+
+    /* Container para senha com botão toggle */
+    .password-container {
+        position: relative;
+    }
+
+    .password-container input {
+        padding-right: 45px;
+    }
+
+    .btn-toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        padding: 5px;
+    }
+
+    .btn-toggle-password:hover {
+        color: var(--eventx-primary);
+    }
+
+    /* Botão principal */
     .btn-login {
         width: 100%;
-        padding: 12px;
+        padding: 15px;
         margin-top: 15px;
         background: var(--eventx-primary);
         color: white;
         border: none;
-        border-radius: 30px;
+        border-radius: 8px;
         font-size: 18px;
         font-weight: bold;
         cursor: pointer;
-        transition: 0.2s;
+        transition: all 0.3s;
     }
 
-        .btn-login:hover {
-            background: var(--eventx-primary);
-            opacity: 0.9;
-        }
+    .btn-login:hover {
+        background: #c5384a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-login:active {
+        transform: translateY(0);
+    }
 
     /* Link de já tem conta */
     .cadastro-text {
         text-align: center;
-        margin-top: 15px;
+        margin-top: 20px;
+        color: #666;
     }
 
-        .cadastro-text a {
-            color: var(--eventx-primary);
-            font-weight: bold;
-        }
+    .cadastro-text a {
+        color: var(--eventx-primary);
+        font-weight: bold;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
 
+    .cadastro-text a:hover {
+        color: #c5384a;
+        text-decoration: underline;
+    }
+
+    /* Texto de ajuda */
+    .form-text {
+        font-size: 12px;
+        margin-top: 3px;
+    }
+
+    /* Responsividade */
+    @@media (max-width: 768px) {
+        .login-card {
+            margin: 10px;
+            padding: 25px 20px;
+        }
+        
+        .title {
+            font-size: 24px;
+        }
+        
+        .btn-login {
+            font-size: 16px;
+        }
+    }
+
+    /* Animação para validação */
+    .text-danger {
+        font-size: 12px;
+        margin-top: 3px;
+        animation: shake 0.5s;
+    }
+
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
 </style>
+}
 
 @section Scripts {
+    <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(`toggleIcon-${fieldId}`);
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('registroForm');
+            
+            // Validação adicional do CPF
+            const cpfField = document.querySelector('input[name="Cpf"]');
+            if (cpfField) {
+                cpfField.addEventListener('blur', function() {
+                    if (this.value && !validarCpf(this.value)) {
+                        this.classList.add('is-invalid');
+                        mostrarErro(this, 'CPF inválido');
+                    } else {
+                        this.classList.remove('is-invalid');
+                        removerErro(this);
+                    }
+                });
+            }
+
+            // Validação de confirmação de senha
+            const senhaField = document.querySelector('input[name="Senha"]');
+            const confirmSenhaField = document.querySelector('input[name="ConfirmarSenha"]');
+            
+            if (confirmSenhaField) {
+                confirmSenhaField.addEventListener('blur', function() {
+                    if (senhaField.value !== this.value && this.value) {
+                        this.classList.add('is-invalid');
+                        mostrarErro(this, 'Senhas não coincidem');
+                    } else {
+                        this.classList.remove('is-invalid');
+                        removerErro(this);
+                    }
+                });
+            }
+
+            function mostrarErro(campo, mensagem) {
+                removerErro(campo);
+                
+                const spanErro = document.createElement('span');
+                spanErro.className = 'text-danger small erro-customizado';
+                spanErro.textContent = mensagem;
+                campo.parentNode.appendChild(spanErro);
+            }
+
+            function removerErro(campo) {
+                const erroExistente = campo.parentNode.querySelector('.erro-customizado');
+                if (erroExistente) {
+                    erroExistente.remove();
+                }
+            }
+        });
+    </script>
+
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }

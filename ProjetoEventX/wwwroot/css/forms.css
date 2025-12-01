@@ -1,0 +1,431 @@
+/* ================================
+   ?? ESTILOS PARA FORMULÁRIOS
+   ================================ */
+
+/* Cartões de evento */
+.event-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.event-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.event-card-header {
+    background: linear-gradient(135deg, var(--eventx-primary), #e73c4f);
+    color: white;
+    padding: 20px 30px;
+    border-bottom: none;
+}
+
+.event-card-header h3 {
+    color: white;
+    margin: 0;
+    font-weight: 600;
+}
+
+.event-card-body {
+    padding: 30px;
+}
+
+/* Campos de formulário melhorados */
+.form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-label i {
+    color: var(--eventx-primary);
+    width: 16px;
+}
+
+.form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.form-control:focus {
+    border-color: var(--eventx-primary);
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+    background-color: #fff;
+}
+
+.form-control:hover:not(:focus) {
+    border-color: #dee2e6;
+}
+
+.form-control::placeholder {
+    color: #6c757d;
+    opacity: 0.8;
+}
+
+/* Select customizado */
+.form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23dc3545' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px 12px;
+    padding-right: 40px;
+}
+
+/* Textarea customizado */
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Campos com erro */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+.form-control.is-valid {
+    border-color: #28a745;
+    background-color: #f8fff8;
+}
+
+/* Texto de ajuda */
+.form-text {
+    font-size: 12px;
+    margin-top: 5px;
+    color: #6c757d;
+}
+
+.text-danger {
+    font-size: 12px;
+    margin-top: 3px;
+    font-weight: 500;
+}
+
+/* Botões melhorados */
+.btn {
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    text-transform: none;
+    transition: all 0.3s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: var(--eventx-primary);
+    border-color: var(--eventx-primary);
+}
+
+.btn-primary:hover {
+    background: #c5384a;
+    border-color: #c5384a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    border-color: #6c757d;
+    transform: translateY(-1px);
+}
+
+.btn-info {
+    background: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.btn-info:hover {
+    background: #138496;
+    border-color: #138496;
+    transform: translateY(-1px);
+}
+
+.btn-lg {
+    padding: 12px 30px;
+    font-size: 16px;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* Grupos de botões */
+.btn-group .btn {
+    margin-right: 0;
+}
+
+/* Loading spinner para formulários */
+.form-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.form-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+/* Animações de validação */
+.form-control.animate-error {
+    animation: shake 0.5s ease-in-out;
+    border-color: #dc3545;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.form-control.animate-success {
+    animation: pulse-success 0.6s ease-in-out;
+    border-color: #28a745;
+}
+
+@keyframes pulse-success {
+    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+    50% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0.1); }
+    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+/* Responsividade para formulários */
+@media (max-width: 768px) {
+    .event-card-body {
+        padding: 20px;
+    }
+    
+    .event-card-header {
+        padding: 15px 20px;
+    }
+    
+    .event-card-header h3 {
+        font-size: 1.3rem;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 10px;
+        justify-content: center;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+    }
+    
+    .d-flex.justify-content-between .btn {
+        margin-bottom: 10px;
+    }
+}
+
+/* Estados dos campos */
+.field-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.field-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--eventx-primary);
+    z-index: 5;
+}
+
+.field-icon + .form-control {
+    padding-left: 45px;
+}
+
+/* Tooltip customizado */
+.tooltip-custom {
+    position: relative;
+    cursor: help;
+}
+
+.tooltip-custom::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+    z-index: 10;
+}
+
+.tooltip-custom::after {
+    content: '';
+    position: absolute;
+    bottom: 115%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #333;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+
+.tooltip-custom:hover::before,
+.tooltip-custom:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Indicador de campo obrigatório */
+.required-field::after {
+    content: ' *';
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Progress bar para formulários longos */
+.form-progress {
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.form-progress-bar {
+    height: 100%;
+    background: var(--eventx-primary);
+    transition: width 0.3s ease;
+}
+
+/* Campos de upload de arquivo */
+.file-input-custom {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    width: 100%;
+}
+
+.file-input-custom input[type="file"] {
+    position: absolute;
+    left: -9999px;
+}
+
+.file-input-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    background: #f8f9fa;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-input-label:hover {
+    border-color: var(--eventx-primary);
+    background: #fff5f5;
+    color: var(--eventx-primary);
+}
+
+.file-input-custom.has-file .file-input-label {
+    border-color: #28a745;
+    background: #f8fff8;
+    color: #28a745;
+}
+
+/* Switch/Toggle customizado */
+.form-switch-custom {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.form-switch-custom input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.switch-slider::before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.form-switch-custom input:checked + .switch-slider {
+    background-color: var(--eventx-primary);
+}
+
+.form-switch-custom input:checked + .switch-slider::before {
+    transform: translateX(26px);
+}
+
+/* Estilo para campos mascarados */
+.masked-input {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+.masked-input::placeholder {
+    font-family: inherit;
+    letter-spacing: normal;
+}
