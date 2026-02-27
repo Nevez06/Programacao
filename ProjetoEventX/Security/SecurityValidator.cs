@@ -7,17 +7,17 @@ namespace ProjetoEventX.Security
     public static class SecurityValidator
     {
         private static readonly string[] DangerousPatterns = {
-            "<script[^>]*>.*?</script>", // Scripts HTML
+            @"<script[^>]*>.*?</script>", // Scripts HTML
             "javascript:", // JavaScript inline
             "vbscript:", // VBScript
-            "onload\s*=", // Event handlers
-            "onerror\s*=",
-            "onclick\s*=",
-            "onmouseover\s*=",
-            "<iframe[^>]*>",
-            "<object[^>]*>",
-            "<embed[^>]*>",
-            "<form[^>]*>",
+            @"onload\s*=", // Event handlers
+            @"onerror\s*=",
+            @"onclick\s*=",
+            @"onmouseover\s*=",
+            @"<iframe[^>]*>",
+            @"<object[^>]*>",
+            @"<embed[^>]*>",
+            @"<form[^>]*>",
             "' OR '", // SQL Injection básico
             "' OR 1=1",
             "UNION SELECT",
@@ -29,7 +29,7 @@ namespace ProjetoEventX.Security
             "xp_", // Extended procedures SQL
             "sp_", // Stored procedures
             "../", // Path traversal
-            "..\\",
+            @"..\",
             "%2e%2e", // URL encoded path traversal
             "0x3c", // Hex encoded <
             "0x3e", // Hex encoded >
@@ -173,7 +173,7 @@ namespace ProjetoEventX.Security
 
             // Remove scripts e eventos perigosos
             var sanitized = Regex.Replace(html, @"<script[^>]*>.*?</script>", "", RegexOptions.IgnoreCase);
-            sanitized = Regex.Replace(sanitized, @"on\w+\s*=\s*['\"][^'\"]*['\"]", "", RegexOptions.IgnoreCase);
+            sanitized = Regex.Replace(sanitized, @"on\w+\s*=\s*['""""][^'""""]*['""""]", "", RegexOptions.IgnoreCase);
             sanitized = Regex.Replace(sanitized, @"javascript:", "", RegexOptions.IgnoreCase);
             
             return sanitized;

@@ -265,7 +265,9 @@ namespace ProjetoEventX.Controllers
                 var listaConvidado = new ListaConvidado
                 {
                     ConvidadoId = convidado.Id,
+                    Convidado = convidado,
                     EventoId = eventoId,
+                    Evento = evento!,
                     DataInclusao = DateTime.UtcNow,
                     ConfirmaPresenca = "Pendente",
                     CreatedAt = DateTime.UtcNow,
@@ -371,16 +373,16 @@ namespace ProjetoEventX.Controllers
                     return RedirectToAction("Listar", new { eventoId });
                 }
 
+                var linkConfirmacao = Url.Action("ConfirmarPresenca", "Convite", 
+                    new { eventoId = eventoId, convidadoId = convidadoId }, 
+                    protocol: Request.Scheme) ?? "";
+
                 var templateConvite = await _context.TemplatesConvites
                     .FirstOrDefaultAsync(t => t.OrganizadorId == user.Id && t.Ativo);
 
                 var htmlConvite = templateConvite != null 
-                    ? templateConvite.GerarHTMLConvite(convidado.Pessoa.Nome, evento.NomeEvento, evento.DataEvento.ToString("dd/MM/yyyy"), evento.Local?.NomeLocal ?? "Local não informado")
+                    ? templateConvite.GerarHTMLConvite(convidado.Pessoa.Nome, linkConfirmacao)
                     : $"<h1>Convite para {evento.NomeEvento}</h1><p>Olá {convidado.Pessoa.Nome}, você está convidado!</p>";
-
-                var linkConfirmacao = Url.Action("ConfirmarPresenca", "Convite", 
-                    new { eventoId = eventoId, convidadoId = convidadoId }, 
-                    protocol: Request.Scheme);
 
                 var htmlCompleto = $@"
                     <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;'>

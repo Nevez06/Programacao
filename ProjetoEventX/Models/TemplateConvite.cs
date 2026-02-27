@@ -19,7 +19,7 @@ namespace ProjetoEventX.Models
         public required Evento Evento { get; set; }
 
         [Required]
-        public string OrganizadorId { get; set; } = string.Empty;
+        public int OrganizadorId { get; set; }
 
         [ForeignKey("OrganizadorId")]
         public required Organizador Organizador { get; set; }

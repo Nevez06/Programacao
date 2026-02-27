@@ -24,10 +24,12 @@ namespace ProjetoEventX.Controllers
         public async Task<IActionResult> Index(int? eventoId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userId, out int userIdInt))
+                return Forbid();
             
             // Verificar se é organizador
             var organizador = await _context.Organizadores
-                .FirstOrDefaultAsync(o => o.Id == userId);
+                .FirstOrDefaultAsync(o => o.Id == userIdInt);
 
             if (organizador == null)
             {
@@ -36,7 +38,7 @@ namespace ProjetoEventX.Controllers
 
             IQueryable<TemplateConvite> templatesQuery = _context.TemplatesConvites
                 .Include(t => t.Evento)
-                .Where(t => t.OrganizadorId == userId);
+                .Where(t => t.OrganizadorId == userIdInt);
 
             if (eventoId.HasValue)
             {
@@ -55,21 +57,30 @@ namespace ProjetoEventX.Controllers
         public async Task<IActionResult> Create(int eventoId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userId, out int userIdInt))
+                return Forbid();
             
             // Verificar se é organizador do evento
             var evento = await _context.Eventos
-                .FirstOrDefaultAsync(e => e.Id == eventoId && e.OrganizadorId == userId);
+                .FirstOrDefaultAsync(e => e.Id == eventoId && e.OrganizadorId == userIdInt);
 
             if (evento == null)
             {
                 return Forbid("Você não tem permissão para criar templates para este evento.");
             }
 
+            var organizador = await _context.Organizadores
+                .FirstOrDefaultAsync(o => o.Id == userIdInt);
+
+            if (organizador == null)
+                return Forbid();
+
             var template = new TemplateConvite
             {
                 EventoId = eventoId,
                 Evento = evento,
-                OrganizadorId = userId,
+                OrganizadorId = userIdInt,
+                Organizador = organizador,
                 NomeTemplate = $"Template - {evento.NomeEvento}",
                 TituloConvite = "Você está convidado!",
                 MensagemPrincipal = "Você está cordialmente convidado para participar do nosso evento especial.",
@@ -94,10 +105,12 @@ namespace ProjetoEventX.Controllers
         public async Task<IActionResult> Create([Bind("EventoId,NomeTemplate,TituloConvite,MensagemPrincipal,MensagemSecundaria,CorFundo,CorTexto,CorPrimaria,FonteTitulo,FonteTexto,TamanhoFonteTitulo,TamanhoFonteTexto,MostrarLogo,MostrarFotoEvento,MostrarMapa,MostrarQRCode,ImagemCabecalho,ImagemRodape,EstiloLayout,CSSPersonalizado")] TemplateConvite template)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userId, out int userIdInt))
+                return Forbid();
             
             // Verificar se é organizador do evento
             var evento = await _context.Eventos
-                .FirstOrDefaultAsync(e => e.Id == template.EventoId && e.OrganizadorId == userId);
+                .FirstOrDefaultAsync(e => e.Id == template.EventoId && e.OrganizadorId == userIdInt);
 
             if (evento == null)
             {
@@ -106,7 +119,7 @@ namespace ProjetoEventX.Controllers
 
             if (ModelState.IsValid)
             {
-                template.OrganizadorId = userId;
+                template.OrganizadorId = userIdInt;
                 template.CreatedAt = DateTime.Now;
                 template.UpdatedAt = DateTime.Now;
                 template.Ativo = true;
@@ -126,10 +139,12 @@ namespace ProjetoEventX.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userId, out int userIdInt))
+                return Forbid();
             
             var template = await _context.TemplatesConvites
                 .Include(t => t.Evento)
-                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizadorId == userId);
+                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizadorId == userIdInt);
 
             if (template == null)
             {
@@ -145,6 +160,8 @@ namespace ProjetoEventX.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("Id,EventoId,NomeTemplate,TituloConvite,MensagemPrincipal,MensagemSecundaria,CorFundo,CorTexto,CorPrimaria,FonteTitulo,FonteTexto,TamanhoFonteTitulo,TamanhoFonteTexto,MostrarLogo,MostrarFotoEvento,MostrarMapa,MostrarQRCode,ImagemCabecalho,ImagemRodape,EstiloLayout,CSSPersonalizado")] TemplateConvite template)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userId, out int userIdInt))
+                return Forbid();
             
             if (id != template.Id)
             {
@@ -153,7 +170,7 @@ namespace ProjetoEventX.Controllers
 
             // Verificar se é o dono do template
             var templateExistente = await _context.TemplatesConvites
-                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizadorId == userId);
+                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizadorId == userIdInt);
 
             if (templateExistente == null)
             {
@@ -212,11 +229,13 @@ namespace ProjetoEventX.Controllers
         public async Task<IActionResult> Preview(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userId, out int userIdInt))
+                return Forbid();
             
             var template = await _context.TemplatesConvites
                 .Include(t => t.Evento)
                 .ThenInclude(e => e.Local)
-                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizadorId == userId);
+                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizadorId == userIdInt);
 
             if (template == null)
             {
@@ -235,9 +254,11 @@ namespace ProjetoEventX.Controllers
         public async Task<IActionResult> DefinirPadrao(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userId, out int userIdInt))
+                return Forbid();
             
             var template = await _context.TemplatesConvites
-                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizadorId == userId);
+                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizadorId == userIdInt);
 
             if (template == null)
             {
@@ -269,9 +290,11 @@ namespace ProjetoEventX.Controllers
         public async Task<IActionResult> Desativar(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userId, out int userIdInt))
+                return Forbid();
             
             var template = await _context.TemplatesConvites
-                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizadorId == userId);
+                .FirstOrDefaultAsync(t => t.Id == id && t.OrganizadorId == userIdInt);
 
             if (template == null)
             {
@@ -291,10 +314,12 @@ namespace ProjetoEventX.Controllers
         public async Task<TemplateConvite?> ObterTemplatePadrao(int eventoId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userId, out int userIdInt))
+                return null;
             
             return await _context.TemplatesConvites
                 .Include(t => t.Evento)
-                .FirstOrDefaultAsync(t => t.EventoId == eventoId && t.OrganizadorId == userId && t.PadraoSistema && t.Ativo);
+                .FirstOrDefaultAsync(t => t.EventoId == eventoId && t.OrganizadorId == userIdInt && t.PadraoSistema && t.Ativo);
         }
 
         private bool TemplateConviteExists(int id)

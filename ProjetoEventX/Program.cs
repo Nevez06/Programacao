@@ -73,11 +73,6 @@ builder.Services.AddScoped<EventBotService>();
 builder.Services.AddScoped<AuditoriaService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<SecurityActionFilter>();
-builder.Services.AddSingleton<SecurityHeadersMiddleware>();
-builder.Services.AddScoped<AuditoriaService>();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<SecurityActionFilter>();
-builder.Services.AddSingleton<SecurityHeadersMiddleware>();
 
 // ================================
 // 🔹 Stripe

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using ProjetoEventX.Data;
+using ProjetoEventX.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
