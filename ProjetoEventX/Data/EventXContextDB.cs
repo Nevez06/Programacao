@@ -27,10 +27,13 @@ namespace ProjetoEventX.Data
         public DbSet<AssistenteVirtual> AssistentesVirtuais { get; set; }
         public DbSet<Local> Locais { get; set; }
         public DbSet<ListaConvidado> ListasConvidados { get; set; }
+        public DbSet<TemplateConvite> TemplatesConvites { get; set; }
         public DbSet<Notificacao> Notificacoes { get; set; }
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<MensagemChat> MensagemChats { get; set; }
         public DbSet<MensagemChat> MensagensChat { get; set; }
+        public DbSet<LogsAcesso> LogsAcessos { get; set; }
+        public DbSet<Auditoria> Auditorias { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

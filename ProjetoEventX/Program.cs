@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjetoEventX.Data;
 using ProjetoEventX.Models;
 using ProjetoEventX.Services; // Certifique-se que GeminiEventService está aqui
+using ProjetoEventX.Security;
 using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -67,6 +68,18 @@ builder.Services.AddHttpClient<GeminiEventService>();
 builder.Services.AddScoped<EventBotService>();
 
 // ================================
+// 🔹 SERVIÇOS DE SEGURANÇA - NOVO 🆕
+// ================================
+builder.Services.AddScoped<AuditoriaService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<SecurityActionFilter>();
+builder.Services.AddSingleton<SecurityHeadersMiddleware>();
+builder.Services.AddScoped<AuditoriaService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<SecurityActionFilter>();
+builder.Services.AddSingleton<SecurityHeadersMiddleware>();
+
+// ================================
 // 🔹 Stripe
 // ================================
 StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY")
@@ -94,7 +107,7 @@ if (!app.Environment.IsDevelopment())
 // ================================
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseRouting();
 
 app.UseAuthentication();

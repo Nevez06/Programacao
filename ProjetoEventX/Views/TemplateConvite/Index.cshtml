@@ -1,0 +1,136 @@
+@model IEnumerable<ProjetoEventX.Models.TemplateConvite>
+@{
+    ViewData["Title"] = "Templates de Convite";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-eventx mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0" style="color: var(--eventx-primary);">
+                        <i class="fas fa-envelope-open-text mr-2"></i>Templates de Convite
+                    </h2>
+                    @if (ViewBag.EventoId != null)
+                    {
+                        <a asp-action="Create" asp-route-eventoId="@ViewBag.EventoId" class="btn btn-eventx-primary">
+                            <i class="fas fa-plus mr-1"></i>Novo Template
+                        </a>
+                    }
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle mr-2"></i>@TempData["Success"]
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-envelope-open-text fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">Nenhum template criado ainda</h4>
+                            <p class="text-muted">Crie seu primeiro template de convite personalizado.</p>
+                            @if (ViewBag.EventoId != null)
+                            {
+                                <a asp-action="Create" asp-route-eventoId="@ViewBag.EventoId" class="btn btn-eventx-primary">
+                                    <i class="fas fa-plus mr-1"></i>Criar Template
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Nome do Template</th>
+                                        <th>Evento</th>
+                                        <th>Estilo</th>
+                                        <th>Status</th>
+                                        <th>Criado em</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var template in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@template.NomeTemplate</strong>
+                                                @if (template.PadraoSistema)
+                                                {
+                                                    <span class="badge badge-success ml-2">Padrão</span>
+                                                }
+                                            </td>
+                                            <td>@template.Evento.NomeEvento</td>
+                                            <td>
+                                                <span class="badge badge-info">@template.EstiloLayout</span>
+                                            </td>
+                                            <td>
+                                                @if (template.Ativo)
+                                                {
+                                                    <span class="badge badge-success">Ativo</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-secondary">Inativo</span>
+                                                }
+                                            </td>
+                                            <td>@template.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a asp-action="Preview" asp-route-id="@template.Id" class="btn btn-sm btn-outline-primary" title="Visualizar">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a asp-action="Edit" asp-route-id="@template.Id" class="btn btn-sm btn-outline-warning" title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    @if (!template.PadraoSistema && template.Ativo)
+                                                    {
+                                                        <form asp-action="DefinirPadrao" asp-route-id="@template.Id" method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Definir como Padrão" onclick="return confirm('Definir este template como padrão?')">
+                                                                <i class="fas fa-star"></i>
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                    @if (template.Ativo)
+                                                    {
+                                                        <form asp-action="Desativar" asp-route-id="@template.Id" method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Desativar" onclick="return confirm('Deseja realmente desativar este template?')">
+                                                                <i class="fas fa-times-circle"></i>
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer">
+                    <a asp-controller="Organizador" asp-action="DetalhesEvento" asp-route-id="@ViewBag.EventoId" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-1"></i>Voltar ao Evento
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss alert after 5 seconds
+        setTimeout(function() {
+            $(".alert").fadeOut('slow');
+        }, 5000);
+    </script>
+}

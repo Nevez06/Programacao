@@ -1,0 +1,69 @@
+@{
+    ViewData["Title"] = "Acesso Negado - EventX";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-danger">
+                <div class="card-header bg-danger text-white text-center">
+                    <i class="fas fa-shield-alt fa-3x mb-2"></i>
+                    <h3 class="mb-0">🔒 ACESSO NEGADO</h3>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+                    </div>
+                    
+                    <h4 class="text-danger mb-3">Você não tem permissão para acessar este recurso!</h4>
+                    
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Motivo:</strong> Seu usuário não possui as permissões necessárias para visualizar esta página.
+                    </div>
+
+                    <div class="mb-4">
+                        <p><strong>🔐 Nível de Acesso Requerido:</strong> @ViewContext.HttpContext.User?.Identity?.AuthenticationType</p>
+                        <p><strong>👤 Usuário Atual:</strong> @User.Identity.Name</p>
+                        <p><strong>📅 Data/Hora:</strong> @DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")</p>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>💡 Dica:</strong> Se você acredita que deveria ter acesso, entre em contato com o administrador do sistema.
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-primary me-2">
+                            <i class="fas fa-home"></i> Voltar para Home
+                        </a>
+                        <a href="javascript:history.back()" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer text-center text-muted">
+                    <small>EventX - Sistema Seguro de Gerenciamento de Eventos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .card {
+            border-radius: 15px;
+        }
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+        }
+        .fa-shield-alt {
+            animation: pulse 2s infinite;
+        }
+        @@keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+}

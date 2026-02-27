@@ -1,0 +1,324 @@
+@model ProjetoEventX.Models.TemplateConvite
+@{
+    ViewData["Title"] = "Preview do Template de Convite";
+    Layout = null; // Layout nulo para preview limpo
+}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - @Model.TituloConvite</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Estilos do Preview */
+        body {
+            font-family: @Model.FonteTexto;
+            background-color: @Model.CorFundo;
+            color: @Model.CorTexto;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .convite-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+        }
+
+        .convite-header {
+            background: @Model.CorPrimaria;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .convite-title {
+            font-family: @Model.FonteTitulo;
+            font-size: @(Model.TamanhoFonteTitulo)px;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+        }
+
+        .convite-content {
+            padding: 30px;
+        }
+
+        .convite-mensagem {
+            font-size: @(Model.TamanhoFonteTexto)px;
+            margin-bottom: 20px;
+        }
+
+        .convite-detalhes {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid @Model.CorPrimaria;
+        }
+
+            .convite-detalhes h3 {
+                color: @Model.CorPrimaria;
+                margin-top: 0;
+                font-size: 18px;
+            }
+
+            .convite-detalhes p {
+                margin-bottom: 8px;
+            }
+
+                .convite-detalhes p strong {
+                    color: @Model.CorPrimaria;
+                }
+
+        .btn-confirmar {
+            display: inline-block;
+            background: @Model.CorPrimaria;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+            .btn-confirmar:hover {
+                background: darken(@Model.CorPrimaria, 10%);
+                color: white;
+                text-decoration: none;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            }
+
+        .convite-footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .preview-header {
+            background: #343a40;
+            color: white;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .preview-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .btn-preview {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-left: 5px;
+            transition: all 0.3s ease;
+        }
+
+            .btn-preview:hover {
+                background: rgba(0,0,0,0.9);
+                color: white;
+            }
+
+        .template-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+            .template-info h5 {
+                color: #1976d2;
+                margin-top: 0;
+            }
+
+        @Html.Raw(Model.CSSPersonalizado)
+    </style>
+</head>
+<body>
+    <!-- Controles de Preview -->
+    <div class="preview-controls">
+        <button type="button" class="btn-preview" onclick="window.print()" title="Imprimir">
+            <i class="fas fa-print"></i>
+        </button>
+        <button type="button" class="btn-preview" onclick="window.close()" title="Fechar">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="container">
+        <!-- Header do Preview -->
+        <div class="preview-header text-center">
+            <h4><i class="fas fa-eye mr-2"></i>Preview do Template de Convite</h4>
+            <p class="mb-0">Este é como o convidado verá o convite</p>
+        </div>
+
+        <!-- Informações do Template -->
+        <div class="template-info">
+            <h5><i class="fas fa-info-circle mr-2"></i>Informações do Template</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Nome:</strong> @Model.NomeTemplate
+                </div>
+                <div class="col-md-3">
+                    <strong>Evento:</strong> @Model.Evento.NomeEvento
+                </div>
+                <div class="col-md-3">
+                    <strong>Estilo:</strong> @Model.EstiloLayout
+                </div>
+                <div class="col-md-3">
+                    <strong>Status:</strong> 
+                    @if (Model.Ativo)
+                    {
+                        <span class="badge badge-success">Ativo</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Inativo</span>
+                    }
+                    @if (Model.PadraoSistema)
+                    {
+                        <span class="badge badge-primary">Padrão</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Convite em si -->
+        @Html.Raw(ViewBag.HTMLConvite)
+
+        <!-- Footer com informações -->
+        <div class="text-center mt-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6><i class="fas fa-palette mr-2"></i>Configurações Visuais</h6>
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <strong>Cor de Fundo:</strong><br>
+                            <span style="display: inline-block; width: 30px; height: 30px; background-color: @Model.CorFundo; border: 1px solid #ccc; border-radius: 50%;"></span>
+                            <small class="d-block">@Model.CorFundo</small>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Cor do Texto:</strong><br>
+                            <span style="display: inline-block; width: 30px; height: 30px; background-color: @Model.CorTexto; border: 1px solid #ccc; border-radius: 50%;"></span>
+                            <small class="d-block">@Model.CorTexto</small>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Cor Primária:</strong><br>
+                            <span style="display: inline-block; width: 30px; height: 30px; background-color: @Model.CorPrimaria; border: 1px solid #ccc; border-radius: 50%;"></span>
+                            <small class="d-block">@Model.CorPrimaria</small>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Fonte:</strong><br>
+                            <small>@Model.FonteTexto</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Adicionar funcionalidade de zoom
+        let zoomLevel = 1;
+        
+        function ajustarZoom(delta) {
+            zoomLevel += delta;
+            zoomLevel = Math.max(0.5, Math.min(2, zoomLevel)); // Limitar entre 50% e 200%
+            
+            document.querySelector('.convite-container').style.transform = `scale(${zoomLevel})`;
+            document.querySelector('.convite-container').style.transformOrigin = 'top center';
+        }
+
+        // Atalhos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey) {
+                switch(e.key) {
+                    case 'p':
+                        e.preventDefault();
+                        window.print();
+                        break;
+                    case '+':
+                    case '=':
+                        e.preventDefault();
+                        ajustarZoom(0.1);
+                        break;
+                    case '-':
+                        e.preventDefault();
+                        ajustarZoom(-0.1);
+                        break;
+                    case '0':
+                        e.preventDefault();
+                        zoomLevel = 1;
+                        document.querySelector('.convite-container').style.transform = 'scale(1)';
+                        break;
+                }
+            }
+        });
+
+        // Adicionar botões de zoom aos controles
+        const controls = document.querySelector('.preview-controls');
+        controls.innerHTML = `
+            <button type="button" class="btn-preview" onclick="ajustarZoom(-0.1)" title="Diminuir Zoom (Ctrl+ -)">
+                <i class="fas fa-search-minus"></i>
+            </button>
+            <button type="button" class="btn-preview" onclick="ajustarZoom(0.1)" title="Aumentar Zoom (Ctrl++)">
+                <i class="fas fa-search-plus"></i>
+            </button>
+            <button type="button" class="btn-preview" onclick="zoomLevel=1; document.querySelector('.convite-container').style.transform='scale(1)" title="Zoom 100% (Ctrl+0)">
+                <i class="fas fa-compress"></i>
+            </button>
+            ${controls.innerHTML}
+        `;
+
+        // Adicionar observação sobre atalhos
+        const infoDiv = document.querySelector('.template-info');
+        const shortcutsInfo = document.createElement('div');
+        shortcutsInfo.className = 'mt-3';
+        shortcutsInfo.innerHTML = `
+            <small class="text-muted">
+                <i class="fas fa-keyboard mr-1"></i>
+                <strong>Atalhos:</strong> 
+                <span class="badge badge-secondary">Ctrl+P</span> Imprimir | 
+                <span class="badge badge-secondary">Ctrl++</span> Aumentar | 
+                <span class="badge badge-secondary">Ctrl+-</span> Diminuir | 
+                <span class="badge badge-secondary">Ctrl+0</span> 100%
+            </small>
+        `;
+        infoDiv.appendChild(shortcutsInfo);
+    </script>
+</body>
+</html>

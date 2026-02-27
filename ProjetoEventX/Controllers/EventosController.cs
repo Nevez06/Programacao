@@ -1,22 +1,30 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
 using ProjetoEventX.Data;
 using ProjetoEventX.Models;
+using ProjetoEventX.Security;
+using ProjetoEventX.Services;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ProjetoEventX.Controllers
 {
     [Authorize]
+    [ServiceFilter(typeof(SecurityActionFilter))]
     public class EventosController : Controller
     {
         private readonly EventXContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly AuditoriaService _auditoriaService;
 
-        public EventosController(EventXContext context, UserManager<ApplicationUser> userManager)
+        public EventosController(EventXContext context, UserManager<ApplicationUser> userManager, AuditoriaService auditoriaService)
         {
             _context = context;
             _userManager = userManager;
+            _auditoriaService = auditoriaService;
         }
 
         // GET: Eventos
@@ -25,24 +33,44 @@ namespace ProjetoEventX.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
+                await _auditoriaService.RegistrarAcaoAsync("ApplicationUser", 0, "VIEW", "Usuário não encontrado - Redirecionado para login");
                 return RedirectToAction("LoginOrganizador", "Auth");
             }
+
+            // Registrar visualização
+            await _auditoriaService.RegistrarVisualizacaoAsync("Evento", 0, $"Listagem de eventos do usuário: {user.UserName}");
 
             // Buscar apenas eventos do organizador logado
             var eventos = await _context.Eventos
                 .Where(e => e.OrganizadorId == user.Id)
                 .OrderByDescending(e => e.DataEvento)
                 .ToListAsync();
-                
+
             return View(eventos);
         }
 
         // GET: Eventos/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
+            if (id == null || id <= 0)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "❌ ID do evento inválido.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("LoginOrganizador", "Auth");
+            }
+
+            // Verificar se o usuário é dono do evento
+            if (!await User.IsOwnerOfEventoAsync(_userManager, id.Value, _context))
+            {
+                TempData["ErrorMessage"] = "❌ Você não tem permissão para visualizar este evento.";
+                await _auditoriaService.RegistrarAcaoAsync("Evento", id.Value, "VIEW", 
+                    $"Tentativa não autorizada de visualizar evento por: {user.UserName}", null, null, false, "Acesso negado");
+                return RedirectToAction("AccessDenied", "Auth");
             }
 
             var evento = await _context.Eventos
@@ -50,11 +78,15 @@ namespace ProjetoEventX.Controllers
                 .ThenInclude(o => o.Pessoa)
                 .Include(e => e.Local)
                 .FirstOrDefaultAsync(m => m.Id == id);
-                
+
             if (evento == null)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "❌ Evento não encontrado.";
+                return RedirectToAction(nameof(Index));
             }
+
+            // Registrar visualização bem-sucedida
+            await _auditoriaService.RegistrarVisualizacaoAsync("Evento", evento.Id, $"Visualização do evento: {evento.NomeEvento}");
 
             return View(evento);
         }
@@ -72,6 +104,32 @@ namespace ProjetoEventX.Controllers
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    TempData["ErrorMessage"] = "❌ Dados inválidos. Verifique os campos.";
+                    return View(evento);
+                }
+
+                // Validações de segurança
+                if (!SecurityValidator.IsValidInput(evento.NomeEvento))
+                {
+                    ModelState.AddModelError("", "❌ Nome do evento contém caracteres inválidos.");
+                    return View(evento);
+                }
+
+                if (!SecurityValidator.IsValidInput(evento.DescricaoEvento, true)) // Permitir HTML básico
+                {
+                    ModelState.AddModelError("", "❌ Descrição do evento contém conteúdo suspeito.");
+                    return View(evento);
+                }
+
+                // Validar data do evento
+                if (evento.DataEvento < DateTime.UtcNow.Date)
+                {
+                    ModelState.AddModelError("", "❌ A data do evento não pode ser anterior à data atual.");
+                    return View(evento);
+                }
+
                 // Buscar o organizador logado
                 var user = await _userManager.GetUserAsync(User);
                 if (user == null)
@@ -90,37 +148,56 @@ namespace ProjetoEventX.Controllers
                     return RedirectToAction("Dashboard", "Organizador");
                 }
 
-                // Definir o OrganizadorId
+                // Definir dados do evento
                 evento.OrganizadorId = organizador.Id;
                 evento.CreatedAt = DateTime.UtcNow;
                 evento.UpdatedAt = DateTime.UtcNow;
+                evento.StatusEvento = "Planejado";
 
-                // Validar ModelState após definir OrganizadorId
-                ModelState.Remove("OrganizadorId"); // Remove validação do campo que será preenchido automaticamente
-                
-                if (ModelState.IsValid)
-                {
-                    _context.Add(evento);
-                    await _context.SaveChangesAsync();
-                    
-                    TempData["SuccessMessage"] = "✅ Evento criado com sucesso!";
-                    return RedirectToAction(nameof(Index));
-                }
+                // Sanitizar dados
+                evento.NomeEvento = SecurityValidator.SanitizeInput(evento.NomeEvento);
+                evento.DescricaoEvento = SecurityValidator.SanitizeHtml(evento.DescricaoEvento);
+                evento.TipoEvento = SecurityValidator.SanitizeInput(evento.TipoEvento);
+
+                _context.Eventos.Add(evento);
+                await _context.SaveChangesAsync();
+
+                // Registrar criação
+                await _auditoriaService.RegistrarAcaoAsync("Evento", evento.Id, "CREATE", 
+                    $"Evento criado: {evento.NomeEvento}", null, new { evento.Id, evento.NomeEvento, evento.DataEvento });
+
+                TempData["SuccessMessage"] = $"✅ Evento '{evento.NomeEvento}' criado com sucesso!";
+                return RedirectToAction("Index", new { id = evento.Id });
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"❌ Erro ao criar evento: {ex.Message}";
-            }
+                // Registrar erro
+                await _auditoriaService.RegistrarAcaoAsync("Evento", 0, "CREATE", 
+                    $"Erro ao criar evento: {ex.Message}", null, null, false, ex.Message);
 
-            return View(evento);
+                TempData["ErrorMessage"] = "❌ Erro ao criar evento. Tente novamente.";
+                return View(evento);
+            }
         }
 
         // GET: Eventos/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
+            if (id == null || id <= 0)
             {
                 return NotFound();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("LoginOrganizador", "Auth");
+            }
+
+            // Verificar permissão
+            if (!await User.IsOwnerOfEventoAsync(_userManager, id.Value, _context))
+            {
+                return RedirectToAction("AccessDenied", "Auth");
             }
 
             var evento = await _context.Eventos.FindAsync(id);
@@ -129,103 +206,104 @@ namespace ProjetoEventX.Controllers
                 return NotFound();
             }
 
-            // Verificar se o evento pertence ao usuário logado
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null || evento.OrganizadorId != user.Id)
-            {
-                TempData["ErrorMessage"] = "❌ Você não tem permissão para editar este evento.";
-                return RedirectToAction(nameof(Index));
-            }
-
             return View(evento);
         }
 
         // POST: Eventos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,NomeEvento,DescricaoEvento,Data Evento,TipoEvento,StatusEvento,HoraInicio,HoraFim,PublicoEstimado,CustoEstimado,LocalId")] Evento evento)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,NomeEvento,DescricaoEvento,DataEvento,TipoEvento,StatusEvento,HoraInicio,HoraFim,PublicoEstimado,CustoEstimado,LocalId,OrganizadorId,CreatedAt,UpdatedAt")] Evento evento)
         {
             if (id != evento.Id)
             {
                 return NotFound();
             }
 
-            try
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
             {
-                // Buscar o organizador logado
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null)
+                return RedirectToAction("LoginOrganizador", "Auth");
+            }
+
+            // Verificar permissão
+            if (!await User.IsOwnerOfEventoAsync(_userManager, id, _context))
+            {
+                return RedirectToAction("AccessDenied", "Auth");
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
                 {
-                    return RedirectToAction("LoginOrganizador", "Auth");
-                }
+                    // Sanitizar dados
+                    evento.NomeEvento = SecurityValidator.SanitizeInput(evento.NomeEvento);
+                    evento.DescricaoEvento = SecurityValidator.SanitizeHtml(evento.DescricaoEvento);
+                    evento.TipoEvento = SecurityValidator.SanitizeInput(evento.TipoEvento);
+                    evento.UpdatedAt = DateTime.UtcNow;
 
-                // Buscar o evento original para manter o OrganizadorId
-                var eventoOriginal = await _context.Eventos.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
-                if (eventoOriginal == null || eventoOriginal.OrganizadorId != user.Id)
-                {
-                    TempData["ErrorMessage"] = "❌ Você não tem permissão para editar este evento.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                // Manter dados originais importantes
-                evento.OrganizadorId = eventoOriginal.OrganizadorId;
-                evento.CreatedAt = eventoOriginal.CreatedAt;
-                evento.UpdatedAt = DateTime.UtcNow;
-
-                ModelState.Remove("OrganizadorId");
-
-                if (ModelState.IsValid)
-                {
+                    // Registrar dados antigos para auditoria
+                    var eventoAntigo = await _context.Eventos.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+                    
                     _context.Update(evento);
                     await _context.SaveChangesAsync();
-                    
-                    TempData["SuccessMessage"] = "✅ Evento atualizado com sucesso!";
+
+                    // Registrar atualização
+                    await _auditoriaService.RegistrarAcaoAsync("Evento", evento.Id, "UPDATE", 
+                        $"Evento atualizado: {evento.NomeEvento}", eventoAntigo, evento);
+
+                    TempData["SuccessMessage"] = $"✅ Evento '{evento.NomeEvento}' atualizado com sucesso!";
                     return RedirectToAction(nameof(Index));
                 }
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!EventoExists(evento.Id))
+                catch (DbUpdateConcurrencyException)
                 {
-                    return NotFound();
+                    if (!EventoExists(evento.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    throw;
+                    await _auditoriaService.RegistrarAcaoAsync("Evento", id, "UPDATE", 
+                        $"Erro ao atualizar evento: {ex.Message}", null, null, false, ex.Message);
+                    
+                    TempData["ErrorMessage"] = "❌ Erro ao atualizar evento.";
                 }
             }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"❌ Erro ao atualizar evento: {ex.Message}";
-            }
-
             return View(evento);
         }
 
         // GET: Eventos/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
+            if (id == null || id <= 0)
             {
                 return NotFound();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("LoginOrganizador", "Auth");
+            }
+
+            // Verificar permissão
+            if (!await User.IsOwnerOfEventoAsync(_userManager, id.Value, _context))
+            {
+                return RedirectToAction("AccessDenied", "Auth");
             }
 
             var evento = await _context.Eventos
                 .Include(e => e.Organizador)
                 .ThenInclude(o => o.Pessoa)
                 .FirstOrDefaultAsync(m => m.Id == id);
-                
+
             if (evento == null)
             {
                 return NotFound();
-            }
-
-            // Verificar se o evento pertence ao usuário logado
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null || evento.OrganizadorId != user.Id)
-            {
-                TempData["ErrorMessage"] = "❌ Você não tem permissão para excluir este evento.";
-                return RedirectToAction(nameof(Index));
             }
 
             return View(evento);
@@ -236,28 +314,29 @@ namespace ProjetoEventX.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            try
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
             {
-                var evento = await _context.Eventos.FindAsync(id);
-                if (evento != null)
-                {
-                    // Verificar se o evento pertence ao usuário logado
-                    var user = await _userManager.GetUserAsync(User);
-                    if (user == null || evento.OrganizadorId != user.Id)
-                    {
-                        TempData["ErrorMessage"] = "❌ Você não tem permissão para excluir este evento.";
-                        return RedirectToAction(nameof(Index));
-                    }
-
-                    _context.Eventos.Remove(evento);
-                    await _context.SaveChangesAsync();
-                    
-                    TempData["SuccessMessage"] = "✅ Evento excluído com sucesso!";
-                }
+                return RedirectToAction("LoginOrganizador", "Auth");
             }
-            catch (Exception ex)
+
+            // Verificar permissão
+            if (!await User.IsOwnerOfEventoAsync(_userManager, id, _context))
             {
-                TempData["ErrorMessage"] = $"❌ Erro ao excluir evento: {ex.Message}";
+                return RedirectToAction("AccessDenied", "Auth");
+            }
+
+            var evento = await _context.Eventos.FindAsync(id);
+            if (evento != null)
+            {
+                // Registrar dados antes da exclusão
+                await _auditoriaService.RegistrarAcaoAsync("Evento", evento.Id, "DELETE", 
+                    $"Evento excluído: {evento.NomeEvento}", evento, null);
+
+                _context.Eventos.Remove(evento);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"✅ Evento '{evento.NomeEvento}' excluído com sucesso!";
             }
 
             return RedirectToAction(nameof(Index));

@@ -1,0 +1,77 @@
+@{
+    ViewData["Title"] = "Confirmação de Presença - EventX";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-success">
+                <div class="card-header bg-success text-white text-center">
+                    <i class="fas fa-check-circle fa-3x mb-2"></i>
+                    <h3 class="mb-0">✅ PRESENÇA CONFIRMADA!</h3>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-calendar-check fa-4x text-success"></i>
+                    </div>
+                    
+                    <h4 class="text-success mb-3">Obrigado por confirmar sua presença!</h4>
+                    
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-user-check"></i> Confirmação Recebida</h5>
+                        <hr>
+                        <p><strong>👤 Convidado:</strong> @ViewBag.NomeConvidado</p>
+                        <p><strong>🎉 Evento:</strong> @ViewBag.NomeEvento</p>
+                        <p><strong>📅 Data:</strong> @ViewBag.DataEvento</p>
+                        <p><strong>✅ Status:</strong> Confirmado</p>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-clock"></i>
+                        <strong>⏰ Importante:</strong> Chegue com antecedência no local do evento.
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-success me-2">
+                            <i class="fas fa-home"></i> Voltar para Home
+                        </a>
+                        <a href="javascript:window.close()" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Fechar
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer text-center text-muted">
+                    <small>EventX - Sistema de Gerenciamento de Eventos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-close após 10 segundos
+        setTimeout(function() {
+            window.close();
+        }, 10000);
+    </script>
+}
+
+@section Styles {
+    <style>
+        .card {
+            border-radius: 15px;
+        }
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+        }
+        .fa-check-circle {
+            animation: bounce 1s infinite;
+        }
+        @@keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+    </style>
+}

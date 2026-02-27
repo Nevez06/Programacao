@@ -1,0 +1,395 @@
+@model ProjetoEventX.Models.TemplateConvite
+@{
+    ViewData["Title"] = "Criar Template de Convite";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-eventx mt-4">
+                <div class="card-header">
+                    <h2 class="mb-0" style="color: var(--eventx-primary);">
+                        <i class="fas fa-magic mr-2"></i>Criar Template de Convite
+                    </h2>
+                    <p class="text-muted mb-0">Evento: @ViewBag.EventoNome</p>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle mr-2"></i>@TempData["Error"]
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    }
+
+                    <form asp-action="Create" method="post" class="template-form">
+                        <input type="hidden" asp-for="EventoId" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <!-- Informações Básicas -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-info-circle mr-2"></i>Informações Básicas</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="NomeTemplate" class="control-label">Nome do Template *</label>
+                                            <input asp-for="NomeTemplate" class="form-control" placeholder="Ex: Convite Moderno - Casamento" />
+                                            <span asp-validation-for="NomeTemplate" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="EstiloLayout" class="control-label">Estilo do Layout *</label>
+                                            <select asp-for="EstiloLayout" class="form-control">
+                                                <option value="Moderno">Moderno</option>
+                                                <option value="Clássico">Clássico</option>
+                                                <option value="Minimalista">Minimalista</option>
+                                                <option value="Festivo">Festivo</option>
+                                                <option value="Corporativo">Corporativo</option>
+                                                <option value="Romântico">Romântico</option>
+                                            </select>
+                                            <span asp-validation-for="EstiloLayout" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Conteúdo do Convite -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-envelope mr-2"></i>Conteúdo do Convite</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label asp-for="TituloConvite" class="control-label">Título do Convite *</label>
+                                            <input asp-for="TituloConvite" class="form-control" placeholder="Ex: Você está convidado!" />
+                                            <span asp-validation-for="TituloConvite" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label asp-for="MensagemPrincipal" class="control-label">Mensagem Principal *</label>
+                                            <textarea asp-for="MensagemPrincipal" class="form-control" rows="3" placeholder="Escreva a mensagem principal do convite..."></textarea>
+                                            <span asp-validation-for="MensagemPrincipal" class="text-danger"></span>
+                                            <small class="form-text text-muted">Use {nome} para incluir o nome do convidado automaticamente</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label asp-for="MensagemSecundaria" class="control-label">Mensagem Secundária (opicional)</label>
+                                            <textarea asp-for="MensagemSecundaria" class="form-control" rows="2" placeholder="Informações adicionais, observações, etc."></textarea>
+                                            <span asp-validation-for="MensagemSecundaria" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cores e Estilos -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-palette mr-2"></i>Cores e Estilos</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label asp-for="CorFundo" class="control-label">Cor de Fundo</label>
+                                            <div class="input-group color-picker">
+                                                <input asp-for="CorFundo" type="color" class="form-control" />
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text color-preview" style="background-color: @Model.CorFundo;">&nbsp;</span>
+                                                </div>
+                                            </div>
+                                            <span asp-validation-for="CorFundo" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label asp-for="CorTexto" class="control-label">Cor do Texto</label>
+                                            <div class="input-group color-picker">
+                                                <input asp-for="CorTexto" type="color" class="form-control" />
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text color-preview" style="background-color: @Model.CorTexto;">&nbsp;</span>
+                                                </div>
+                                            </div>
+                                            <span asp-validation-for="CorTexto" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label asp-for="CorPrimaria" class="control-label">Cor Primária</label>
+                                            <div class="input-group color-picker">
+                                                <input asp-for="CorPrimaria" type="color" class="form-control" />
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text color-preview" style="background-color: @Model.CorPrimaria;">&nbsp;</span>
+                                                </div>
+                                            </div>
+                                            <span asp-validation-for="CorPrimaria" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label asp-for="TamanhoFonteTitulo" class="control-label">Tamanho Fonte Título</label>
+                                            <input asp-for="TamanhoFonteTitulo" type="range" min="16" max="48" class="form-control" />
+                                            <small class="form-text text-muted">@Model.TamanhoFonteTitulo px</small>
+                                            <span asp-validation-for="TamanhoFonteTitulo" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="FonteTitulo" class="control-label">Fonte do Título</label>
+                                            <select asp-for="FonteTitulo" class="form-control">
+                                                <option value="Arial, sans-serif">Arial</option>
+                                                <option value="'Times New Roman', serif">Times New Roman</option>
+                                                <option value="'Helvetica Neue', sans-serif">Helvetica</option>
+                                                <option value="Georgia, serif">Georgia</option>
+                                                <option value="'Roboto', sans-serif">Roboto</option>
+                                                <option value="'Open Sans', sans-serif">Open Sans</option>
+                                                <option value="'Lato', sans-serif">Lato</option>
+                                                <option value="'Playfair Display', serif">Playfair Display</option>
+                                            </select>
+                                            <span asp-validation-for="FonteTitulo" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="FonteTexto" class="control-label">Fonte do Texto</label>
+                                            <select asp-for="FonteTexto" class="form-control">
+                                                <option value="Arial, sans-serif">Arial</option>
+                                                <option value="'Times New Roman', serif">Times New Roman</option>
+                                                <option value="'Helvetica Neue', sans-serif">Helvetica</option>
+                                                <option value="Georgia, serif">Georgia</option>
+                                                <option value="'Roboto', sans-serif">Roboto</option>
+                                                <option value="'Open Sans', sans-serif">Open Sans</option>
+                                                <option value="'Lato', sans-serif">Lato</option>
+                                                <option value="'Source Sans Pro', sans-serif">Source Sans Pro</option>
+                                            </select>
+                                            <span asp-validation-for="FonteTexto" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Opções de Exibição -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-cog mr-2"></i>Opções de Exibição</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <div class="custom-control custom-checkbox">
+                                                <input asp-for="MostrarLogo" class="custom-control-input" />
+                                                <label asp-for="MostrarLogo" class="custom-control-label">Mostrar Logo</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <div class="custom-control custom-checkbox">
+                                                <input asp-for="MostrarFotoEvento" class="custom-control-input" />
+                                                <label asp-for="MostrarFotoEvento" class="custom-control-label">Mostrar Foto do Evento</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <div class="custom-control custom-checkbox">
+                                                <input asp-for="MostrarMapa" class="custom-control-input" />
+                                                <label asp-for="MostrarMapa" class="custom-control-label">Mostrar Mapa</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <div class="custom-control custom-checkbox">
+                                                <input asp-for="MostrarQRCode" class="custom-control-input" />
+                                                <label asp-for="MostrarQRCode" class="custom-control-label">Mostrar QR Code</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CSS Personalizado -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-code mr-2"></i>CSS Personalizado (Avançado)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label asp-for="CSSPersonalizado" class="control-label">CSS Adicional</label>
+                                    <textarea asp-for="CSSPersonalizado" class="form-control" rows="4" placeholder="/* Seu CSS personalizado aqui */"></textarea>
+                                    <span asp-validation-for="CSSPersonalizado" class="text-danger"></span>
+                                    <small class="form-text text-muted">Use CSS válido para personalizar ainda mais o layout do convite.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-eventx-primary btn-lg">
+                                <i class="fas fa-save mr-2"></i>Criar Template
+                            </button>
+                            <a asp-controller="Organizador" asp-action="DetalhesEvento" asp-route-id="@Model.EventoId" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times mr-2"></i>Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .template-form .card {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .template-form .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+        }
+
+        .color-picker input[type="color"] {
+            width: 50px;
+            height: 38px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .color-preview {
+            width: 40px;
+            height: 38px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: var(--eventx-primary);
+            border-color: var(--eventx-primary);
+        }
+
+        .btn-eventx-primary {
+            background: linear-gradient(135deg, var(--eventx-primary) 0%, var(--eventx-secondary) 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+            .btn-eventx-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+                color: white;
+            }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: #e9ecef;
+            outline: none;
+        }
+
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: var(--eventx-primary);
+                cursor: pointer;
+            }
+
+            input[type="range"]::-moz-range-thumb {
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: var(--eventx-primary);
+                cursor: pointer;
+                border: none;
+            }
+    </style>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Atualizar preview de cores em tempo real
+        document.addEventListener('DOMContentLoaded', function() {
+            const colorInputs = document.querySelectorAll('input[type="color"]');
+            colorInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const preview = this.parentElement.querySelector('.color-preview');
+                    if (preview) {
+                        preview.style.backgroundColor = this.value;
+                    }
+                });
+            });
+
+            // Atualizar valor do range
+            const rangeInputs = document.querySelectorAll('input[type="range"]');
+            rangeInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const small = this.parentElement.querySelector('small');
+                    if (small) {
+                        small.textContent = this.value + ' px';
+                    }
+                });
+            });
+        });
+
+        // Preview em nova aba
+        function previewTemplate() {
+            const form = document.querySelector('.template-form');
+            const formData = new FormData(form);
+            
+            // Abrir preview em nova aba
+            const previewWindow = window.open('', '_blank');
+            previewWindow.document.write(`
+                <html>
+                <head>
+                    <title>Preview do Template</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        .preview-container { max-width: 600px; margin: 0 auto; }
+                    </style>
+                </head>
+                <body>
+                    <div class="preview-container">
+                        <h1>Preview do Template</h1>
+                        <p>Em construção...</p>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+    </script>
+}
