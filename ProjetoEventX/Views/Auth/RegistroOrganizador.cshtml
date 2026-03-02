@@ -18,7 +18,7 @@
             
             <div asp-validation-summary="All" class="text-danger small mb-3"></div>
 
-            <div class="input-group">
+            <div class="field-group">
                 <label for="NomeCompleto">
                     <i class="fas fa-user"></i> Nome completo
                 </label>
@@ -26,16 +26,15 @@
                 <span asp-validation-for="NomeCompleto" class="text-danger small"></span>
             </div>
 
-            <div class="input-group">
+            <div class="field-group">
                 <label for="Cpf">
                     <i class="fas fa-id-card"></i> CPF
                 </label>
                 <input asp-for="Cpf" class="form-control cpf-input" placeholder="000.000.000-00" maxlength="14" />
                 <span asp-validation-for="Cpf" class="text-danger small"></span>
-                <small class="form-text text-muted">Formato: 000.000.000-00</small>
             </div>
 
-            <div class="input-group">
+            <div class="field-group">
                 <label for="Endereco">
                     <i class="fas fa-map-marker-alt"></i> Endereço
                 </label>
@@ -43,16 +42,15 @@
                 <span asp-validation-for="Endereco" class="text-danger small"></span>
             </div>
 
-            <div class="input-group">
+            <div class="field-group">
                 <label for="Telefone">
                     <i class="fas fa-phone"></i> Telefone
                 </label>
                 <input asp-for="Telefone" class="form-control telefone-input" placeholder="(00) 00000-0000" maxlength="15" />
                 <span asp-validation-for="Telefone" class="text-danger small"></span>
-                <small class="form-text text-muted">Formato: (00) 00000-0000</small>
             </div>
 
-            <div class="input-group">
+            <div class="field-group">
                 <label for="Email">
                     <i class="fas fa-envelope"></i> Email
                 </label>
@@ -60,7 +58,7 @@
                 <span asp-validation-for="Email" class="text-danger small"></span>
             </div>
 
-            <div class="input-group">
+            <div class="field-group">
                 <label for="Senha">
                     <i class="fas fa-lock"></i> Senha
                 </label>
@@ -74,7 +72,7 @@
                 <small class="form-text text-muted">Mínimo de 6 caracteres</small>
             </div>
 
-            <div class="input-group">
+            <div class="field-group">
                 <label for="ConfirmarSenha">
                     <i class="fas fa-lock"></i> Confirmar senha
                 </label>
@@ -151,11 +149,11 @@
     }
 
     /* Inputs */
-    .input-group {
+    .field-group {
         margin-bottom: 18px;
     }
 
-    .input-group label {
+    .field-group label {
         font-size: 15px;
         font-weight: 600;
         color: #333;
@@ -163,12 +161,12 @@
         display: block;
     }
 
-    .input-group label i {
+    .field-group label i {
         margin-right: 8px;
         color: var(--eventx-primary);
     }
 
-    .input-group input {
+    .field-group input {
         width: 100%;
         padding: 12px 15px;
         border: 2.5px solid #e0e0e0;
@@ -177,13 +175,13 @@
         transition: border-color 0.3s;
     }
 
-    .input-group input:focus {
+    .field-group input:focus {
         border-color: var(--eventx-primary);
         outline: none;
         box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
     }
 
-    .input-group input.is-invalid {
+    .field-group input.is-invalid {
         border-color: #dc3545;
     }
 

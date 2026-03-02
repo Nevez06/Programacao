@@ -3,50 +3,170 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow-lg border-0">
-                <div class="card-body p-5 text-center">
-                    <h2 class="fw-bold text-primary mb-3">
-                        <i class="fas fa-calendar-alt"></i> EventX
-                    </h2>
-                    <p class="text-muted mb-4">Escolha como deseja entrar no sistema</p>
+<div class="login-container">
+    <div class="login-card text-center">
 
-                    <div class="d-grid gap-3">
-                        <a asp-controller="Auth" asp-action="LoginOrganizador" class="btn btn-outline-primary btn-lg rounded-pill">
-                            <i class="fas fa-user-tie me-2"></i> Entrar como <strong>Organizador</strong>
-                        </a>
+        <div class="logo-area text-center mb-3">
+            <img class="logo" src="@Url.Content("~/Images/Logo-removebg-preview.png")" alt="Logo EventX">
+            <img class="nome-logo mt-2" src="@Url.Content("~/Images/Logo_so_nome.png")" alt="Nome EventX">
+        </div>
 
-                        <a asp-controller="Auth" asp-action="LoginFornecedor" class="btn btn-outline-success btn-lg rounded-pill">
-                            <i class="fas fa-store me-2"></i> Entrar como <strong>Fornecedor</strong>
-                        </a>
+        <h2 class="title">Entrar</h2>
+        <p class="subtitle">Escolha como deseja entrar no sistema</p>
 
-                        <a asp-controller="Auth" asp-action="LoginConvidado" class="btn btn-outline-info btn-lg rounded-pill">
-                            <i class="fas fa-user-friends me-2"></i> Entrar como <strong>Convidado</strong>
-                        </a>
-                    </div>
+        <div class="d-grid gap-3 mt-4">
+            <a asp-controller="Auth" asp-action="LoginOrganizador" class="btn-option btn-option-primary">
+                <i class="fas fa-user-tie me-2"></i> Entrar como <strong>Organizador</strong>
+            </a>
 
-                    <hr class="my-4" />
+            <a asp-controller="Auth" asp-action="LoginFornecedor" class="btn-option btn-option-success">
+                <i class="fas fa-store me-2"></i> Entrar como <strong>Fornecedor</strong>
+            </a>
 
-                    <p class="text-muted">
-                        Não tem uma conta?
-                    </p>
+            <a asp-controller="Auth" asp-action="LoginConvidado" class="btn-option btn-option-info">
+                <i class="fas fa-user-friends me-2"></i> Entrar como <strong>Convidado</strong>
+            </a>
+        </div>
 
-                    <div class="d-grid gap-2">
-                        <a asp-controller="Auth" asp-action="RegistroOrganizador" class="btn btn-primary rounded-pill">
-                            <i class="fas fa-user-plus me-2"></i> Cadastrar Organizador
-                        </a>
-                        <a asp-controller="Auth" asp-action="RegistroFornecedor" class="btn btn-success rounded-pill">
-                            <i class="fas fa-store-alt me-2"></i> Cadastrar Fornecedor
-                        </a>
-                    </div>
-                </div>
-            </div>
+        <hr class="my-4" />
+
+        <p class="subtitle">Não tem uma conta?</p>
+
+        <div class="d-grid gap-3">
+            <a asp-controller="Auth" asp-action="RegistroOrganizador" class="btn-option-filled btn-filled-primary">
+                <i class="fas fa-user-plus me-2"></i> Cadastrar Organizador
+            </a>
+            <a asp-controller="Auth" asp-action="RegistroFornecedor" class="btn-option-filled btn-filled-success">
+                <i class="fas fa-store-alt me-2"></i> Cadastrar Fornecedor
+            </a>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script src="https://kit.fontawesome.com/a2d9b5a86d.js" crossorigin="anonymous"></script>
-}
+<style>
+    .logo-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .logo {
+        width: 120px;
+    }
+
+    .nome-logo {
+        width: 150px;
+    }
+
+    .login-container {
+        width: 100%;
+        height: 100vh;
+        background: #f3f3f3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: -5%;
+    }
+
+    .login-card {
+        background: white;
+        width: 100%;
+        max-width: 500px;
+        padding: 35px 40px;
+        border-radius: 18px;
+        box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
+        margin: 20px;
+    }
+
+    .title {
+        margin-bottom: 5px;
+        font-size: 28px;
+        font-weight: bold;
+        color: var(--eventx-primary);
+    }
+
+    .subtitle {
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .btn-option {
+        display: block;
+        padding: 15px 20px;
+        border-radius: 30px;
+        font-size: 18px;
+        text-decoration: none;
+        transition: all 0.3s;
+        border: 2.5px solid;
+    }
+
+    .btn-option-primary {
+        color: var(--eventx-primary);
+        border-color: var(--eventx-primary);
+    }
+
+    .btn-option-primary:hover {
+        background: var(--eventx-primary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-option-success {
+        color: #198754;
+        border-color: #198754;
+    }
+
+    .btn-option-success:hover {
+        background: #198754;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+    }
+
+    .btn-option-info {
+        color: #0dcaf0;
+        border-color: #0dcaf0;
+    }
+
+    .btn-option-info:hover {
+        background: #0dcaf0;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 202, 240, 0.3);
+    }
+
+    .btn-option-filled {
+        display: block;
+        padding: 12px 20px;
+        border-radius: 30px;
+        font-size: 16px;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.3s;
+        border: none;
+        color: white;
+    }
+
+    .btn-filled-primary {
+        background: var(--eventx-primary);
+    }
+
+    .btn-filled-primary:hover {
+        background: #c5384a;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-filled-success {
+        background: #198754;
+    }
+
+    .btn-filled-success:hover {
+        background: #157347;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+    }
+</style>

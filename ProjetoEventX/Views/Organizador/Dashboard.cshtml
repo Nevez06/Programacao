@@ -2,201 +2,518 @@
 @{
     ViewData["Title"] = "Dashboard - Organizador";
     Layout = "_Layout";
+    var proximoEvento = ViewBag.ProximoEvento as ProjetoEventX.Models.Evento;
 }
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
-}
+<style>
+    .dash-wrapper {
+        background: #f5f1ed;
+        min-height: 100vh;
+        padding-bottom: 3rem;
+    }
 
-<!-- CONTAINER RESPONSIVO -->
-<div class="dashboard-wrapper">
-    
-    <!-- HEADER MOBILE (visível apenas em mobile) -->
-    <header class="mobile-header">
-        <div class="time-status">9:30</div>
-        <div class="signal-battery">
-            <div class="signal-bars">
-                <div class="signal-bar"></div>
-                <div class="signal-bar"></div>
-                <div class="signal-bar"></div>
-                <div class="signal-bar active"></div>
-            </div>
-            <div class="battery-icon">
-                <div class="battery-level"></div>
-            </div>
-        </div>
-    </header>
+    /* Header de Boas-vindas */
+    .dash-welcome {
+        background: linear-gradient(135deg, #8B0000 0%, #B22222 50%, #D4A574 100%);
+        color: #fff;
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+    }
 
-    <!-- NAVBAR MOBILE (visível apenas em mobile) -->
-    <nav class="mobile-nav">
-        <div class="nav-left">
-            <div class="logo-container">
-                <div class="logo-icon">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7L12 12L22 7L12 2ZM2 17L12 22L22 17M2 12L12 17L22 12" fill="#992008"/>
-                    </svg>
+    .dash-welcome h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+    }
+
+    .dash-welcome p {
+        opacity: 0.85;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .dash-welcome .user-avatar {
+        width: 60px;
+        height: 60px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-right: 1rem;
+    }
+
+    /* Cards de Estatísticas */
+    .stat-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: #fff;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon.eventos { background: linear-gradient(135deg, #8B0000, #B22222); }
+    .stat-icon.convidados { background: linear-gradient(135deg, #2E7D32, #43A047); }
+    .stat-icon.orcamento { background: linear-gradient(135deg, #E65100, #FF8F00); }
+    .stat-icon.concluidos { background: linear-gradient(135deg, #1565C0, #42A5F5); }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #888;
+        margin-top: 2px;
+    }
+
+    /* Próximo Evento */
+    .next-event-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        border-left: 5px solid #8B0000;
+    }
+
+    .next-event-card h5 {
+        color: #8B0000;
+        font-weight: 700;
+    }
+
+    .next-event-card .event-date {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .next-event-card .event-name {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0.5rem 0;
+    }
+
+    .event-meta {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .event-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .event-meta-item i {
+        color: #8B0000;
+    }
+
+    /* Ações Rápidas */
+    .quick-action {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        height: 100%;
+    }
+
+    .quick-action:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .quick-action .qa-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #8B0000, #D4A574);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.8rem;
+        color: #fff;
+        font-size: 1.4rem;
+    }
+
+    .quick-action h6 {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 0.2rem;
+    }
+
+    .quick-action p {
+        font-size: 0.8rem;
+        color: #999;
+        margin: 0;
+    }
+
+    /* Lista de Eventos */
+    .eventos-list-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .eventos-list-card h5 {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 1.2rem;
+    }
+
+    .evento-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 12px;
+        background: #f8f9fa;
+        margin-bottom: 0.8rem;
+        transition: background 0.2s;
+    }
+
+    .evento-item:hover {
+        background: #f0ebe5;
+    }
+
+    .evento-item .evento-date-box {
+        min-width: 55px;
+        text-align: center;
+        margin-right: 1rem;
+    }
+
+    .evento-date-box .day {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #8B0000;
+        line-height: 1;
+    }
+
+    .evento-date-box .month {
+        font-size: 0.75rem;
+        color: #888;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .evento-item .evento-info {
+        flex: 1;
+    }
+
+    .evento-info .evento-nome {
+        font-weight: 600;
+        color: #333;
+        font-size: 0.95rem;
+    }
+
+    .evento-info .evento-tipo {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-badge.planejado { background: #FFF3E0; color: #E65100; }
+    .status-badge.andamento { background: #E3F2FD; color: #1565C0; }
+    .status-badge.concluido { background: #E8F5E9; color: #2E7D32; }
+    .status-badge.cancelado { background: #FFEBEE; color: #C62828; }
+
+    .section-title {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 1.2rem;
+        font-size: 1.1rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #999;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+</style>
+
+<div class="dash-wrapper">
+    <!-- Header de Boas-vindas -->
+    <section class="dash-welcome">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
                 </div>
-                <span class="brand-name">EventX</span>
+                <div>
+                    <h1>Olá, @(Model.Pessoa?.Nome ?? Model.UserName)!</h1>
+                    <p>Gerencie seus eventos com praticidade e eficiência</p>
+                </div>
             </div>
         </div>
-        <div class="nav-right">
-            <a href="#" class="nav-link">Login</a>
-            <a href="#" class="nav-link">Cadastro</a>
-        </div>
-    </nav>
+    </section>
 
-    <!-- TÍTULO DESKTOP (visível apenas em desktop) -->
-    <div class="desktop-title">
-        <h1 class="welcome-title">Bem-vindo, Organizador! 🎉</h1>
-        <p class="welcome-subtitle">Gerencie seus eventos com praticidade e eficiência</p>
+    <div class="container">
+        <!-- Cards de Estatísticas -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="stat-icon eventos">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-number">@ViewBag.TotalEventos</div>
+                    <div class="stat-label">Total de Eventos</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="stat-icon convidados">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number">@ViewBag.TotalConvidados</div>
+                    <div class="stat-label">Convidados (@ViewBag.ConvidadosConfirmados confirmados)</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="stat-icon orcamento">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="stat-number">R$ @(((decimal)ViewBag.TotalDespesas).ToString("N0"))</div>
+                    <div class="stat-label">Total em Despesas</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="stat-icon concluidos">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-number">@ViewBag.EventosConcluidos</div>
+                    <div class="stat-label">Eventos Concluídos</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Coluna Esquerda -->
+            <div class="col-lg-8">
+                <!-- Próximo Evento -->
+                @if (proximoEvento != null)
+                {
+                    <div class="next-event-card mb-4">
+                        <h5><i class="fas fa-star me-2"></i>Próximo Evento</h5>
+                        <div class="event-name">@proximoEvento.NomeEvento</div>
+                        <div class="event-meta">
+                            <div class="event-meta-item">
+                                <i class="fas fa-calendar"></i>
+                                @proximoEvento.DataEvento.ToString("dd/MM/yyyy")
+                            </div>
+                            <div class="event-meta-item">
+                                <i class="fas fa-clock"></i>
+                                @proximoEvento.HoraInicio - @proximoEvento.HoraFim
+                            </div>
+                            <div class="event-meta-item">
+                                <i class="fas fa-tag"></i>
+                                @proximoEvento.TipoEvento
+                            </div>
+                            <div class="event-meta-item">
+                                <i class="fas fa-users"></i>
+                                @proximoEvento.PublicoEstimado pessoas
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Lista de Eventos -->
+                <div class="eventos-list-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Meus Eventos</h5>
+                        <a asp-action="CriarEvento" class="btn btn-sm" style="background: #8B0000; color: #fff;">
+                            <i class="fas fa-plus"></i> Novo
+                        </a>
+                    </div>
+
+                    @if (Model.Eventos != null && Model.Eventos.Any())
+                    {
+                        @foreach (var evento in Model.Eventos.OrderByDescending(e => e.DataEvento).Take(5))
+                        {
+                            <a asp-action="DetalhesEvento" asp-route-id="@evento.Id" style="text-decoration: none;">
+                                <div class="evento-item">
+                                    <div class="evento-date-box">
+                                        <div class="day">@evento.DataEvento.Day</div>
+                                        <div class="month">@evento.DataEvento.ToString("MMM")</div>
+                                    </div>
+                                    <div class="evento-info">
+                                        <div class="evento-nome">@evento.NomeEvento</div>
+                                        <div class="evento-tipo">@evento.TipoEvento · @evento.HoraInicio - @evento.HoraFim</div>
+                                    </div>
+                                    @{
+                                        var statusClass = evento.StatusEvento?.ToLower() switch {
+                                            "planejado" => "planejado",
+                                            "em andamento" => "andamento",
+                                            "concluído" or "finalizado" => "concluido",
+                                            "cancelado" => "cancelado",
+                                            _ => "planejado"
+                                        };
+                                    }
+                                    <span class="status-badge @statusClass">@evento.StatusEvento</span>
+                                </div>
+                            </a>
+                        }
+
+                        @if (Model.Eventos.Count > 5)
+                        {
+                            <div class="text-center mt-3">
+                                <a asp-action="MeusEventos" class="btn btn-outline-secondary btn-sm">Ver todos os eventos</a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-plus d-block"></i>
+                            <p>Você ainda não tem eventos criados.</p>
+                            <a asp-action="CriarEvento" class="btn btn-sm" style="background: #8B0000; color: #fff;">
+                                <i class="fas fa-plus"></i> Criar Primeiro Evento
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Coluna Direita -->
+            <div class="col-lg-4">
+                <!-- Ações Rápidas -->
+                <h6 class="section-title"><i class="fas fa-bolt me-2"></i>Ações Rápidas</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <a asp-action="CriarEvento" class="quick-action">
+                            <div class="qa-icon">
+                                <i class="fas fa-calendar-plus"></i>
+                            </div>
+                            <h6>Criar Evento</h6>
+                            <p>Novo evento</p>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a asp-controller="Convite" asp-action="Index" class="quick-action">
+                            <div class="qa-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <h6>Convidar</h6>
+                            <p>Enviar convites</p>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a asp-controller="Fornecedor" asp-action="Catalogo" class="quick-action">
+                            <div class="qa-icon">
+                                <i class="fas fa-store"></i>
+                            </div>
+                            <h6>Fornecedores</h6>
+                            <p>Ver catálogo</p>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a asp-controller="Administracao" asp-action="Index" class="quick-action">
+                            <div class="qa-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <h6>Orçamento</h6>
+                            <p>Gerenciar</p>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a asp-controller="TemplateConvite" asp-action="Index" class="quick-action">
+                            <div class="qa-icon">
+                                <i class="fas fa-palette"></i>
+                            </div>
+                            <h6>Templates</h6>
+                            <p>Convites</p>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a asp-controller="IA" asp-action="Index" class="quick-action">
+                            <div class="qa-icon">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <h6>Assistente IA</h6>
+                            <p>Ajuda inteligente</p>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Info do Perfil -->
+                <div class="eventos-list-card">
+                    <h5><i class="fas fa-user-circle me-2"></i>Meu Perfil</h5>
+                    <div class="mt-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-user text-muted me-2" style="width: 20px;"></i>
+                            <small class="text-muted">Nome:</small>
+                            <strong class="ms-2" style="font-size: 0.9rem;">@(Model.Pessoa?.Nome ?? "—")</strong>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-envelope text-muted me-2" style="width: 20px;"></i>
+                            <small class="text-muted">Email:</small>
+                            <strong class="ms-2" style="font-size: 0.9rem;">@(Model.Email ?? "—")</strong>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-phone text-muted me-2" style="width: 20px;"></i>
+                            <small class="text-muted">Telefone:</small>
+                            <strong class="ms-2" style="font-size: 0.9rem;">@(Model.Pessoa?.Telefone ?? "—")</strong>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-map-marker-alt text-muted me-2" style="width: 20px;"></i>
+                            <small class="text-muted">Cidade:</small>
+                            <strong class="ms-2" style="font-size: 0.9rem;">@(Model.Pessoa?.Cidade ?? "—")/@(Model.Pessoa?.UF ?? "—")</strong>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-calendar-check text-muted me-2" style="width: 20px;"></i>
+                            <small class="text-muted">Membro desde:</small>
+                            <strong class="ms-2" style="font-size: 0.9rem;">@Model.DataCadastro.ToString("MMM/yyyy")</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <!-- BANNER PRINCIPAL -->
-    <section class="hero-banner-section">
-        <img src="~/Images/bg-top.png" alt="Evento" class="banner-image">
-        <div class="banner-overlay">
-            <div class="banner-content">
-                <p class="banner-subtitle">Compartilhe, planeje, convide e gerencie com facilidade</p>
-                <h1 class="banner-title">EVENTOS EM UM SÓ LUGAR</h1>
-                <button class="btn-criar-evento" onclick="window.location.href='@Url.Action("CriarEvento", "Organizador")'">Criar meu evento</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- BOTÕES PRINCIPAIS -->
-    <section class="main-actions">
-        <div class="actions-grid">
-            <div class="action-item" onclick="window.location.href='@Url.Action("Index", "Convite")'">
-                <div class="action-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="white"/>
-                    </svg>
-                </div>
-                <div class="action-text">
-                    <span class="action-main">Convidar</span>
-                    <span class="action-sub">Pessoas</span>
-                </div>
-            </div>
-
-            <div class="action-item" onclick="window.location.href='@Url.Action("CriarEvento", "Organizador")'">
-                <div class="action-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M19 3H18V1H16V3H8V1H6V3H5C3.89 3 3.01 3.9 3.01 5L3 19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V8H19V19ZM7 10H12V15H7V10Z" fill="white"/>
-                    </svg>
-                </div>
-                <div class="action-text">
-                    <span class="action-main">Criar</span>
-                    <span class="action-sub">Evento</span>
-                </div>
-            </div>
-
-            <div class="action-item" onclick="window.location.href='@Url.Action("Index", "Fornecedor")'">
-                <div class="action-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 7.5V9M15 11V9.5L21 9V11M7 12C7.56 12 8 12.44 8 13S7.56 14 7 14 6 13.56 6 13 6.44 12 7 12M12 12C12.56 12 13 12.44 13 13S12.56 14 12 14 11 13.56 11 13 11.44 12 12 12M17 12C17.56 12 18 12.44 18 13S17.56 14 17 14 16 13.56 16 13 16.44 12 17 12M12 20.5C7 20.5 2.73 16.39 2 11H22C21.27 16.39 17 20.5 12 20.5Z" fill="white"/>
-                    </svg>
-                </div>
-                <div class="action-text">
-                    <span class="action-main">Escolher</span>
-                    <span class="action-sub">Fornecedores</span>
-                </div>
-            </div>
-
-            <div class="action-item" onclick="window.location.href='@Url.Action("Index", "Administracao")'">
-                <div class="action-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5ZM9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17Z" fill="white"/>
-                    </svg>
-                </div>
-                <div class="action-text">
-                    <span class="action-main">Gerenciar</span>
-                    <span class="action-sub">Orçamento</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- EXPLORAR FORNECEDORES -->
-    <section class="explore-section">
-        <div class="explore-card" onclick="window.location.href='@Url.Action("Index", "Fornecedor")'">
-            <div class="explore-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z" fill="#992008"/>
-                </svg>
-            </div>
-            <span class="explore-text">Explorar Fornecedores</span>
-        </div>
-    </section>
-
-    <!-- CATEGORIAS CIRCULARES -->
-    <section class="categories-section">
-        <div class="categories-grid">
-            <div class="category-circle" onclick="window.location.href='@Url.Action("Index", "Convite")'">
-                <div class="circle-bg">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="white"/>
-                    </svg>
-                </div>
-                <span class="category-label">Convites</span>
-            </div>
-
-            <div class="category-circle">
-                <div class="circle-bg">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L13.09 8.26L20 9L14 14L16.18 22L10 18.27L3.82 22L6 14L0 9L6.91 8.26L8 2L12 2Z" fill="white"/>
-                    </svg>
-                </div>
-                <span class="category-label">Decoração</span>
-            </div>
-
-            <div class="category-circle">
-                <div class="circle-bg">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7L12 12L22 7L12 2ZM2 17L12 22L22 17M2 12L12 17L22 12" fill="white"/>
-                    </svg>
-                </div>
-                <span class="category-label">Espaços</span>
-            </div>
-
-            <div class="category-circle">
-                <div class="circle-bg">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 2L7.17 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4H16.83L15 2H9Z" fill="white"/>
-                    </svg>
-                </div>
-                <span class="category-label">Fotografia</span>
-            </div>
-
-            <div class="category-circle">
-                <div class="circle-bg">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 3V13.55C11.41 13.21 10.73 13 10 13C7.79 13 6 14.79 6 17S7.79 21 10 21S14 19.21 14 17V7H18V3H12Z" fill="white"/>
-                    </svg>
-                </div>
-                <span class="category-label">Música</span>
-            </div>
-
-            <div class="category-circle">
-                <div class="circle-bg">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 6H16L14 4H10L8 6H4C2.9 6 2 6.9 2 8V19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6Z" fill="white"/>
-                    </svg>
-                </div>
-                <span class="category-label">Lembrancinhas</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- FOOTER MOBILE (visível apenas em mobile) -->
-    <footer class="mobile-footer">
-        <div class="footer-logo">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2ZM2 17L12 22L22 17M2 12L12 17L22 12" fill="#992008"/>
-            </svg>
-        </div>
-        <div class="footer-indicator"></div>
-    </footer>
-
 </div>
 
 <!-- BOTÃO FLUTUANTE CHAT IA -->

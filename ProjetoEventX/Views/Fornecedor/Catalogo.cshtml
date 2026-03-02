@@ -1,0 +1,185 @@
+@model IEnumerable<ProjetoEventX.Models.Produto>
+@{
+    ViewData["Title"] = "EventX - Catálogo de Produtos";
+}
+
+<style>
+    .catalogo-section {
+        background: var(--eventx-secondary, #f5f0eb);
+        min-height: 80vh;
+        padding: 3rem 0;
+    }
+
+    .catalogo-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .catalogo-header h2 {
+        color: var(--eventx-primary, #8B0000);
+        font-weight: 700;
+        font-size: 2rem;
+    }
+
+    .catalogo-header p {
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
+
+    .produto-card {
+        text-align: center;
+        padding: 2rem 1.5rem;
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .produto-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .produto-icon {
+        width: 70px;
+        height: 70px;
+        background: var(--eventx-primary, #8B0000);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.2rem;
+        color: #fff;
+        font-size: 1.8rem;
+    }
+
+    .produto-card h5 {
+        color: var(--eventx-primary, #8B0000);
+        font-weight: 600;
+        margin-bottom: 0.8rem;
+        font-size: 1.15rem;
+    }
+
+    .produto-card .produto-descricao {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .produto-preco {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--eventx-primary, #8B0000);
+        margin-bottom: 0.5rem;
+    }
+
+    .produto-fornecedor {
+        font-size: 0.85rem;
+        color: #999;
+    }
+
+    .produto-fornecedor i {
+        margin-right: 4px;
+    }
+
+    .produto-tipo-badge {
+        display: inline-block;
+        background: var(--eventx-primary, #8B0000);
+        color: #fff;
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.8rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #ccc;
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-state h4 {
+        color: #999;
+        font-weight: 600;
+    }
+
+    .empty-state p {
+        color: #aaa;
+    }
+
+    .ver-detalhes-btn {
+        display: inline-block;
+        margin-top: 0.8rem;
+        padding: 6px 20px;
+        background: var(--eventx-primary, #8B0000);
+        color: #fff;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: background 0.3s;
+    }
+
+    .produto-card:hover .ver-detalhes-btn {
+        background: var(--eventx-primary-dark, #654321);
+    }
+</style>
+
+<section class="catalogo-section">
+    <div class="container">
+        <div class="catalogo-header">
+            <h2><i class="fas fa-store"></i> Catálogo de Produtos</h2>
+            <p>Explore os produtos e serviços oferecidos pelos nossos fornecedores</p>
+        </div>
+
+        @if (Model.Any())
+        {
+            <div class="row">
+                @foreach (var produto in Model)
+                {
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <a asp-action="DetalhesProduto" asp-route-id="@produto.Id" class="produto-card">
+                            <div class="produto-icon">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <span class="produto-tipo-badge">@produto.Tipo</span>
+                            <h5>@produto.Nome</h5>
+                            <p class="produto-descricao">@produto.Descricao</p>
+                            <p class="produto-preco">R$ @produto.Preco.ToString("N2")</p>
+                            <p class="produto-fornecedor">
+                                <i class="fas fa-store"></i> @produto.Fornecedor?.Pessoa?.Nome
+                            </p>
+                            <span class="ver-detalhes-btn">
+                                <i class="fas fa-eye"></i> Ver Detalhes
+                            </span>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-box-open d-block"></i>
+                <h4>Nenhum produto disponível</h4>
+                <p>Os fornecedores ainda não cadastraram produtos.</p>
+            </div>
+        }
+    </div>
+</section>

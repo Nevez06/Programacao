@@ -1,155 +1,415 @@
 @model ProjetoEventX.Models.RegistroFornecedorViewModel
 @{
-    ViewData["Title"] = "Cadastro - Fornecedor";
+    ViewData["Title"] = "Cadastro Fornecedor";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card card-eventx mt-5">
-                <div class="card-body">
-                    <h2 class="text-center mb-4" style="color: var(--eventx-primary);">Cadastro Fornecedor</h2>
-                    
-                    <form asp-action="RegistroFornecedor" method="post">
-                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="NomeCompleto" class="form-label"></label>
-                                <input asp-for="NomeCompleto" class="form-control" placeholder="Seu nome completo" />
-                                <span asp-validation-for="NomeCompleto" class="text-danger"></span>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="NomeLoja" class="form-label"></label>
-                                <input asp-for="NomeLoja" class="form-control" placeholder="Nome da sua loja/empresa" />
-                                <span asp-validation-for="NomeLoja" class="text-danger"></span>
-                            </div>
-                        </div>
+<div class="login-container">
+    <div class="login-card">
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Cpf" class="form-label"></label>
-                                <input asp-for="Cpf" class="form-control" placeholder="000.000.000-00" />
-                                <span asp-validation-for="Cpf" class="text-danger"></span>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Cnpj" class="form-label"></label>
-                                <input asp-for="Cnpj" class="form-control" placeholder="00.000.000/0000-00" />
-                                <span asp-validation-for="Cnpj" class="text-danger"></span>
-                            </div>
-                        </div>
+        <div class="logo-area text-center mb-3">
+            <img class="logo" src="@Url.Content("~/Images/Logo-removebg-preview.png")" alt="Logo EventX">
+            <img class="nome-logo mt-2" src="@Url.Content("~/Images/Logo_so_nome.png")" alt="Nome EventX">
+        </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Email" class="form-label"></label>
-                                <input asp-for="Email" class="form-control" type="email" placeholder="email@exemplo.com" />
-                                <span asp-validation-for="Email" class="text-danger"></span>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Telefone" class="form-label"></label>
-                                <input asp-for="Telefone" class="form-control" placeholder="(00) 00000-0000" />
-                                <span asp-validation-for="Telefone" class="text-danger"></span>
-                            </div>
-                        </div>
+        <h2 class="title">Cadastro Fornecedor</h2>
 
-                        <div class="mb-3">
-                            <label asp-for="TipoServico" class="form-label"></label>
-                            <select asp-for="TipoServico" class="form-control">
-                                <option value="">Selecione o tipo de serviço</option>
-                                <option value="Buffet">Buffet</option>
-                                <option value="Decoração">Decoração</option>
-                                <option value="Fotografia">Fotografia</option>
-                                <option value="Música">Música/DJ</option>
-                                <option value="Iluminação">Iluminação</option>
-                                <option value="Locação">Locação de Espaço</option>
-                                <option value="Segurança">Segurança</option>
-                                <option value="Outros">Outros</option>
-                            </select>
-                            <span asp-validation-for="TipoServico" class="text-danger"></span>
-                        </div>
+        <form asp-action="RegistroFornecedor" method="post" id="registroForm">
 
-                        <div class="mb-3">
-                            <label asp-for="Endereco" class="form-label"></label>
-                            <input asp-for="Endereco" class="form-control" placeholder="Rua, número, bairro" />
-                            <span asp-validation-for="Endereco" class="text-danger"></span>
-                        </div>
+            <div asp-validation-summary="All" class="text-danger small mb-3"></div>
 
-                        <div class="row">
-                            <div class="col-md-8 mb-3">
-                                <label asp-for="Cidade" class="form-label"></label>
-                                <input asp-for="Cidade" class="form-control" placeholder="Sua cidade" />
-                                <span asp-validation-for="Cidade" class="text-danger"></span>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label asp-for="UF" class="form-label"></label>
-                                <select asp-for="UF" class="form-control">
-                                    <option value="">UF</option>
-                                    <option value="AC">AC</option>
-                                    <option value="AL">AL</option>
-                                    <option value="AP">AP</option>
-                                    <option value="AM">AM</option>
-                                    <option value="BA">BA</option>
-                                    <option value="CE">CE</option>
-                                    <option value="DF">DF</option>
-                                    <option value="ES">ES</option>
-                                    <option value="GO">GO</option>
-                                    <option value="MA">MA</option>
-                                    <option value="MT">MT</option>
-                                    <option value="MS">MS</option>
-                                    <option value="MG">MG</option>
-                                    <option value="PA">PA</option>
-                                    <option value="PB">PB</option>
-                                    <option value="PR">PR</option>
-                                    <option value="PE">PE</option>
-                                    <option value="PI">PI</option>
-                                    <option value="RJ">RJ</option>
-                                    <option value="RN">RN</option>
-                                    <option value="RS">RS</option>
-                                    <option value="RO">RO</option>
-                                    <option value="RR">RR</option>
-                                    <option value="SC">SC</option>
-                                    <option value="SP">SP</option>
-                                    <option value="SE">SE</option>
-                                    <option value="TO">TO</option>
-                                </select>
-                                <span asp-validation-for="UF" class="text-danger"></span>
-                            </div>
-                        </div>
+            <div class="field-group">
+                <label for="NomeCompleto">
+                    <i class="fas fa-user"></i> Nome Completo
+                </label>
+                <input asp-for="NomeCompleto" class="form-control" placeholder="Seu nome completo" />
+                <span asp-validation-for="NomeCompleto" class="text-danger small"></span>
+            </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Senha" class="form-label"></label>
-                                <input asp-for="Senha" class="form-control" type="password" />
-                                <span asp-validation-for="Senha" class="text-danger"></span>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="ConfirmarSenha" class="form-label"></label>
-                                <input asp-for="ConfirmarSenha" class="form-control" type="password" />
-                                <span asp-validation-for="ConfirmarSenha" class="text-danger"></span>
-                            </div>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-eventx-primary">Cadastrar</button>
-                        </div>
-                    </form>
-                    
-                    <div class="text-center mt-3">
-                        <p>Já tem conta? <a asp-action="LoginFornecedor">Faça login aqui</a></p>
-                    </div>
+            <div class="field-group">
+                <label for="NomeLoja">
+                    <i class="fas fa-store"></i> Nome da Loja
+                </label>
+                <input asp-for="NomeLoja" class="form-control" placeholder="Nome da sua loja/empresa" />
+                <span asp-validation-for="NomeLoja" class="text-danger small"></span>
+            </div>
+
+            <div class="row-two">
+                <div class="field-group half">
+                    <label for="Cpf">
+                        <i class="fas fa-id-card"></i> CPF
+                    </label>
+                    <input asp-for="Cpf" class="form-control cpf-input" placeholder="000.000.000-00" maxlength="14" />
+                    <span asp-validation-for="Cpf" class="text-danger small"></span>
+                </div>
+
+                <div class="field-group half">
+                    <label for="Cnpj">
+                        <i class="fas fa-building"></i> CNPJ
+                    </label>
+                    <input asp-for="Cnpj" class="form-control cnpj-input" placeholder="00.000.000/0000-00" maxlength="18" />
+                    <span asp-validation-for="Cnpj" class="text-danger small"></span>
                 </div>
             </div>
-        </div>
+
+            <div class="row-two">
+                <div class="field-group half">
+                    <label for="Email">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input asp-for="Email" type="email" class="form-control" placeholder="email@exemplo.com" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="field-group half">
+                    <label for="Telefone">
+                        <i class="fas fa-phone"></i> Telefone
+                    </label>
+                    <input asp-for="Telefone" class="form-control telefone-input" placeholder="(00) 00000-0000" maxlength="15" />
+                    <span asp-validation-for="Telefone" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="TipoServico">
+                    <i class="fas fa-concierge-bell"></i> Tipo de Serviço
+                </label>
+                <select asp-for="TipoServico" class="form-control">
+                    <option value="">Selecione o tipo de serviço</option>
+                    <option value="Buffet">Buffet</option>
+                    <option value="Decoração">Decoração</option>
+                    <option value="Fotografia">Fotografia</option>
+                    <option value="Música">Música/DJ</option>
+                    <option value="Iluminação">Iluminação</option>
+                    <option value="Locação">Locação de Espaço</option>
+                    <option value="Segurança">Segurança</option>
+                    <option value="Outros">Outros</option>
+                </select>
+                <span asp-validation-for="TipoServico" class="text-danger small"></span>
+            </div>
+
+            <div class="field-group">
+                <label for="Endereco">
+                    <i class="fas fa-map-marker-alt"></i> Endereço
+                </label>
+                <input asp-for="Endereco" class="form-control" placeholder="Rua, número, bairro" />
+                <span asp-validation-for="Endereco" class="text-danger small"></span>
+            </div>
+
+            <div class="row-two">
+                <div class="field-group half-large">
+                    <label for="Cidade">
+                        <i class="fas fa-city"></i> Cidade
+                    </label>
+                    <input asp-for="Cidade" class="form-control" placeholder="Sua cidade" />
+                    <span asp-validation-for="Cidade" class="text-danger small"></span>
+                </div>
+
+                <div class="field-group half-small">
+                    <label for="UF">
+                        <i class="fas fa-map"></i> UF
+                    </label>
+                    <select asp-for="UF" class="form-control">
+                        <option value="">UF</option>
+                        <option value="AC">AC</option>
+                        <option value="AL">AL</option>
+                        <option value="AP">AP</option>
+                        <option value="AM">AM</option>
+                        <option value="BA">BA</option>
+                        <option value="CE">CE</option>
+                        <option value="DF">DF</option>
+                        <option value="ES">ES</option>
+                        <option value="GO">GO</option>
+                        <option value="MA">MA</option>
+                        <option value="MT">MT</option>
+                        <option value="MS">MS</option>
+                        <option value="MG">MG</option>
+                        <option value="PA">PA</option>
+                        <option value="PB">PB</option>
+                        <option value="PR">PR</option>
+                        <option value="PE">PE</option>
+                        <option value="PI">PI</option>
+                        <option value="RJ">RJ</option>
+                        <option value="RN">RN</option>
+                        <option value="RS">RS</option>
+                        <option value="RO">RO</option>
+                        <option value="RR">RR</option>
+                        <option value="SC">SC</option>
+                        <option value="SP">SP</option>
+                        <option value="SE">SE</option>
+                        <option value="TO">TO</option>
+                    </select>
+                    <span asp-validation-for="UF" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="Senha">
+                    <i class="fas fa-lock"></i> Senha
+                </label>
+                <div class="password-container">
+                    <input asp-for="Senha" type="password" class="form-control" placeholder="Digite sua senha (mín. 6 caracteres)" />
+                    <button type="button" class="btn-toggle-password" onclick="togglePassword('Senha')">
+                        <i class="fas fa-eye" id="toggleIcon-Senha"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="Senha" class="text-danger small"></span>
+                <small class="form-text text-muted">Mínimo de 6 caracteres</small>
+            </div>
+
+            <div class="field-group">
+                <label for="ConfirmarSenha">
+                    <i class="fas fa-lock"></i> Confirmar Senha
+                </label>
+                <div class="password-container">
+                    <input asp-for="ConfirmarSenha" type="password" class="form-control" placeholder="Confirme sua senha" />
+                    <button type="button" class="btn-toggle-password" onclick="togglePassword('ConfirmarSenha')">
+                        <i class="fas fa-eye" id="toggleIcon-ConfirmarSenha"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="ConfirmarSenha" class="text-danger small"></span>
+            </div>
+
+            <button type="submit" class="btn-login">
+                <i class="fas fa-user-plus"></i> Cadastrar
+            </button>
+
+            <p class="cadastro-text">
+                Já tem conta?
+                <a asp-action="LoginFornecedor">
+                    <i class="fas fa-sign-in-alt"></i> Faça login aqui
+                </a>
+            </p>
+
+        </form>
     </div>
 </div>
 
+@section Styles {
+<style>
+    .logo-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .logo {
+        width: 120px;
+    }
+
+    .nome-logo {
+        width: 150px;
+    }
+
+    .login-container {
+        width: 100%;
+        min-height: 100vh;
+        background: #f3f3f3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px 0;
+    }
+
+    .login-card {
+        background: white;
+        width: 100%;
+        max-width: 550px;
+        padding: 35px 40px;
+        border-radius: 18px;
+        box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
+        margin: 20px;
+    }
+
+    .title {
+        text-align: center;
+        margin-bottom: 25px;
+        font-size: 28px;
+        font-weight: bold;
+        color: var(--eventx-primary);
+    }
+
+    .field-group {
+        margin-bottom: 18px;
+    }
+
+    .field-group label {
+        font-size: 15px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .field-group label i {
+        margin-right: 8px;
+        color: var(--eventx-primary);
+    }
+
+    .field-group input,
+    .field-group select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2.5px solid #e0e0e0;
+        font-size: 16px;
+        border-radius: 8px;
+        transition: border-color 0.3s;
+    }
+
+    .field-group input:focus,
+    .field-group select:focus {
+        border-color: var(--eventx-primary);
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .field-group input.is-invalid {
+        border-color: #dc3545;
+    }
+
+    .row-two {
+        display: flex;
+        gap: 15px;
+    }
+
+    .row-two .half {
+        flex: 1;
+    }
+
+    .row-two .half-large {
+        flex: 2;
+    }
+
+    .row-two .half-small {
+        flex: 1;
+    }
+
+    .password-container {
+        position: relative;
+    }
+
+    .password-container input {
+        padding-right: 45px;
+    }
+
+    .btn-toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        padding: 5px;
+    }
+
+    .btn-toggle-password:hover {
+        color: var(--eventx-primary);
+    }
+
+    .btn-login {
+        width: 100%;
+        padding: 15px;
+        margin-top: 15px;
+        background: var(--eventx-primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-login:hover {
+        background: #c5384a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-login:active {
+        transform: translateY(0);
+    }
+
+    .cadastro-text {
+        text-align: center;
+        margin-top: 20px;
+        color: #666;
+    }
+
+    .cadastro-text a {
+        color: var(--eventx-primary);
+        font-weight: bold;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+    .cadastro-text a:hover {
+        color: #c5384a;
+        text-decoration: underline;
+    }
+
+    .form-text {
+        font-size: 12px;
+        margin-top: 3px;
+    }
+
+    @@media (max-width: 768px) {
+        .login-card {
+            margin: 10px;
+            padding: 25px 20px;
+        }
+
+        .title {
+            font-size: 24px;
+        }
+
+        .btn-login {
+            font-size: 16px;
+        }
+
+        .row-two {
+            flex-direction: column;
+            gap: 0;
+        }
+    }
+
+    .text-danger {
+        font-size: 12px;
+        margin-top: 3px;
+        animation: shake 0.5s;
+    }
+
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+</style>
+}
+
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(`toggleIcon-${fieldId}`);
+
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
 
 

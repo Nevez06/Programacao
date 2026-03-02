@@ -50,11 +50,28 @@ namespace ProjetoEventX.Controllers
                 return RedirectToAction("LoginOrganizador", "Auth");
 
             var organizador = await _context.Organizadores
+                .Include(o => o.Pessoa)
                 .Include(o => o.Eventos)
-                .FirstOrDefaultAsync(o => o.Id == user.Id);
+                    .ThenInclude(e => e.ListasConvidados)
+                .Include(o => o.Eventos)
+                    .ThenInclude(e => e.Despesas)
+                .FirstOrDefaultAsync(o => o.Email == user.Email);
 
             if (organizador == null)
                 return NotFound();
+
+            // Estatísticas para o dashboard
+            var eventos = organizador.Eventos.ToList();
+            ViewBag.TotalEventos = eventos.Count;
+            ViewBag.EventosAtivos = eventos.Count(e => e.StatusEvento == "Planejado" || e.StatusEvento == "Em andamento");
+            ViewBag.EventosConcluidos = eventos.Count(e => e.StatusEvento == "Concluído" || e.StatusEvento == "Finalizado");
+            ViewBag.TotalConvidados = eventos.SelectMany(e => e.ListasConvidados).Count();
+            ViewBag.ConvidadosConfirmados = eventos.SelectMany(e => e.ListasConvidados).Count(c => c.ConfirmaPresenca == "Confirmado");
+            ViewBag.TotalDespesas = eventos.SelectMany(e => e.Despesas).Sum(d => d.Valor);
+            ViewBag.ProximoEvento = eventos
+                .Where(e => e.DataEvento >= DateTime.Now)
+                .OrderBy(e => e.DataEvento)
+                .FirstOrDefault();
 
             return View(organizador);
         }
@@ -174,7 +191,7 @@ namespace ProjetoEventX.Controllers
             if (user == null || user.TipoUsuario != "Organizador")
                 return RedirectToAction("LoginOrganizador", "Auth");
 
-            var organizador = await _context.Organizadores.FirstOrDefaultAsync(o => o.Id == user.Id);
+            var organizador = await _context.Organizadores.FirstOrDefaultAsync(o => o.Email == user.Email);
             if (organizador == null)
                 return NotFound();
 

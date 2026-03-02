@@ -1,0 +1,269 @@
+@model ProjetoEventX.Models.Produto
+@{
+    ViewData["Title"] = "Detalhes do Produto - " + Model.Nome;
+}
+
+<style>
+    .detalhes-section {
+        background: var(--eventx-secondary, #f5f0eb);
+        min-height: 80vh;
+        padding: 3rem 0;
+    }
+
+    .voltar-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--eventx-primary, #8B0000);
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 2rem;
+        transition: all 0.3s;
+    }
+
+    .voltar-btn:hover {
+        color: var(--eventx-primary-dark, #654321);
+        transform: translateX(-5px);
+    }
+
+    .produto-detalhes-card {
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    .produto-header {
+        background: linear-gradient(135deg, var(--eventx-primary, #8B0000), var(--eventx-accent, #D4A574));
+        color: #fff;
+        padding: 2.5rem;
+        text-align: center;
+    }
+
+    .produto-header .produto-icon {
+        width: 90px;
+        height: 90px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.2rem;
+        font-size: 2.5rem;
+    }
+
+    .produto-header h2 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .produto-header .tipo-badge {
+        display: inline-block;
+        background: rgba(255,255,255,0.25);
+        padding: 5px 18px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .produto-body {
+        padding: 2.5rem;
+    }
+
+    .produto-info-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .produto-info-item {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .produto-info-item label {
+        display: block;
+        font-size: 0.85rem;
+        color: #999;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+
+    .produto-info-item .valor {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .produto-preco-destaque {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--eventx-primary, #8B0000);
+    }
+
+    .produto-descricao-completa {
+        color: #555;
+        line-height: 1.7;
+        font-size: 1rem;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .divider {
+        border: none;
+        border-top: 2px solid #f0f0f0;
+        margin: 2rem 0;
+    }
+
+    .fornecedor-section-title {
+        color: var(--eventx-primary, #8B0000);
+        font-weight: 700;
+        font-size: 1.4rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .fornecedor-section-title i {
+        font-size: 1.2rem;
+    }
+
+    .fornecedor-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 2rem;
+        border-left: 4px solid var(--eventx-primary, #8B0000);
+    }
+
+    .fornecedor-card .info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.7rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .fornecedor-card .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .fornecedor-card .info-item i {
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--eventx-primary, #8B0000);
+        color: #fff;
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+
+    .fornecedor-card .info-item .info-label {
+        font-size: 0.8rem;
+        color: #999;
+        display: block;
+    }
+
+    .fornecedor-card .info-item .info-value {
+        font-weight: 600;
+        color: #333;
+        font-size: 1rem;
+    }
+</style>
+
+<section class="detalhes-section">
+    <div class="container">
+        <a asp-action="Catalogo" class="voltar-btn">
+            <i class="fas fa-arrow-left"></i> Voltar ao Catálogo
+        </a>
+
+        <div class="produto-detalhes-card">
+            <!-- Header do Produto -->
+            <div class="produto-header">
+                <div class="produto-icon">
+                    <i class="fas fa-box"></i>
+                </div>
+                <h2>@Model.Nome</h2>
+                <span class="tipo-badge">@Model.Tipo</span>
+            </div>
+
+            <!-- Body -->
+            <div class="produto-body">
+                <div class="produto-info-row">
+                    <div class="produto-info-item">
+                        <label>Preço</label>
+                        <span class="produto-preco-destaque">R$ @Model.Preco.ToString("N2")</span>
+                    </div>
+                    <div class="produto-info-item">
+                        <label>Tipo</label>
+                        <span class="valor">@Model.Tipo</span>
+                    </div>
+                </div>
+
+                <label style="font-size: 0.85rem; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block;">Descrição</label>
+                <div class="produto-descricao-completa">
+                    @Model.Descricao
+                </div>
+
+                <hr class="divider" />
+
+                <!-- Informações do Fornecedor -->
+                <h4 class="fornecedor-section-title">
+                    <i class="fas fa-store"></i> Informações do Fornecedor
+                </h4>
+
+                <div class="fornecedor-card">
+                    <div class="info-item">
+                        <i class="fas fa-store"></i>
+                        <div>
+                            <span class="info-label">Nome da Loja</span>
+                            <span class="info-value">@(Model.Fornecedor?.Pessoa?.Nome ?? "Não informado")</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-id-card"></i>
+                        <div>
+                            <span class="info-label">CNPJ</span>
+                            <span class="info-value">@(Model.Fornecedor?.Cnpj ?? "Não informado")</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <span class="info-label">Telefone</span>
+                            <span class="info-value">@(Model.Fornecedor?.PhoneNumber ?? "Não informado")</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <span class="info-label">Email</span>
+                            <span class="info-value">@(Model.Fornecedor?.Email ?? "Não informado")</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <span class="info-label">Localização</span>
+                            <span class="info-value">@(Model.Fornecedor?.Cidade ?? "")/​@(Model.Fornecedor?.UF ?? "")</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-concierge-bell"></i>
+                        <div>
+                            <span class="info-label">Tipo de Serviço</span>
+                            <span class="info-value">@(Model.Fornecedor?.TipoServico ?? "Não informado")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -46,6 +46,12 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
     .AddEntityFrameworkStores<EventXContext>()
     .AddDefaultTokenProviders();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Auth/Login";
+    options.AccessDeniedPath = "/Auth/AccessDenied";
+});
+
 // ================================
 // 🔹 SESSÃO (Para Limitações de Chat) - NOVO 🆕
 // ================================

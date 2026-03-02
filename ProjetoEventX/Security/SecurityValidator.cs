@@ -182,8 +182,19 @@ namespace ProjetoEventX.Security
         private static bool ContainsDangerousContent(string input, string[] patterns)
         {
             var lowerInput = input.ToLowerInvariant();
-            return patterns.Any(pattern => 
-                Regex.IsMatch(lowerInput, pattern.ToLowerInvariant(), RegexOptions.IgnoreCase));
+            return patterns.Any(pattern =>
+            {
+                var lowerPattern = pattern.ToLowerInvariant();
+                try
+                {
+                    return Regex.IsMatch(lowerInput, lowerPattern, RegexOptions.IgnoreCase);
+                }
+                catch (RegexParseException)
+                {
+                    // Se o padrão não é regex válido, trata como string literal
+                    return lowerInput.Contains(lowerPattern, StringComparison.OrdinalIgnoreCase);
+                }
+            });
         }
 
         private static bool IsSafeHtml(string html)

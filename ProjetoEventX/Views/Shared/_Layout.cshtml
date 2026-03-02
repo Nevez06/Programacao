@@ -15,6 +15,17 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 
+@inject Microsoft.AspNetCore.Identity.UserManager<ProjetoEventX.Models.ApplicationUser> UserManager
+
+@{
+    string tipoUsuario = "";
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        var appUser = await UserManager.GetUserAsync(User);
+        tipoUsuario = appUser?.TipoUsuario ?? "";
+    }
+}
+
 <body>
     <!-- Mostrar mensagens de alerta globais -->
     @if (TempData["SuccessMessage"] != null)
@@ -72,28 +83,46 @@
 
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Organizador" asp-action="Dashboard">
-                                    <i class="fas fa-gauge"></i> Dashboard
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="TemplateConvite" asp-action="Index">
-                                    <i class="fas fa-envelope-open-text"></i> Templates
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="IA" asp-action="Index">
-                                    <i class="fas fa-robot"></i> Assistente IA
-                                </a>
-                            </li>
+                            @if (tipoUsuario == "Organizador")
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Organizador" asp-action="Dashboard">
+                                        <i class="fas fa-gauge"></i> Dashboard
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="TemplateConvite" asp-action="Index">
+                                        <i class="fas fa-envelope-open-text"></i> Templates
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="IA" asp-action="Index">
+                                        <i class="fas fa-robot"></i> Assistente IA
+                                    </a>
+                                </li>
+                            }
+                            else if (tipoUsuario == "Fornecedor")
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Fornecedor" asp-action="Dashboard">
+                                        <i class="fas fa-gauge"></i> Dashboard
+                                    </a>
+                                </li>
+                            }
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                     <i class="fas fa-user-circle"></i> @User.Identity.Name
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-controller="Organizador" asp-action="Profile"><i class="fas fa-user"></i> Perfil</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Eventos" asp-action="Index"><i class="fas fa-calendar"></i> Meus Eventos</a></li>
+                                    @if (tipoUsuario == "Organizador")
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Organizador" asp-action="Profile"><i class="fas fa-user"></i> Perfil</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Eventos" asp-action="Index"><i class="fas fa-calendar"></i> Meus Eventos</a></li>
+                                    }
+                                    else if (tipoUsuario == "Fornecedor")
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Fornecedor" asp-action="Dashboard"><i class="fas fa-store"></i> Minha Loja</a></li>
+                                    }
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
