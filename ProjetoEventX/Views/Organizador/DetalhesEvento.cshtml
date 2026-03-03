@@ -50,6 +50,7 @@
             <div class="dashboard-card">
                 <h3>Ações</h3>
                 <div class="d-grid gap-2">
+                    <a asp-controller="Pedido" asp-action="Index" asp-route-eventoId="@Model.Id" class="btn btn-eventx-secondary">🛒 Pedidos</a>
                     <a asp-controller="Convite" asp-action="Criar" asp-route-eventoId="@Model.Id" class="btn btn-eventx-secondary">📧 Convidar Pessoas</a>
                     <a asp-controller="Administracao" asp-action="Index" asp-route-eventoId="@Model.Id" class="btn btn-eventx-secondary">💰 Gerenciar Orçamento</a>
                     <a asp-controller="Chat" asp-action="Chat" asp-route-eventoId="@Model.Id" class="btn btn-eventx-secondary">💬 Chat do Evento</a>

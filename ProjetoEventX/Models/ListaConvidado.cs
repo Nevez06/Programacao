@@ -12,13 +12,13 @@ namespace ProjetoEventX.Models
         public int ConvidadoId { get; set; }
 
         [ForeignKey("ConvidadoId")]
-        public required Convidado Convidado { get; set; }
+        public Convidado? Convidado { get; set; }
 
         [Required]
         public int EventoId { get; set; }
 
         [ForeignKey("EventoId")]
-        public required Evento Evento { get; set; }
+        public Evento? Evento { get; set; }
 
         public DateTime DataInclusao { get; set; } = DateTime.Now;
 

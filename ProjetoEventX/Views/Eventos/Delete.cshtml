@@ -57,7 +57,9 @@
     
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Excluir" class="btn btn-danger" /> |
-        <a asp-action="Index">Voltar para a Lista</a>
+        <div class="d-flex gap-2 align-items-center">
+            <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Excluir</button>
+            <a asp-action="Index" class="btn btn-eventx-secondary"><i class="fas fa-arrow-left"></i> Voltar para a Lista</a>
+        </div>
     </form>
 </div>

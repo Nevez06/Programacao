@@ -1,0 +1,141 @@
+@{
+    ViewData["Title"] = "Novo Pedido";
+    var produtos = ViewBag.ProdutosLista as List<ProjetoEventX.Models.Produto>;
+    var produtoSelecionado = ViewBag.ProdutoSelecionado as Guid?;
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card card-eventx mt-4">
+                <div class="card-body">
+                    <h2 class="mb-2" style="color: var(--eventx-primary);">
+                        <i class="fas fa-shopping-cart"></i> Novo Pedido
+                    </h2>
+                    <p class="text-muted mb-4">Evento: <strong>@ViewBag.EventoNome</strong></p>
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Create" method="post">
+                        <input type="hidden" name="eventoId" value="@ViewBag.EventoId" />
+
+                        <!-- Selecionar Produto -->
+                        <div class="mb-4">
+                            <label class="form-label"><i class="fas fa-box"></i> Selecione o Produto/Serviço</label>
+                            <select name="produtoId" id="produtoSelect" class="form-control" required>
+                                <option value="">-- Escolha um produto --</option>
+                                @if (produtos != null)
+                                {
+                                    @foreach (var produto in produtos)
+                                    {
+                                        var isSelected = produtoSelecionado.HasValue && produtoSelecionado.Value == produto.Id;
+                                        if (isSelected)
+                                        {
+                                            <option value="@produto.Id" 
+                                                    data-preco="@produto.Preco.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                    data-tipo="@produto.Tipo"
+                                                    data-fornecedor="@produto.Fornecedor?.Pessoa?.Nome"
+                                                    data-descricao="@produto.Descricao"
+                                                    selected>
+                                                @produto.Nome — R$ @produto.Preco.ToString("N2") (@produto.Tipo)
+                                            </option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@produto.Id" 
+                                                    data-preco="@produto.Preco.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                    data-tipo="@produto.Tipo"
+                                                    data-fornecedor="@produto.Fornecedor?.Pessoa?.Nome"
+                                                    data-descricao="@produto.Descricao">
+                                                @produto.Nome — R$ @produto.Preco.ToString("N2") (@produto.Tipo)
+                                            </option>
+                                        }
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Info do Produto Selecionado -->
+                        <div id="produtoInfo" class="card mb-4" style="display: none;">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h5 id="produtoNome" class="mb-1"></h5>
+                                        <p id="produtoDescricao" class="text-muted mb-1"></p>
+                                        <small id="produtoFornecedor" class="text-muted"></small>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <h4 id="produtoPreco" class="text-success mb-0"></h4>
+                                        <small class="text-muted">por unidade</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quantidade -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="fas fa-sort-numeric-up"></i> Quantidade</label>
+                                <input type="number" name="quantidade" id="quantidadeInput" class="form-control" min="1" max="1000" value="1" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="fas fa-calculator"></i> Total Estimado</label>
+                                <div class="form-control bg-light" id="totalEstimado" style="font-size: 1.2rem; font-weight: 600;">
+                                    R$ 0,00
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-eventx-primary">
+                                <i class="fas fa-check"></i> Confirmar Pedido
+                            </button>
+                            <a asp-action="Index" asp-route-eventoId="@ViewBag.EventoId" class="btn btn-eventx-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const select = document.getElementById('produtoSelect');
+            const qtdInput = document.getElementById('quantidadeInput');
+            const totalEl = document.getElementById('totalEstimado');
+            const infoCard = document.getElementById('produtoInfo');
+
+            function atualizarTotal() {
+                const opt = select.options[select.selectedIndex];
+                const preco = parseFloat(opt?.dataset?.preco || 0);
+                const qtd = parseInt(qtdInput.value) || 0;
+                const total = preco * qtd;
+                totalEl.textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                if (select.value) {
+                    infoCard.style.display = 'block';
+                    document.getElementById('produtoNome').textContent = opt.textContent.split('—')[0].trim();
+                    document.getElementById('produtoDescricao').textContent = opt.dataset.descricao || '';
+                    document.getElementById('produtoFornecedor').textContent = 'Fornecedor: ' + (opt.dataset.fornecedor || 'N/A');
+                    document.getElementById('produtoPreco').textContent = 'R$ ' + preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                } else {
+                    infoCard.style.display = 'none';
+                }
+            }
+
+            select.addEventListener('change', atualizarTotal);
+            qtdInput.addEventListener('input', atualizarTotal);
+            atualizarTotal();
+        });
+    </script>
+}

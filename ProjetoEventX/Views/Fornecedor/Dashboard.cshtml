@@ -278,6 +278,57 @@
         background: #650000;
         color: #fff;
     }
+
+    /* Botões de ação do produto */
+    .produto-acoes {
+        display: flex;
+        gap: 6px;
+        margin-left: 10px;
+        flex-shrink: 0;
+    }
+
+    .btn-acao-produto {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-acao-editar {
+        background: #E3F2FD;
+        color: #1565C0;
+    }
+
+    .btn-acao-editar:hover {
+        background: #1565C0;
+        color: #fff;
+    }
+
+    .btn-acao-excluir {
+        background: #FFEBEE;
+        color: #C62828;
+    }
+
+    .btn-acao-excluir:hover {
+        background: #C62828;
+        color: #fff;
+    }
+
+    .alert-sucesso-forn {
+        background: #E8F5E9;
+        border: 1px solid #A5D6A7;
+        color: #2E7D32;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
 </style>
 
 <div class="dash-wrapper">
@@ -297,6 +348,13 @@
     </section>
 
     <div class="container">
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="alert-sucesso-forn">
+                <i class="fas fa-check-circle me-2"></i>@TempData["Sucesso"]
+            </div>
+        }
+
         <!-- Cards de Estatísticas -->
         <div class="row g-3 mb-4">
             <div class="col-6 col-lg-3">
@@ -344,6 +402,9 @@
                 <div class="perfil-card mb-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5><i class="fas fa-store me-2"></i>Informações da Loja</h5>
+                        <button class="btn btn-sm btn-eventx" data-bs-toggle="modal" data-bs-target="#editPerfilModal">
+                            <i class="fas fa-pen me-1"></i> Editar
+                        </button>
                     </div>
                     <div class="perfil-info-item">
                         <i class="fas fa-store"></i>
@@ -418,6 +479,14 @@
                                     <div class="produto-tipo-sm">@produto.Tipo · @produto.Descricao</div>
                                 </div>
                                 <div class="produto-preco-sm">R$ @produto.Preco.ToString("N2")</div>
+                                <div class="produto-acoes">
+                                    <button class="btn-acao-produto btn-acao-editar" title="Editar" data-bs-toggle="modal" data-bs-target="#editModal-@produto.Id.ToString().Replace("-","")">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                    <button class="btn-acao-produto btn-acao-excluir" title="Excluir" data-bs-toggle="modal" data-bs-target="#deleteModal-@produto.Id.ToString().Replace("-","")">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         }
                     }
@@ -449,12 +518,12 @@
                         </div>
                     </div>
                     <div class="col-6">
-                        <a asp-controller="Eventos" asp-action="Index" class="quick-action">
+                        <a asp-controller="Pedido" asp-action="Index" class="quick-action">
                             <div class="qa-icon">
-                                <i class="fas fa-calendar-alt"></i>
+                                <i class="fas fa-shopping-bag"></i>
                             </div>
-                            <h6>Eventos</h6>
-                            <p>Ver eventos</p>
+                            <h6>Pedidos</h6>
+                            <p>Ver pedidos</p>
                         </a>
                     </div>
                 </div>
@@ -462,17 +531,20 @@
                 <!-- Resumo de Pedidos -->
                 <div class="produtos-list-card mb-4">
                     <h5><i class="fas fa-shopping-bag me-2"></i>Pedidos Recentes</h5>
-                    @if (Model.Pedidos != null && Model.Pedidos.Any())
+                    @{
+                        var pedidosRecentes = ViewBag.PedidosRecentes as List<ProjetoEventX.Models.Pedido>;
+                    }
+                    @if (pedidosRecentes != null && pedidosRecentes.Any())
                     {
-                        @foreach (var pedido in Model.Pedidos.OrderByDescending(p => p.DataPedido).Take(5))
+                        @foreach (var pedido in pedidosRecentes)
                         {
                             <div class="produto-row">
                                 <div class="produto-icon-sm" style="background: linear-gradient(135deg, #E65100, #FF8F00);">
                                     <i class="fas fa-receipt"></i>
                                 </div>
                                 <div class="produto-info-sm">
-                                    <div class="produto-nome-sm">Pedido #@pedido.Id.ToString().Substring(0, 8)</div>
-                                    <div class="produto-tipo-sm">@pedido.DataPedido.ToString("dd/MM/yyyy") · @pedido.StatusPedido</div>
+                                    <div class="produto-nome-sm">@(pedido.Produto?.Nome ?? "Produto") — @(pedido.Evento?.NomeEvento ?? "")</div>
+                                    <div class="produto-tipo-sm">@pedido.DataPedido.ToString("dd/MM/yyyy") · <span class="badge @(pedido.StatusPedido == "Pendente" ? "bg-warning text-dark" : pedido.StatusPedido == "Pago" ? "bg-info" : pedido.StatusPedido == "Entregue" ? "bg-success" : "bg-secondary")" style="font-size: 0.7rem;">@pedido.StatusPedido</span></div>
                                 </div>
                                 <div class="produto-preco-sm">R$ @pedido.PrecoTotal.ToString("N2")</div>
                             </div>
@@ -513,6 +585,93 @@
                         </div>
                     }
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Perfil da Loja -->
+<div class="modal fade" id="editPerfilModal" tabindex="-1" aria-labelledby="editPerfilModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #8B0000; color: #fff;">
+                <h5 class="modal-title" id="editPerfilModalLabel"><i class="fas fa-store me-2"></i>Editar Informações da Loja</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-controller="Fornecedor" asp-action="EditarPerfil" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><i class="fas fa-store me-1 text-muted"></i> Nome da Loja</label>
+                                <input type="text" class="form-control" name="NomeLoja" value="@(Model.Pessoa?.Nome)" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><i class="fas fa-id-card me-1 text-muted"></i> CNPJ</label>
+                                <input type="text" class="form-control" name="Cnpj" value="@Model.Cnpj" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><i class="fas fa-phone me-1 text-muted"></i> Telefone</label>
+                                <input type="text" class="form-control" name="Telefone" value="@(Model.PhoneNumber ?? Model.Pessoa?.Telefone)" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><i class="fas fa-concierge-bell me-1 text-muted"></i> Tipo de Serviço</label>
+                                @{
+                                    var tiposServico = new[] { "Buffet", "Decoração", "Fotografia", "Música", "Locação", "Outros" };
+                                }
+                                <select class="form-control" name="TipoServico" required>
+                                    @foreach (var tipo in tiposServico)
+                                    {
+                                        if (Model.TipoServico == tipo)
+                                        {
+                                            <option value="@tipo" selected>@tipo</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@tipo">@tipo</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label"><i class="fas fa-map-marker-alt me-1 text-muted"></i> Cidade</label>
+                                <input type="text" class="form-control" name="Cidade" value="@Model.Cidade" required />
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="mb-3">
+                                <label class="form-label">UF</label>
+                                <input type="text" class="form-control" name="UF" value="@Model.UF" maxlength="2" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><i class="fas fa-home me-1 text-muted"></i> Endereço</label>
+                                <input type="text" class="form-control" name="Endereco" value="@(Model.Pessoa?.Endereco)" />
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn" style="background: #e0e0e0; color: #333; font-weight: 600; border-radius: 8px;" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-eventx">
+                            <i class="fas fa-save me-1"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -561,3 +720,93 @@
         </div>
     </div>
 </div>
+
+<!-- Modais de Edição e Exclusão para cada produto -->
+@if (Model.Produtos != null && Model.Produtos.Any())
+{
+    @foreach (var produto in Model.Produtos)
+    {
+        var modalEditId = "editModal-" + produto.Id.ToString().Replace("-","");
+        var modalDeleteId = "deleteModal-" + produto.Id.ToString().Replace("-","");
+
+        <!-- Modal Editar Produto -->
+        <div class="modal fade" id="@modalEditId" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: #1565C0; color: #fff;">
+                        <h5 class="modal-title"><i class="fas fa-pen me-2"></i>Editar Produto</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form asp-controller="Fornecedor" asp-action="EditarProduto" method="post">
+                            <input type="hidden" name="produtoId" value="@produto.Id" />
+                            <div class="mb-3">
+                                <label class="form-label">Nome do Produto</label>
+                                <input type="text" class="form-control" name="Nome" value="@produto.Nome" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Descrição</label>
+                                <textarea class="form-control" name="Descricao" rows="3" required>@produto.Descricao</textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Preço (R$)</label>
+                                        <input type="number" class="form-control" name="Preco" step="0.01" value="@produto.Preco.ToString(System.Globalization.CultureInfo.InvariantCulture)" required />
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Tipo</label>
+                                        <select class="form-control" name="Tipo" required>
+                                            @if (produto.Tipo == "Produto")
+                                            {
+                                                <option value="Produto" selected>Produto</option>
+                                                <option value="Local">Local</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="Produto">Produto</option>
+                                                <option value="Local" selected>Local</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn w-100" style="background: #1565C0; color: #fff; font-weight: 600;">
+                                <i class="fas fa-save me-2"></i>Salvar Alterações
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Excluir Produto -->
+        <div class="modal fade" id="@modalDeleteId" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: #C62828; color: #fff;">
+                        <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Excluir Produto</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2.5rem; color: #E65100; margin-bottom: 1rem;"></i>
+                        <p style="font-weight: 600; color: #333;">Tem certeza que deseja excluir</p>
+                        <p style="font-size: 1.1rem; font-weight: 700; color: #8B0000;">@produto.Nome</p>
+                        <p style="font-size: 0.85rem; color: #999;">Esta ação não pode ser desfeita.</p>
+                    </div>
+                    <div class="modal-footer justify-content-center" style="border: none;">
+                        <button type="button" class="btn" style="background: #e0e0e0; color: #333; font-weight: 600; border-radius: 8px;" data-bs-dismiss="modal">Cancelar</button>
+                        <form asp-controller="Fornecedor" asp-action="ExcluirProduto" method="post" class="d-inline">
+                            <input type="hidden" name="produtoId" value="@produto.Id" />
+                            <button type="submit" class="btn" style="background: #C62828; color: #fff; font-weight: 600; border-radius: 8px;">
+                                <i class="fas fa-trash me-2"></i>Excluir
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}

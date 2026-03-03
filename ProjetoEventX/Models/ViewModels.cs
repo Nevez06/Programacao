@@ -142,4 +142,28 @@ namespace ProjetoEventX.Models
         [DataType(DataType.Password)]
         public string Senha { get; set; } = string.Empty;
     }
+
+    // ORÇAMENTO POR EVENTO
+    public class OrcamentoEventoViewModel
+    {
+        public int EventoId { get; set; }
+        public string NomeEvento { get; set; } = string.Empty;
+        public DateTime DataEvento { get; set; }
+        public string TipoEvento { get; set; } = string.Empty;
+        public string StatusEvento { get; set; } = "Planejado";
+        public decimal CustoEstimado { get; set; }
+        public decimal TotalGasto { get; set; }
+        public decimal Saldo { get; set; }
+        public int QuantidadeDespesas { get; set; }
+        public List<ProjetoEventX.Models.Despesa> Despesas { get; set; } = new();
+    }
+
+    // DESPESA RECENTE
+    public class DespesaRecenteViewModel
+    {
+        public string Descricao { get; set; } = string.Empty;
+        public decimal Valor { get; set; }
+        public DateTime DataDespesa { get; set; }
+        public string NomeEvento { get; set; } = string.Empty;
+    }
 }

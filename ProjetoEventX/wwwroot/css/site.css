@@ -1,19 +1,14 @@
 /* EventX Modern Styles */
 :root {
-    --eventx-primary: #8B4513;
-    --eventx-primary-dark: #654321;
-    --eventx-secondary: #F5F5DC;
-    --eventx-accent: #D2691E;
-    --eventx-light: #FFF8DC;
+    --eventx-primary: #8B0000;
+    --eventx-primary-dark: #6B0000;
+    --eventx-secondary: #D4C5B9;
+    --eventx-accent: #A52A2A;
+    --eventx-light: #F5F5F0;
     --eventx-dark: #2C2C2C;
     --eventx-gray: #6C757D;
     --eventx-white: #FFFFFF;
     --eventx-shadow: rgba(0, 0, 0, 0.1);
-       --eventx-primary: #8B0000; /* Maroon/Dark Red */
-    --eventx-secondary: #D4C5B9; /* Light Beige */
-    --eventx-dark: #2C2C2C; /* Dark Grey */
-    --eventx-light: #F5F5F0; /* Off-white */
-    --eventx-accent: #A52A2A; /* Lighter maroon */
 }
 
 * {
@@ -673,8 +668,8 @@ body {
 /*Formulario Logins*/
 
 /* =======================
-   FORMULÁRIOS EVENTX (NOVO)
+   FORMULï¿½RIOS EVENTX (NOVO)
    ======================= */
 /* ===========================
-   EventX Auth Forms - Protótipo
+   EventX Auth Forms - Protï¿½tipo
    =========================== */

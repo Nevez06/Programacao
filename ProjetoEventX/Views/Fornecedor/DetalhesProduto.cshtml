@@ -176,6 +176,109 @@
         color: #333;
         font-size: 1rem;
     }
+
+    /* Botão de Realizar Pedido */
+    .btn-realizar-pedido {
+        background: linear-gradient(135deg, #8B0000, #B22222);
+        color: #fff;
+        border: none;
+        padding: 14px 32px;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
+    }
+
+    .btn-realizar-pedido:hover {
+        background: linear-gradient(135deg, #6B0000, #8B0000);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+        color: #fff;
+    }
+
+    .pedido-section {
+        background: linear-gradient(135deg, #f8f4f0, #fff);
+        border: 2px solid #8B0000;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .pedido-section h4 {
+        color: #8B0000;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .pedido-section p {
+        color: #666;
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-pedido .modal-header {
+        background: linear-gradient(135deg, #8B0000, #B22222);
+        color: #fff;
+    }
+
+    .modal-pedido .produto-resumo {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-pedido .produto-resumo .produto-icon-mini {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #8B0000, #D4A574);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+    .modal-pedido .produto-resumo .nome-prod {
+        font-weight: 700;
+        color: #333;
+    }
+
+    .modal-pedido .produto-resumo .preco-prod {
+        color: #8B0000;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .preco-total-display {
+        background: #f0ebe5;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .preco-total-display .label {
+        font-size: 0.8rem;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .preco-total-display .valor-total {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #8B0000;
+    }
 </style>
 
 <section class="detalhes-section">
@@ -263,7 +366,112 @@
                         </div>
                     </div>
                 </div>
+
+                @if (ViewBag.IsOrganizador == true)
+                {
+                    var eventos = ViewBag.EventosOrganizador as List<ProjetoEventX.Models.Evento>;
+                    <div class="pedido-section">
+                        <h4><i class="fas fa-shopping-cart me-2"></i>Interessado neste produto?</h4>
+                        <p>Realize um pedido e o fornecedor será notificado do seu interesse.</p>
+                        @if (eventos != null && eventos.Any())
+                        {
+                            <button type="button" class="btn-realizar-pedido" data-bs-toggle="modal" data-bs-target="#realizarPedidoModal">
+                                <i class="fas fa-cart-plus"></i> Realizar Pedido
+                            </button>
+                        }
+                        else
+                        {
+                            <div class="alert" style="background: #FFF3E0; color: #E65100; border-radius: 10px; display: inline-block; padding: 12px 24px;">
+                                <i class="fas fa-info-circle me-2"></i>Crie um evento primeiro para poder realizar pedidos.
+                                <br />
+                                <a asp-controller="Organizador" asp-action="CriarEvento" class="mt-2 d-inline-block" style="color: #8B0000; font-weight: 600;">
+                                    <i class="fas fa-plus-circle me-1"></i>Criar Evento
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
             </div>
         </div>
     </div>
 </section>
+
+@if (ViewBag.IsOrganizador == true)
+{
+    var eventosModal = ViewBag.EventosOrganizador as List<ProjetoEventX.Models.Evento>;
+    if (eventosModal != null && eventosModal.Any())
+    {
+        <!-- Modal Realizar Pedido -->
+        <div class="modal fade modal-pedido" id="realizarPedidoModal" tabindex="-1" aria-labelledby="realizarPedidoModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="realizarPedidoModalLabel">
+                            <i class="fas fa-cart-plus me-2"></i>Realizar Pedido
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Resumo do Produto -->
+                        <div class="produto-resumo">
+                            <div class="produto-icon-mini">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <div>
+                                <div class="nome-prod">@Model.Nome</div>
+                                <div class="preco-prod">R$ @Model.Preco.ToString("N2") <small style="color:#999; font-weight: 400;">/ unidade</small></div>
+                            </div>
+                        </div>
+
+                        <form asp-controller="Pedido" asp-action="Create" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="produtoId" value="@Model.Id" />
+
+                            <div class="mb-3">
+                                <label class="form-label"><i class="fas fa-calendar-alt me-1 text-muted"></i> Selecione o Evento</label>
+                                <select name="eventoId" class="form-control" required>
+                                    <option value="">-- Escolha um evento --</option>
+                                    @foreach (var evento in eventosModal)
+                                    {
+                                        <option value="@evento.Id">@evento.NomeEvento — @evento.DataEvento.ToString("dd/MM/yyyy")</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label"><i class="fas fa-sort-numeric-up me-1 text-muted"></i> Quantidade</label>
+                                <input type="number" name="quantidade" id="quantidadePedido" class="form-control" value="1" min="1" required />
+                            </div>
+
+                            <div class="preco-total-display">
+                                <div class="label">Total Estimado</div>
+                                <div class="valor-total" id="totalEstimado">R$ @Model.Preco.ToString("N2")</div>
+                            </div>
+
+                            <div class="d-grid mt-3">
+                                <button type="submit" class="btn-realizar-pedido" style="justify-content: center; width: 100%;">
+                                    <i class="fas fa-check-circle"></i> Confirmar Pedido
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var precoUnitario = @Model.Preco.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                var quantidadeInput = document.getElementById('quantidadePedido');
+                var totalDisplay = document.getElementById('totalEstimado');
+
+                quantidadeInput.addEventListener('input', function () {
+                    var qtd = parseInt(this.value) || 1;
+                    if (qtd < 1) qtd = 1;
+                    var total = (precoUnitario * qtd).toFixed(2).replace('.', ',');
+                    totalDisplay.textContent = 'R$ ' + total;
+                });
+            });
+        </script>
+    }
+}

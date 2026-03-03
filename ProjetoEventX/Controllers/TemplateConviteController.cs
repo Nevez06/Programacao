@@ -117,6 +117,10 @@ namespace ProjetoEventX.Controllers
                 return Forbid("Você não tem permissão para criar templates para este evento.");
             }
 
+            // Limpar erros de navegação que não vêm do form
+            ModelState.Remove("Evento");
+            ModelState.Remove("Organizador");
+
             if (ModelState.IsValid)
             {
                 template.OrganizadorId = userIdInt;
@@ -176,6 +180,10 @@ namespace ProjetoEventX.Controllers
             {
                 return Forbid("Você não tem permissão para editar este template.");
             }
+
+            // Limpar erros de navegação que não vêm do form
+            ModelState.Remove("Evento");
+            ModelState.Remove("Organizador");
 
             if (ModelState.IsValid)
             {

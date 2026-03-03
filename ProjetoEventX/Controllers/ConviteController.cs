@@ -114,9 +114,30 @@ namespace ProjetoEventX.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Criar(int eventoId, ListaConvidado convite)
         {
-            if (!ModelState.IsValid)
+            // Limpar erros de validação de propriedades de navegação (preenchidas pelo controller, não pelo form)
+            ModelState.Remove("Evento");
+            ModelState.Remove("Evento.NomeEvento");
+            ModelState.Remove("Evento.DescricaoEvento");
+            ModelState.Remove("Evento.TipoEvento");
+            ModelState.Remove("Evento.Local");
+            ModelState.Remove("Evento.HoraInicio");
+            ModelState.Remove("Evento.HoraFim");
+            ModelState.Remove("Convidado");
+            ModelState.Remove("Convidado.Pessoa");
+            ModelState.Remove("Convidado.Pessoa.Nome");
+            ModelState.Remove("Convidado.Pessoa.Email");
+            ModelState.Remove("Convidado.Pessoa.Cpf");
+            ModelState.Remove("Convidado.Pessoa.Endereco");
+            ModelState.Remove("Convidado.UserName");
+            ModelState.Remove("Convidado.Email");
+
+            // Validar apenas os campos do form
+            var nomeForm = Request.Form["Convidado.Pessoa.Nome"].ToString();
+            var emailForm = Request.Form["Convidado.Pessoa.Email"].ToString();
+            if (string.IsNullOrWhiteSpace(nomeForm) || string.IsNullOrWhiteSpace(emailForm))
             {
-                TempData["ErrorMessage"] = "❌ Dados inválidos. Verifique os campos.";
+                TempData["ErrorMessage"] = "❌ Nome e email do convidado são obrigatórios.";
+                ViewBag.EventoId = eventoId;
                 return View(convite);
             }
 
@@ -141,6 +162,14 @@ namespace ProjetoEventX.Controllers
                     return RedirectToAction("Index", "Eventos");
                 }
 
+                // Helper local para repopular ViewBag ao retornar à view
+                void PrepararViewBag()
+                {
+                    ViewBag.EventoId = eventoId;
+                    ViewBag.NomeEvento = evento.NomeEvento;
+                    ViewBag.EnderecoLocal = evento.Local?.EnderecoLocal ?? "Local não informado";
+                }
+
                 // Obter e validar dados do formulário
                 var nomeConvidado = Request.Form["Convidado.Pessoa.Nome"].ToString();
                 var emailConvidado = Request.Form["Convidado.Pessoa.Email"].ToString();
@@ -149,12 +178,14 @@ namespace ProjetoEventX.Controllers
                 if (!SecurityValidator.IsValidInput(nomeConvidado))
                 {
                     ModelState.AddModelError("", "❌ Nome do convidado contém caracteres inválidos.");
+                    PrepararViewBag();
                     return View(convite);
                 }
 
                 if (!SecurityValidator.IsValidEmail(emailConvidado))
                 {
                     ModelState.AddModelError("", "❌ Email do convidado inválido ou suspeito.");
+                    PrepararViewBag();
                     return View(convite);
                 }
 
@@ -206,6 +237,7 @@ namespace ProjetoEventX.Controllers
                         else
                         {
                             ModelState.AddModelError("", "❌ Erro ao criar usuário convidado.");
+                            PrepararViewBag();
                             return View(convite);
                         }
                     }
@@ -257,6 +289,7 @@ namespace ProjetoEventX.Controllers
                     else
                     {
                         ModelState.AddModelError("", "❌ Erro ao criar usuário convidado.");
+                        PrepararViewBag();
                         return View(convite);
                     }
                 }
@@ -301,6 +334,7 @@ namespace ProjetoEventX.Controllers
                     $"Erro ao adicionar convidado: {ex.Message}", null, null, false, ex.Message);
 
                 TempData["ErrorMessage"] = "❌ Erro ao adicionar convidado.";
+                ViewBag.EventoId = eventoId;
                 return View(convite);
             }
         }

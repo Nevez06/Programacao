@@ -50,10 +50,10 @@
                             <select asp-for="TipoEvento" class="form-control">
                                 <option value="">Selecione o tipo</option>
                                 <option value="Casamento">?? Casamento</option>
-                                <option value="Aniversário">?? Aniversário</option>
+                                <option value="Aniversï¿½rio">?? Aniversï¿½rio</option>
                                 <option value="Corporativo">?? Corporativo</option>
                                 <option value="Festa">?? Festa</option>
-                                <option value="Conferência">?? Conferência</option>
+                                <option value="Conferï¿½ncia">?? Conferï¿½ncia</option>
                                 <option value="Formatura">?? Formatura</option>
                                 <option value="Workshop">??? Workshop</option>
                                 <option value="Outros">?? Outros</option>
@@ -78,7 +78,7 @@
                             <select asp-for="StatusEvento" class="form-control">
                                 <option value="Planejado">?? Planejado</option>
                                 <option value="Em Andamento">? Em Andamento</option>
-                                <option value="Concluído">? Concluído</option>
+                                <option value="Concluï¿½do">? Concluï¿½do</option>
                                 <option value="Cancelado">? Cancelado</option>
                             </select>
                             <span asp-validation-for="StatusEvento" class="text-danger"></span>
@@ -87,17 +87,17 @@
                     
                     <div class="mb-3">
                         <label asp-for="DescricaoEvento" class="form-label">
-                            <i class="fas fa-align-left"></i> Descrição do Evento
+                            <i class="fas fa-align-left"></i> Descriï¿½ï¿½o do Evento
                         </label>
                         <textarea asp-for="DescricaoEvento" class="form-control" rows="4" placeholder="Descreva os detalhes do seu evento..."></textarea>
                         <span asp-validation-for="DescricaoEvento" class="text-danger"></span>
-                        <small class="form-text text-muted">Forneça detalhes que ajudem no planejamento</small>
+                        <small class="form-text text-muted">Forneï¿½a detalhes que ajudem no planejamento</small>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="HoraInicio" class="form-label">
-                                <i class="fas fa-clock"></i> Hora de Início
+                                <i class="fas fa-clock"></i> Hora de Inï¿½cio
                             </label>
                             <input asp-for="HoraInicio" class="form-control hora-input" placeholder="18:00" maxlength="5" />
                             <span asp-validation-for="HoraInicio" class="text-danger"></span>
@@ -116,11 +116,11 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="PublicoEstimado" class="form-label">
-                                <i class="fas fa-users"></i> Público Estimado
+                                <i class="fas fa-users"></i> Pï¿½blico Estimado
                             </label>
                             <input asp-for="PublicoEstimado" type="number" class="form-control" placeholder="50" min="1" max="10000" />
                             <span asp-validation-for="PublicoEstimado" class="text-danger"></span>
-                            <small class="form-text text-muted">Número de pessoas esperadas</small>
+                            <small class="form-text text-muted">Nï¿½mero de pessoas esperadas</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label asp-for="CustoEstimado" class="form-label">
@@ -128,20 +128,20 @@
                             </label>
                             <input asp-for="CustoEstimado" class="form-control dinheiro-input" placeholder="R$ 0,00" />
                             <span asp-validation-for="CustoEstimado" class="text-danger"></span>
-                            <small class="form-text text-muted">Orçamento previsto para o evento</small>
+                            <small class="form-text text-muted">Orï¿½amento previsto para o evento</small>
                         </div>
                     </div>
                     
                     <div class="d-flex justify-content-between align-items-center mt-4">
-                        <a asp-action="Index" class="btn btn-outline-secondary">
+                        <a asp-action="Index" class="btn btn-eventx-secondary">
                             <i class="fas fa-arrow-left"></i> Voltar para a Lista
                         </a>
                         <div>
-                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info me-2">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-eventx-secondary me-2">
                                 <i class="fas fa-eye"></i> Ver Detalhes
                             </a>
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-save"></i> Salvar Alterações
+                            <button type="submit" class="btn btn-eventx-primary btn-lg">
+                                <i class="fas fa-save"></i> Salvar Alteraï¿½ï¿½es
                             </button>
                         </div>
                     </div>
@@ -156,20 +156,20 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Aplicar validações adicionais
+            // Aplicar validaï¿½ï¿½es adicionais
             const form = document.getElementById('eventoForm');
             const dataEvento = document.querySelector('input[name="DataEvento"]');
             const horaInicio = document.querySelector('input[name="HoraInicio"]');
             const horaFim = document.querySelector('input[name="HoraFim"]');
             
-            // Definir data mínima como hoje
+            // Definir data mï¿½nima como hoje
             const hoje = new Date();
             const dataMinima = hoje.toISOString().split('T')[0];
             if (dataEvento) {
                 dataEvento.setAttribute('min', dataMinima);
             }
 
-            // Formatação inicial para campos existentes
+            // Formataï¿½ï¿½o inicial para campos existentes
             if (horaInicio && horaInicio.value && horaInicio.value.length === 4) {
                 horaInicio.value = horaInicio.value.substring(0,2) + ':' + horaInicio.value.substring(2);
             }
@@ -177,23 +177,23 @@
                 horaFim.value = horaFim.value.substring(0,2) + ':' + horaFim.value.substring(2);
             }
             
-            // Validação no envio do formulário
+            // Validaï¿½ï¿½o no envio do formulï¿½rio
             form.addEventListener('submit', function(e) {
                 let valido = true;
                 
-                // Validar hora de início
+                // Validar hora de inï¿½cio
                 if (horaInicio && horaInicio.value && !validarHora(horaInicio.value)) {
-                    mostrarErro(horaInicio, 'Formato de hora inválido (use HH:MM)');
+                    mostrarErro(horaInicio, 'Formato de hora invï¿½lido (use HH:MM)');
                     valido = false;
                 }
                 
                 // Validar hora de fim
                 if (horaFim && horaFim.value && !validarHora(horaFim.value)) {
-                    mostrarErro(horaFim, 'Formato de hora inválido (use HH:MM)');
+                    mostrarErro(horaFim, 'Formato de hora invï¿½lido (use HH:MM)');
                     valido = false;
                 }
                 
-                // Validar se hora de fim é maior que hora de início
+                // Validar se hora de fim ï¿½ maior que hora de inï¿½cio
                 if (horaInicio && horaFim && horaInicio.value && horaFim.value) {
                     const [horaIni, minIni] = horaInicio.value.split(':').map(Number);
                     const [horaEnd, minEnd] = horaFim.value.split(':').map(Number);
@@ -202,7 +202,7 @@
                     const minutosFim = horaEnd * 60 + minEnd;
                     
                     if (minutosFim <= minutosInicio) {
-                        mostrarErro(horaFim, 'Hora de fim deve ser maior que hora de início');
+                        mostrarErro(horaFim, 'Hora de fim deve ser maior que hora de inï¿½cio');
                         valido = false;
                     }
                 }

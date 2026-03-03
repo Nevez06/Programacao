@@ -1,0 +1,126 @@
+@model ProjetoEventX.Models.Pedido
+@{
+    ViewData["Title"] = "Detalhes do Pedido";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card card-eventx mt-4">
+                <div class="card-body">
+                    <h2 class="mb-4" style="color: var(--eventx-primary);">
+                        <i class="fas fa-receipt"></i> Detalhes do Pedido
+                    </h2>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-box"></i> Produto</h5>
+                                </div>
+                                <div class="card-body">
+                                    <h5>@Model.Produto?.Nome</h5>
+                                    <p class="text-muted mb-1">@Model.Produto?.Descricao</p>
+                                    <p class="mb-1"><strong>Tipo:</strong> @Model.Produto?.Tipo</p>
+                                    @if (Model.Produto?.Fornecedor?.Pessoa != null)
+                                    {
+                                        <p class="mb-0"><strong>Fornecedor:</strong> @Model.Produto.Fornecedor.Pessoa.Nome</p>
+                                        <small class="text-muted">@Model.Produto.Fornecedor.Pessoa.Email</small>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Evento</h5>
+                                </div>
+                                <div class="card-body">
+                                    <h5>@Model.Evento?.NomeEvento</h5>
+                                    <p class="mb-1"><strong>Data:</strong> @Model.Evento?.DataEvento.ToString("dd/MM/yyyy")</p>
+                                    <p class="mb-0"><strong>Tipo:</strong> @Model.Evento?.TipoEvento</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-file-invoice-dollar"></i> Resumo do Pedido</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                    <h6 class="text-muted">Quantidade</h6>
+                                    <h3>@Model.Quantidade</h3>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <h6 class="text-muted">Preço Unitário</h6>
+                                    <h3>R$ @((Model.PrecoTotal / Model.Quantidade).ToString("N2"))</h3>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <h6 class="text-muted">Total</h6>
+                                    <h3 class="text-success">R$ @Model.PrecoTotal.ToString("N2")</h3>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <h6 class="text-muted">Status</h6>
+                                    @{
+                                        var badgeClass = Model.StatusPedido switch
+                                        {
+                                            "Pendente" => "bg-warning text-dark",
+                                            "Pago" => "bg-info text-white",
+                                            "Entregue" => "bg-success",
+                                            "Cancelado" => "bg-danger",
+                                            _ => "bg-secondary"
+                                        };
+                                    }
+                                    <h3><span class="badge @badgeClass">@Model.StatusPedido</span></h3>
+                                </div>
+                            </div>
+                            <hr>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-clock"></i> Pedido realizado em @Model.DataPedido.ToString("dd/MM/yyyy 'às' HH:mm")
+                            </p>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-fingerprint"></i> ID: @Model.Id
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Ações -->
+                    <div class="d-flex gap-2 flex-wrap">
+                        @if (Model.StatusPedido == "Pendente")
+                        {
+                            <form asp-action="AtualizarStatus" method="post">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="novoStatus" value="Pago" />
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check"></i> Marcar como Pago
+                                </button>
+                            </form>
+                            <form asp-action="Cancelar" method="post">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza?')">
+                                    <i class="fas fa-times"></i> Cancelar Pedido
+                                </button>
+                            </form>
+                        }
+                        @if (Model.StatusPedido == "Pago")
+                        {
+                            <form asp-action="AtualizarStatus" method="post">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="novoStatus" value="Entregue" />
+                                <button type="submit" class="btn btn-info text-white">
+                                    <i class="fas fa-truck"></i> Marcar como Entregue
+                                </button>
+                            </form>
+                        }
+                        <a asp-action="Index" asp-route-eventoId="@Model.EventoId" class="btn btn-eventx-secondary">
+                            <i class="fas fa-arrow-left"></i> Voltar aos Pedidos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

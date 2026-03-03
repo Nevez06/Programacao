@@ -123,7 +123,9 @@
     
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
+        <div class="d-flex gap-2 align-items-center">
+            <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</button>
+            <a asp-action="Index" class="btn btn-eventx-secondary"><i class="fas fa-arrow-left"></i> Back to List</a>
+        </div>
     </form>
 </div>

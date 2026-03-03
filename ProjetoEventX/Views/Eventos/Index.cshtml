@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Meus Eventos";
+    var tipoUsuario = User.Claims.FirstOrDefault(c => c.Type == "TipoUsuario")?.Value ?? "";
+    var isOrganizador = tipoUsuario == "Organizador";
 }
 
 <div class="row mb-4">
@@ -11,11 +13,14 @@
         </h1>
         <p class="text-muted">Gerencie todos os seus eventos em um só lugar</p>
     </div>
-    <div class="col-md-4 text-end">
-        <a asp-action="Create" class="btn btn-primary btn-lg">
-            <i class="fas fa-plus"></i> Criar Novo Evento
-        </a>
-    </div>
+    @if (isOrganizador)
+    {
+        <div class="col-md-4 text-end">
+            <a asp-action="Create" class="btn btn-eventx-primary btn-lg">
+                <i class="fas fa-plus"></i> Criar Novo Evento
+            </a>
+        </div>
+    }
 </div>
 
 @if (Model.Any())
@@ -78,9 +83,16 @@ else
             <i class="fas fa-calendar-plus" style="font-size: 4rem; color: var(--eventx-primary); opacity: 0.3;"></i>
         </div>
         <h3 class="text-eventx-primary mb-3">Nenhum evento encontrado</h3>
-        <p class="text-muted mb-4">Comece criando seu primeiro evento!</p>
-        <a asp-action="Create" class="btn btn-primary btn-lg">
-            <i class="fas fa-plus"></i> Criar Primeiro Evento
-        </a>
+        @if (isOrganizador)
+        {
+            <p class="text-muted mb-4">Comece criando seu primeiro evento!</p>
+            <a asp-action="Create" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus"></i> Criar Primeiro Evento
+            </a>
+        }
+        else
+        {
+            <p class="text-muted mb-4">Nenhum evento disponível no momento.</p>
+        }
     </div>
 }

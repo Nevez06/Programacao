@@ -104,6 +104,9 @@ namespace ProjetoEventX.Controllers
         {
             try
             {
+                // OrganizadorId é definido pelo controller, não pelo form
+                ModelState.Remove("OrganizadorId");
+
                 if (!ModelState.IsValid)
                 {
                     TempData["ErrorMessage"] = "❌ Dados inválidos. Verifique os campos.";
@@ -230,6 +233,9 @@ namespace ProjetoEventX.Controllers
             {
                 return RedirectToAction("AccessDenied", "Auth");
             }
+
+            // Limpar validação de propriedades não vindas do form quando necessário
+            ModelState.Remove("Organizador");
 
             if (ModelState.IsValid)
             {

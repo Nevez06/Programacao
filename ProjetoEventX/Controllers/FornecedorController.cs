@@ -60,6 +60,22 @@ namespace ProjetoEventX.Controllers
             if (produto == null)
                 return NotFound();
 
+            // Se o usuário logado é Organizador, carregar seus eventos para o modal de pedido
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null && user.TipoUsuario == "Organizador")
+                {
+                    var eventosOrganizador = await _context.Eventos
+                        .Where(e => e.OrganizadorId == user.Id)
+                        .OrderBy(e => e.NomeEvento)
+                        .ToListAsync();
+
+                    ViewBag.EventosOrganizador = eventosOrganizador;
+                    ViewBag.IsOrganizador = true;
+                }
+            }
+
             return View(produto);
         }
 
@@ -73,20 +89,29 @@ namespace ProjetoEventX.Controllers
             var fornecedor = await _context.Fornecedores
                 .Include(f => f.Pessoa)
                 .Include(f => f.Produtos)
-                .Include(f => f.Pedidos)
                 .Include(f => f.Feedbacks)
                 .FirstOrDefaultAsync(f => f.Email == user.Email);
 
             if (fornecedor == null)
                 return NotFound();
 
+            // Buscar pedidos pelos produtos do fornecedor (Pedido não tem FK direta para Fornecedor)
+            var produtosIds = fornecedor.Produtos.Select(p => p.Id).ToList();
+            var pedidosFornecedor = await _context.Pedidos
+                .Include(p => p.Evento)
+                .Include(p => p.Produto)
+                .Where(p => produtosIds.Contains(p.ProdutoId))
+                .OrderByDescending(p => p.DataPedido)
+                .ToListAsync();
+
             // Estatísticas para o dashboard
             ViewBag.TotalProdutos = fornecedor.Produtos.Count;
-            ViewBag.TotalPedidos = fornecedor.Pedidos.Count;
-            ViewBag.PedidosPendentes = fornecedor.Pedidos.Count(p => p.StatusPedido == "Pendente");
-            ViewBag.ReceitaTotal = fornecedor.Pedidos.Where(p => p.StatusPedido == "Pago" || p.StatusPedido == "Entregue").Sum(p => p.PrecoTotal);
+            ViewBag.TotalPedidos = pedidosFornecedor.Count;
+            ViewBag.PedidosPendentes = pedidosFornecedor.Count(p => p.StatusPedido == "Pendente");
+            ViewBag.ReceitaTotal = pedidosFornecedor.Where(p => p.StatusPedido == "Pago" || p.StatusPedido == "Entregue").Sum(p => p.PrecoTotal);
             ViewBag.TotalFeedbacks = fornecedor.Feedbacks.Count;
             ViewBag.AvaliacaoMedia = fornecedor.AvaliacaoMedia;
+            ViewBag.PedidosRecentes = pedidosFornecedor.Take(5).ToList();
 
             return View(fornecedor);
         }
@@ -117,6 +142,58 @@ namespace ProjetoEventX.Controllers
             _context.Produtos.Add(produto);
             await _context.SaveChangesAsync();
 
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        // POST: Fornecedor/EditarProduto
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditarProduto(Guid produtoId, string Nome, string Descricao, decimal Preco, string Tipo)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TipoUsuario != "Fornecedor")
+                return RedirectToAction("LoginFornecedor", "Auth");
+
+            var fornecedor = await _context.Fornecedores.FirstOrDefaultAsync(f => f.Email == user.Email);
+            if (fornecedor == null)
+                return NotFound();
+
+            var produto = await _context.Produtos.FirstOrDefaultAsync(p => p.Id == produtoId && p.FornecedorId == fornecedor.Id);
+            if (produto == null)
+                return NotFound();
+
+            produto.Nome = Nome;
+            produto.Descricao = Descricao;
+            produto.Preco = Preco;
+            produto.Tipo = Tipo ?? produto.Tipo;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Sucesso"] = "Produto atualizado com sucesso!";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        // POST: Fornecedor/ExcluirProduto
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExcluirProduto(Guid produtoId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TipoUsuario != "Fornecedor")
+                return RedirectToAction("LoginFornecedor", "Auth");
+
+            var fornecedor = await _context.Fornecedores.FirstOrDefaultAsync(f => f.Email == user.Email);
+            if (fornecedor == null)
+                return NotFound();
+
+            var produto = await _context.Produtos.FirstOrDefaultAsync(p => p.Id == produtoId && p.FornecedorId == fornecedor.Id);
+            if (produto == null)
+                return NotFound();
+
+            _context.Produtos.Remove(produto);
+            await _context.SaveChangesAsync();
+
+            TempData["Sucesso"] = "Produto excluído com sucesso!";
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -248,6 +325,57 @@ namespace ProjetoEventX.Controllers
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Fornecedor/EditarPerfil
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditarPerfil(string NomeLoja, string Cnpj, string Telefone, string Cidade, string UF, string TipoServico, string Endereco)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TipoUsuario != "Fornecedor")
+                return RedirectToAction("LoginFornecedor", "Auth");
+
+            var fornecedor = await _context.Fornecedores
+                .Include(f => f.Pessoa)
+                .FirstOrDefaultAsync(f => f.Email == user.Email);
+
+            if (fornecedor == null)
+                return NotFound();
+
+            // Atualizar dados do Fornecedor
+            if (!string.IsNullOrWhiteSpace(Cnpj))
+                fornecedor.Cnpj = Cnpj;
+            if (!string.IsNullOrWhiteSpace(Cidade))
+                fornecedor.Cidade = Cidade;
+            if (!string.IsNullOrWhiteSpace(UF))
+                fornecedor.UF = UF;
+            if (!string.IsNullOrWhiteSpace(TipoServico))
+                fornecedor.TipoServico = TipoServico;
+            if (!string.IsNullOrWhiteSpace(Telefone))
+                fornecedor.PhoneNumber = Telefone;
+            fornecedor.UpdatedAt = DateTime.Now;
+
+            // Atualizar dados da Pessoa vinculada
+            if (fornecedor.Pessoa != null)
+            {
+                if (!string.IsNullOrWhiteSpace(NomeLoja))
+                    fornecedor.Pessoa.Nome = NomeLoja;
+                if (!string.IsNullOrWhiteSpace(Telefone))
+                    fornecedor.Pessoa.Telefone = Telefone;
+                if (!string.IsNullOrWhiteSpace(Cidade))
+                    fornecedor.Pessoa.Cidade = Cidade;
+                if (!string.IsNullOrWhiteSpace(UF))
+                    fornecedor.Pessoa.UF = UF;
+                if (!string.IsNullOrWhiteSpace(Endereco))
+                    fornecedor.Pessoa.Endereco = Endereco;
+                fornecedor.Pessoa.UpdatedAt = DateTime.Now;
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Sucesso"] = "Informações da loja atualizadas com sucesso!";
+            return RedirectToAction(nameof(Dashboard));
         }
 
         private bool FornecedorExists(int id)

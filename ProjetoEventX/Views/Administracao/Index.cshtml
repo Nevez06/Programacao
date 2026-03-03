@@ -2,95 +2,593 @@
     ViewData["Title"] = "Administração - Gastos";
     var evento = ViewBag.Evento as ProjetoEventX.Models.Evento;
     var despesas = ViewBag.Despesas as IEnumerable<ProjetoEventX.Models.Despesa>;
-    var totalGasto = ViewBag.TotalGasto ?? 0m;
-    var totalPedidos = ViewBag.TotalPedidos ?? 0m;
-    var totalGeral = ViewBag.TotalGeral ?? 0m;
+    var totalGasto = (decimal)(ViewBag.TotalGasto ?? 0m);
+    var totalPedidos = (decimal)(ViewBag.TotalPedidos ?? 0m);
+    var totalGeral = (decimal)(ViewBag.TotalGeral ?? 0m);
 }
 
-<div class="container">
-    <h1 class="mb-4" style="color: var(--eventx-primary);">Administração - @(evento?.NomeEvento ?? "Evento")</h1>
-    
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="dashboard-card text-center">
-                <h3>R$ @totalGasto.ToString("N2")</h3>
-                <p>Total em Despesas</p>
-            </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="dashboard-card text-center">
-                <h3>R$ @totalPedidos.ToString("N2")</h3>
-                <p>Total em Pedidos</p>
-            </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="dashboard-card text-center">
-                <h3>R$ @totalGeral.ToString("N2")</h3>
-                <p>Total Geral</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-8">
-            <div class="dashboard-card">
-                <h3>Adicionar Despesa</h3>
-                <form asp-action="AdicionarDespesa" method="post">
-                    <input type="hidden" name="eventoId" value="@evento?.Id" />
-                    <div class="mb-3">
-                        <label class="form-label">Descrição</label>
-                        <input type="text" name="Descricao" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Valor (R$)</label>
-                        <input type="number" step="0.01" name="Valor" class="form-control" required />
-                    </div>
-                    <button type="submit" class="btn btn-eventx-primary">Adicionar</button>
-                </form>
-            </div>
-            
-            <div class="dashboard-card mt-4">
-                <h3>Histórico de Despesas</h3>
-                @if (despesas != null && despesas.Any())
-                {
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Descrição</th>
-                                <th>Valor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var despesa in despesas)
-                            {
-                                <tr>
-                                    <td>@despesa.DataDespesa.ToString("dd/MM/yyyy")</td>
-                                    <td>@despesa.Descricao</td>
-                                    <td>R$ @despesa.Valor.ToString("N2")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                }
-                else
-                {
-                    <p>Nenhuma despesa registrada ainda.</p>
-                }
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="dashboard-card">
-                <h3>Ações</h3>
-                <div class="d-grid gap-2">
-                    <input type="hidden" name="eventoId" value="@evento?.Id" />
-                    <a asp-action="RelatorioGastos" asp-route-eventoId="@evento?.Id" class="btn btn-eventx-secondary">📊 Relatório de Gastos</a>
-                    <a asp-controller="Organizador" asp-action="DetalhesEvento" asp-route-id="@evento?.Id" class="btn btn-eventx-secondary">← Voltar ao Evento</a>
+<style>
+    .admin-wrapper {
+        background: #f5f1ed;
+        min-height: 100vh;
+        padding-bottom: 3rem;
+    }
 
+    .admin-header {
+        background: linear-gradient(135deg, #8B0000 0%, #B22222 40%, #D4A574 100%);
+        color: #fff;
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .admin-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+    }
+
+    .admin-header p {
+        opacity: 0.85;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .admin-header .header-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-right: 1rem;
+    }
+
+    .resumo-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+    }
+
+    .resumo-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    .resumo-card .card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: #fff;
+        margin-bottom: 1rem;
+    }
+
+    .card-icon.despesas { background: linear-gradient(135deg, #E65100, #FF8F00); }
+    .card-icon.pedidos { background: linear-gradient(135deg, #1565C0, #42A5F5); }
+    .card-icon.total { background: linear-gradient(135deg, #8B0000, #B22222); }
+
+    .resumo-card .valor {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #333;
+        line-height: 1.1;
+    }
+
+    .resumo-card .label {
+        font-size: 0.85rem;
+        color: #888;
+        margin-top: 2px;
+    }
+
+    .form-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .form-card h5 {
+        color: #8B0000;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-card .form-label {
+        font-weight: 600;
+        color: #555;
+        font-size: 0.9rem;
+    }
+
+    .form-card .form-control {
+        border-radius: 10px;
+        border: 2px solid #e0e0e0;
+        padding: 10px 14px;
+        transition: border-color 0.3s;
+    }
+
+    .form-card .form-control:focus {
+        border-color: #8B0000;
+        box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
+    }
+
+    .btn-adicionar {
+        background: linear-gradient(135deg, #8B0000, #B22222);
+        color: #fff;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .btn-adicionar:hover {
+        background: linear-gradient(135deg, #6B0000, #8B0000);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
+        color: #fff;
+    }
+
+    .input-valor-wrapper {
+        position: relative;
+    }
+
+    .input-valor-wrapper .prefixo {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-weight: 700;
+        color: #8B0000;
+        font-size: 1rem;
+        pointer-events: none;
+    }
+
+    .input-valor-wrapper input {
+        padding-left: 48px !important;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .despesas-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .despesas-card h5 {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 1.2rem;
+    }
+
+    .despesa-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 12px;
+        background: #f8f9fa;
+        margin-bottom: 0.6rem;
+        transition: background 0.2s;
+    }
+
+    .despesa-item:hover {
+        background: #f0ebe5;
+    }
+
+    .despesa-item .despesa-icon {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, #E65100, #FF8F00);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .despesa-item .despesa-info { flex: 1; }
+    .despesa-item .despesa-desc { font-weight: 600; color: #333; font-size: 0.95rem; }
+    .despesa-item .despesa-data { font-size: 0.8rem; color: #999; }
+    .despesa-item .despesa-valor { font-weight: 700; color: #8B0000; font-size: 1rem; white-space: nowrap; margin-right: 8px; }
+
+    .despesa-acoes {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .btn-desp-acao {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-desp-editar {
+        background: #E3F2FD;
+        color: #1565C0;
+    }
+
+    .btn-desp-editar:hover {
+        background: #1565C0;
+        color: #fff;
+    }
+
+    .btn-desp-excluir {
+        background: #FFEBEE;
+        color: #C62828;
+    }
+
+    .btn-desp-excluir:hover {
+        background: #C62828;
+        color: #fff;
+    }
+
+    .modal-edit-desp .modal-header {
+        background: #1565C0;
+        color: #fff;
+    }
+
+    .modal-delete-desp .modal-header {
+        background: #C62828;
+        color: #fff;
+    }
+
+    .acoes-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .acoes-card h5 {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 1.2rem;
+    }
+
+    .acao-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 1rem;
+        border-radius: 12px;
+        background: #f8f9fa;
+        margin-bottom: 0.6rem;
+        text-decoration: none;
+        color: #333;
+        transition: all 0.2s;
+        font-weight: 600;
+    }
+
+    .acao-link:hover {
+        background: #f0ebe5;
+        transform: translateX(5px);
+        color: #8B0000;
+    }
+
+    .acao-link .acao-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .acao-icon.relatorio { background: linear-gradient(135deg, #1565C0, #42A5F5); }
+    .acao-icon.voltar { background: linear-gradient(135deg, #8B0000, #D4A574); }
+    .acao-icon.pedidos-icon { background: linear-gradient(135deg, #2E7D32, #43A047); }
+
+    .empty-despesas {
+        text-align: center;
+        padding: 2rem;
+        color: #999;
+    }
+
+    .empty-despesas i {
+        font-size: 2.5rem;
+        opacity: 0.3;
+        margin-bottom: 0.8rem;
+    }
+
+    .alert-sucesso-admin {
+        background: #E8F5E9;
+        border: 1px solid #A5D6A7;
+        color: #2E7D32;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="admin-wrapper">
+    <section class="admin-header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <div class="header-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div>
+                    <h1>Administração — @(evento?.NomeEvento ?? "Evento")</h1>
+                    <p>Controle financeiro e gestão de despesas do evento</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="alert-sucesso-admin">
+                <i class="fas fa-check-circle me-2"></i>@TempData["Sucesso"]
+            </div>
+        }
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="resumo-card">
+                    <div class="card-icon despesas"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <div class="valor">R$ @totalGasto.ToString("N2")</div>
+                    <div class="label">Total em Despesas</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="resumo-card">
+                    <div class="card-icon pedidos"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="valor">R$ @totalPedidos.ToString("N2")</div>
+                    <div class="label">Total em Pedidos</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="resumo-card">
+                    <div class="card-icon total"><i class="fas fa-coins"></i></div>
+                    <div class="valor" style="color: #8B0000;">R$ @totalGeral.ToString("N2")</div>
+                    <div class="label">Total Geral</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="form-card mb-4">
+                    <h5><i class="fas fa-plus-circle me-2"></i>Adicionar Despesa</h5>
+                    <form asp-action="AdicionarDespesa" method="post" id="formDespesa">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="eventoId" value="@evento?.Id" />
+                        <div class="row">
+                            <div class="col-md-7">
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-tag me-1 text-muted"></i> Descrição</label>
+                                    <input type="text" name="Descricao" class="form-control" placeholder="Ex: Aluguel do espaço, Decoração..." required />
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-dollar-sign me-1 text-muted"></i> Valor</label>
+                                    <div class="input-valor-wrapper">
+                                        <span class="prefixo">R$</span>
+                                        <input type="text" name="Valor" id="valorDespesa" class="form-control" placeholder="0,00" inputmode="decimal" required />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn-adicionar">
+                                <i class="fas fa-plus me-2"></i>Adicionar Despesa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="despesas-card">
+                    <h5><i class="fas fa-history me-2"></i>Histórico de Despesas</h5>
+                    @if (despesas != null && despesas.Any())
+                    {
+                        @foreach (var despesa in despesas)
+                        {
+                            <div class="despesa-item">
+                                <div class="despesa-icon"><i class="fas fa-receipt"></i></div>
+                                <div class="despesa-info">
+                                    <div class="despesa-desc">@despesa.Descricao</div>
+                                    <div class="despesa-data">@despesa.DataDespesa.ToString("dd/MM/yyyy 'às' HH:mm")</div>
+                                </div>
+                                <div class="despesa-valor">R$ @despesa.Valor.ToString("N2")</div>
+                                <div class="despesa-acoes">
+                                    <button class="btn-desp-acao btn-desp-editar" title="Editar" data-bs-toggle="modal" data-bs-target="#editDesp-@despesa.Id">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                    <button class="btn-desp-acao btn-desp-excluir" title="Excluir" data-bs-toggle="modal" data-bs-target="#deleteDesp-@despesa.Id">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-despesas">
+                            <i class="fas fa-receipt d-block"></i>
+                            <p class="mb-0">Nenhuma despesa registrada ainda.</p>
+                            <small>Adicione despesas usando o formulário acima.</small>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="acoes-card">
+                    <h5><i class="fas fa-bolt me-2"></i>Ações</h5>
+
+                    <a asp-action="RelatorioGastos" asp-route-eventoId="@evento?.Id" class="acao-link">
+                        <div class="acao-icon relatorio"><i class="fas fa-chart-bar"></i></div>
+                        <div>
+                            <div>Relatório de Gastos</div>
+                            <small style="color: #999; font-weight: 400;">Visualizar relatório completo</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Pedido" asp-action="Index" asp-route-eventoId="@evento?.Id" class="acao-link">
+                        <div class="acao-icon pedidos-icon"><i class="fas fa-shopping-bag"></i></div>
+                        <div>
+                            <div>Ver Pedidos</div>
+                            <small style="color: #999; font-weight: 400;">Pedidos deste evento</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Organizador" asp-action="DetalhesEvento" asp-route-id="@evento?.Id" class="acao-link">
+                        <div class="acao-icon voltar"><i class="fas fa-arrow-left"></i></div>
+                        <div>
+                            <div>Voltar ao Evento</div>
+                            <small style="color: #999; font-weight: 400;">Detalhes de @(evento?.NomeEvento ?? "Evento")</small>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="acoes-card mt-4">
+                    <h5><i class="fas fa-info-circle me-2"></i>Resumo</h5>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Despesas</span>
+                        <span style="font-weight: 600;">@(despesas?.Count() ?? 0) registro(s)</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Valor Despesas</span>
+                        <span style="font-weight: 600; color: #E65100;">R$ @totalGasto.ToString("N2")</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Valor Pedidos</span>
+                        <span style="font-weight: 600; color: #1565C0;">R$ @totalPedidos.ToString("N2")</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2">
+                        <span style="font-weight: 700; color: #333;">Total Geral</span>
+                        <span style="font-weight: 700; color: #8B0000; font-size: 1.1rem;">R$ @totalGeral.ToString("N2")</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@if (despesas != null && despesas.Any())
+{
+    @foreach (var despesa in despesas)
+    {
+        <!-- Modal Editar Despesa -->
+        <div class="modal fade modal-edit-desp" id="editDesp-@despesa.Id" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-pen me-2"></i>Editar Despesa</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form asp-action="EditarDespesa" method="post" class="form-edit-despesa">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="despesaId" value="@despesa.Id" />
+                            <input type="hidden" name="eventoId" value="@evento?.Id" />
+                            <div class="mb-3">
+                                <label class="form-label">Descrição</label>
+                                <input type="text" name="Descricao" class="form-control" value="@despesa.Descricao" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Valor (R$)</label>
+                                <div class="input-valor-wrapper">
+                                    <span class="prefixo">R$</span>
+                                    <input type="text" name="Valor" class="form-control input-valor-edit" value="@despesa.Valor.ToString("N2").Replace('.', ',')" inputmode="decimal" required />
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn" style="background: #e0e0e0; color: #333; font-weight: 600; border-radius: 8px;" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn" style="background: #1565C0; color: #fff; font-weight: 600; border-radius: 8px;">
+                                    <i class="fas fa-save me-1"></i>Salvar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Excluir Despesa -->
+        <div class="modal fade modal-delete-desp" id="deleteDesp-@despesa.Id" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Excluir Despesa</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2.5rem; color: #E65100; margin-bottom: 1rem;"></i>
+                        <p style="font-weight: 600; color: #333;">Tem certeza que deseja excluir?</p>
+                        <p style="font-size: 1.1rem; font-weight: 700; color: #8B0000;">@despesa.Descricao</p>
+                        <p style="font-size: 0.9rem; color: #666;">R$ @despesa.Valor.ToString("N2")</p>
+                        <p style="font-size: 0.8rem; color: #999;">Esta ação não pode ser desfeita.</p>
+                    </div>
+                    <div class="modal-footer justify-content-center" style="border: none;">
+                        <button type="button" class="btn" style="background: #e0e0e0; color: #333; font-weight: 600; border-radius: 8px;" data-bs-dismiss="modal">Cancelar</button>
+                        <form asp-action="ExcluirDespesa" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="despesaId" value="@despesa.Id" />
+                            <input type="hidden" name="eventoId" value="@evento?.Id" />
+                            <button type="submit" class="btn" style="background: #C62828; color: #fff; font-weight: 600; border-radius: 8px;">
+                                <i class="fas fa-trash me-1"></i>Excluir
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var valorInput = document.getElementById('valorDespesa');
+
+        valorInput.addEventListener('input', function () {
+            this.value = this.value.replace(/[^0-9.,]/g, '');
+        });
+
+        document.getElementById('formDespesa').addEventListener('submit', function () {
+            valorInput.value = valorInput.value.replace(',', '.');
+        });
+
+        // Aplicar máscara nos inputs de edição também
+        document.querySelectorAll('.input-valor-edit').forEach(function (input) {
+            input.addEventListener('input', function () {
+                this.value = this.value.replace(/[^0-9.,]/g, '');
+            });
+        });
+
+        document.querySelectorAll('.form-edit-despesa').forEach(function (form) {
+            form.addEventListener('submit', function () {
+                var input = form.querySelector('.input-valor-edit');
+                if (input) input.value = input.value.replace(',', '.');
+            });
+        });
+    });
+</script>
 

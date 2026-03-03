@@ -12,11 +12,13 @@ namespace ProjetoEventX.Controllers
     {
         private readonly EventXContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IConfiguration _configuration;
 
-        public OrganizadorController(EventXContext context, UserManager<ApplicationUser> userManager)
+        public OrganizadorController(EventXContext context, UserManager<ApplicationUser> userManager, IConfiguration configuration)
         {
             _context = context;
             _userManager = userManager;
+            _configuration = configuration;
         }
 
         // GET: Organizador
@@ -177,16 +179,14 @@ namespace ProjetoEventX.Controllers
         [HttpGet]
         public IActionResult CriarEvento()
         {
+            ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"] ?? "";
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CriarEvento(Evento evento)
+        public async Task<IActionResult> CriarEvento(Evento evento, string? CustoEstimadoTexto, string? LocalNome, string? LocalEndereco)
         {
-            if (!ModelState.IsValid)
-                return View(evento);
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null || user.TipoUsuario != "Organizador")
                 return RedirectToAction("LoginOrganizador", "Auth");
@@ -194,6 +194,45 @@ namespace ProjetoEventX.Controllers
             var organizador = await _context.Organizadores.FirstOrDefaultAsync(o => o.Email == user.Email);
             if (organizador == null)
                 return NotFound();
+
+            // OrganizadorId é definido pelo controller, não pelo form
+            ModelState.Remove("OrganizadorId");
+            ModelState.Remove("CustoEstimadoTexto");
+            ModelState.Remove("LocalNome");
+            ModelState.Remove("LocalEndereco");
+
+            // Parsear custo estimado manualmente (suporte a vírgula)
+            if (!string.IsNullOrWhiteSpace(CustoEstimadoTexto))
+            {
+                var valorStr = CustoEstimadoTexto.Replace(",", ".");
+                if (decimal.TryParse(valorStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var custo))
+                {
+                    evento.CustoEstimado = custo;
+                }
+            }
+
+            // Criar Local se informado
+            if (!string.IsNullOrWhiteSpace(LocalEndereco))
+            {
+                var local = new Local
+                {
+                    NomeLocal = !string.IsNullOrWhiteSpace(LocalNome) ? LocalNome : "Local do Evento",
+                    EnderecoLocal = LocalEndereco,
+                    TipoLocal = "Evento",
+                    Capacidade = evento.PublicoEstimado > 0 ? evento.PublicoEstimado : 100,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
+                _context.Locais.Add(local);
+                await _context.SaveChangesAsync();
+                evento.LocalId = local.Id;
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"] ?? "";
+                return View(evento);
+            }
 
             evento.OrganizadorId = organizador.Id;
             evento.CreatedAt = DateTime.Now;
@@ -234,6 +273,157 @@ namespace ProjetoEventX.Controllers
                 return NotFound();
 
             return View(evento);
+        }
+
+        // GET: Organizador/Orcamento
+        public async Task<IActionResult> Orcamento()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TipoUsuario != "Organizador")
+                return RedirectToAction("LoginOrganizador", "Auth");
+
+            var organizador = await _context.Organizadores
+                .Include(o => o.Eventos)
+                    .ThenInclude(e => e.Despesas)
+                .FirstOrDefaultAsync(o => o.Email == user.Email);
+
+            if (organizador == null)
+                return NotFound();
+
+            var eventos = organizador.Eventos.ToList();
+
+            // Dados consolidados
+            var totalOrcamentoEstimado = eventos.Sum(e => e.CustoEstimado);
+            var totalGasto = eventos.SelectMany(e => e.Despesas).Sum(d => d.Valor);
+            var saldo = totalOrcamentoEstimado - totalGasto;
+
+            // Dados por evento
+            var orcamentoPorEvento = eventos.Select(e => new OrcamentoEventoViewModel
+            {
+                EventoId = e.Id,
+                NomeEvento = e.NomeEvento,
+                DataEvento = e.DataEvento,
+                TipoEvento = e.TipoEvento,
+                StatusEvento = e.StatusEvento ?? "Planejado",
+                CustoEstimado = e.CustoEstimado,
+                TotalGasto = e.Despesas.Sum(d => d.Valor),
+                Saldo = e.CustoEstimado - e.Despesas.Sum(d => d.Valor),
+                QuantidadeDespesas = e.Despesas.Count,
+                Despesas = e.Despesas.OrderByDescending(d => d.DataDespesa).ToList()
+            }).OrderByDescending(o => o.DataEvento).ToList();
+
+            // Despesas recentes (últimas 10 de todos os eventos)
+            var despesasRecentes = eventos
+                .SelectMany(e => e.Despesas.Select(d => new { Despesa = d, NomeEvento = e.NomeEvento }))
+                .OrderByDescending(x => x.Despesa.DataDespesa)
+                .Take(10)
+                .ToList();
+
+            ViewBag.TotalOrcamentoEstimado = totalOrcamentoEstimado;
+            ViewBag.TotalGasto = totalGasto;
+            ViewBag.Saldo = saldo;
+            ViewBag.TotalEventos = eventos.Count;
+            ViewBag.OrcamentoPorEvento = orcamentoPorEvento;
+            ViewBag.DespesasRecentes = despesasRecentes
+                .Select(x => new DespesaRecenteViewModel
+                {
+                    Descricao = x.Despesa.Descricao,
+                    Valor = x.Despesa.Valor,
+                    DataDespesa = x.Despesa.DataDespesa,
+                    NomeEvento = x.NomeEvento
+                }).ToList();
+
+            return View();
+        }
+
+        // GET: Organizador/Profile
+        public async Task<IActionResult> Profile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TipoUsuario != "Organizador")
+                return RedirectToAction("LoginOrganizador", "Auth");
+
+            var organizador = await _context.Organizadores
+                .Include(o => o.Pessoa)
+                .Include(o => o.Eventos)
+                    .ThenInclude(e => e.Despesas)
+                .Include(o => o.Eventos)
+                    .ThenInclude(e => e.ListasConvidados)
+                .FirstOrDefaultAsync(o => o.Email == user.Email);
+
+            if (organizador == null)
+                return NotFound();
+
+            var eventos = organizador.Eventos.ToList();
+            ViewBag.TotalEventos = eventos.Count;
+            ViewBag.EventosAtivos = eventos.Count(e => e.StatusEvento == "Planejado" || e.StatusEvento == "Em andamento");
+            ViewBag.EventosConcluidos = eventos.Count(e => e.StatusEvento == "Concluído" || e.StatusEvento == "Finalizado");
+            ViewBag.TotalConvidados = eventos.SelectMany(e => e.ListasConvidados).Count();
+            ViewBag.TotalGasto = eventos.SelectMany(e => e.Despesas).Sum(d => d.Valor);
+
+            return View(organizador);
+        }
+
+        // POST: Organizador/Profile (Editar perfil)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(string nome, string telefone, string endereco, string cidade, string uf)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TipoUsuario != "Organizador")
+                return RedirectToAction("LoginOrganizador", "Auth");
+
+            var organizador = await _context.Organizadores
+                .Include(o => o.Pessoa)
+                .FirstOrDefaultAsync(o => o.Email == user.Email);
+
+            if (organizador == null)
+                return NotFound();
+
+            // Atualizar dados da pessoa
+            if (organizador.Pessoa != null)
+            {
+                organizador.Pessoa.Nome = nome ?? organizador.Pessoa.Nome;
+                organizador.Pessoa.Telefone = telefone ?? organizador.Pessoa.Telefone;
+                organizador.Pessoa.Endereco = endereco ?? organizador.Pessoa.Endereco;
+                organizador.Pessoa.Cidade = cidade ?? organizador.Pessoa.Cidade;
+                organizador.Pessoa.UF = uf ?? organizador.Pessoa.UF;
+                organizador.Pessoa.UpdatedAt = DateTime.Now;
+            }
+
+            organizador.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            TempData["Sucesso"] = "Perfil atualizado com sucesso!";
+            return RedirectToAction("Profile");
+        }
+
+        // POST: Organizador/AlterarSenha
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AlterarSenha(string senhaAtual, string novaSenha, string confirmarSenha)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToAction("LoginOrganizador", "Auth");
+
+            if (novaSenha != confirmarSenha)
+            {
+                TempData["Erro"] = "A nova senha e a confirmação não coincidem.";
+                return RedirectToAction("Profile");
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, senhaAtual, novaSenha);
+            if (result.Succeeded)
+            {
+                TempData["Sucesso"] = "Senha alterada com sucesso!";
+            }
+            else
+            {
+                TempData["Erro"] = "Erro ao alterar senha: " + string.Join(", ", result.Errors.Select(e => e.Description));
+            }
+
+            return RedirectToAction("Profile");
         }
 
         private bool OrganizadorExists(int id)

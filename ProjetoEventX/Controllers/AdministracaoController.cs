@@ -61,40 +61,122 @@ namespace ProjetoEventX.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AdicionarDespesa(int eventoId, Despesa despesa)
+        public async Task<IActionResult> AdicionarDespesa(int eventoId, string Descricao, string Valor)
         {
-            if (ModelState.IsValid)
+            // Converter valor (aceitar vírgula ou ponto)
+            var valorLimpo = Valor.Replace(",", ".");
+            if (!decimal.TryParse(valorLimpo, System.Globalization.NumberStyles.Any, 
+                System.Globalization.CultureInfo.InvariantCulture, out var valorDecimal) || valorDecimal <= 0)
             {
-                despesa.EventoId = eventoId;
-                despesa.DataDespesa = DateTime.Now;
-
-                _context.Despesas.Add(despesa);
-                await _context.SaveChangesAsync();
-
-                // Atualizar ou criar administração
-                var administracao = await _context.Administracoes
-                    .FirstOrDefaultAsync(a => a.IdEvento == eventoId);
-
-                if (administracao == null)
-                {
-                    administracao = new Administracao
-                    {
-                        IdEvento = eventoId,
-                        Orcamento = 0,
-                        ValorTotal = 0
-                    };
-                    _context.Administracoes.Add(administracao);
-                }
-
-                administracao.ValorTotal = await _context.Despesas
-                    .Where(d => d.EventoId == eventoId)
-                    .SumAsync(d => d.Valor);
-
-                await _context.SaveChangesAsync();
-
+                TempData["Erro"] = "Valor inválido. Informe um valor maior que zero.";
                 return RedirectToAction("Index", new { eventoId });
             }
 
+            if (string.IsNullOrWhiteSpace(Descricao))
+            {
+                TempData["Erro"] = "Descrição é obrigatória.";
+                return RedirectToAction("Index", new { eventoId });
+            }
+
+            var evento = await _context.Eventos.FindAsync(eventoId);
+            if (evento == null)
+                return NotFound();
+
+            var despesa = new Despesa
+            {
+                EventoId = eventoId,
+                Evento = evento,
+                Descricao = Descricao,
+                Valor = valorDecimal,
+                DataDespesa = DateTime.Now
+            };
+
+            _context.Despesas.Add(despesa);
+            await _context.SaveChangesAsync();
+
+            // Atualizar ou criar administração
+            var administracao = await _context.Administracoes
+                .FirstOrDefaultAsync(a => a.IdEvento == eventoId);
+
+            if (administracao == null)
+            {
+                administracao = new Administracao
+                {
+                    IdEvento = eventoId,
+                    Orcamento = 0,
+                    ValorTotal = 0
+                };
+                _context.Administracoes.Add(administracao);
+            }
+
+            administracao.ValorTotal = await _context.Despesas
+                .Where(d => d.EventoId == eventoId)
+                .SumAsync(d => d.Valor);
+
+            await _context.SaveChangesAsync();
+
+            TempData["Sucesso"] = $"Despesa \"{Descricao}\" de R$ {valorDecimal:N2} adicionada com sucesso!";
+            return RedirectToAction("Index", new { eventoId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditarDespesa(int despesaId, int eventoId, string Descricao, string Valor)
+        {
+            var valorLimpo = Valor.Replace(",", ".");
+            if (!decimal.TryParse(valorLimpo, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var valorDecimal) || valorDecimal <= 0)
+            {
+                TempData["Erro"] = "Valor inválido. Informe um valor maior que zero.";
+                return RedirectToAction("Index", new { eventoId });
+            }
+
+            var despesa = await _context.Despesas.FindAsync(despesaId);
+            if (despesa == null)
+                return NotFound();
+
+            despesa.Descricao = Descricao;
+            despesa.Valor = valorDecimal;
+            await _context.SaveChangesAsync();
+
+            // Atualizar administração
+            var administracao = await _context.Administracoes
+                .FirstOrDefaultAsync(a => a.IdEvento == eventoId);
+            if (administracao != null)
+            {
+                administracao.ValorTotal = await _context.Despesas
+                    .Where(d => d.EventoId == eventoId)
+                    .SumAsync(d => d.Valor);
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Sucesso"] = $"Despesa atualizada com sucesso!";
+            return RedirectToAction("Index", new { eventoId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExcluirDespesa(int despesaId, int eventoId)
+        {
+            var despesa = await _context.Despesas.FindAsync(despesaId);
+            if (despesa == null)
+                return NotFound();
+
+            _context.Despesas.Remove(despesa);
+            await _context.SaveChangesAsync();
+
+            // Atualizar administração
+            var administracao = await _context.Administracoes
+                .FirstOrDefaultAsync(a => a.IdEvento == eventoId);
+            if (administracao != null)
+            {
+                administracao.ValorTotal = await _context.Despesas
+                    .Where(d => d.EventoId == eventoId)
+                    .SumAsync(d => d.Valor);
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Sucesso"] = "Despesa excluída com sucesso!";
             return RedirectToAction("Index", new { eventoId });
         }
 
