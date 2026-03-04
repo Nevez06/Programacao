@@ -2,59 +2,371 @@
 
 @{
     ViewData["Title"] = "Detalhes do Evento";
+    var ptBR = System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
+
+    string StatusBadgeClass(string status) => status switch
+    {
+        "Planejado" => "badge-planejado",
+        "Em Andamento" => "badge-andamento",
+        "Confirmado" => "badge-confirmado",
+        "Concluído" => "badge-concluido",
+        "Cancelado" => "badge-cancelado",
+        _ => "badge-planejado"
+    };
 }
 
-<h1>Detalhes do Evento</h1>
+<style>
+    .details-wrapper {
+        background: #f5f1ed;
+        min-height: 100vh;
+        padding-bottom: 3rem;
+    }
 
-<div>
-    <h4>Evento</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NomeEvento)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NomeEvento)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DescricaoEvento)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DescricaoEvento)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DataEvento)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DataEvento)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TipoEvento)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TipoEvento)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StatusEvento)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StatusEvento)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Organizador)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OrganizadorId)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.LocalId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.LocalId)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Editar</a> |
-    <a asp-action="Index">Voltar para a Lista</a>
+    .details-header {
+        background: linear-gradient(135deg, #8B0000 0%, #B22222 40%, #D4A574 100%);
+        color: #fff;
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .details-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+    }
+
+    .details-header p {
+        opacity: 0.85;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .details-header .header-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-right: 1rem;
+    }
+
+    .info-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card h5 {
+        font-weight: 700;
+        color: #8B0000;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-item .info-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .info-icon.icon-date { background: #FFF3E0; color: #E65100; }
+    .info-icon.icon-type { background: #E8F5E9; color: #2E7D32; }
+    .info-icon.icon-status { background: #E3F2FD; color: #1565C0; }
+    .info-icon.icon-time { background: #F3E5F5; color: #7B1FA2; }
+    .info-icon.icon-people { background: #E0F7FA; color: #00838F; }
+    .info-icon.icon-cost { background: #FBE9E7; color: #BF360C; }
+    .info-icon.icon-desc { background: #F1F8E9; color: #558B2F; }
+    .info-icon.icon-org { background: #EDE7F6; color: #4527A0; }
+    .info-icon.icon-local { background: #FFF8E1; color: #F57F17; }
+
+    .info-item .info-label {
+        font-size: 0.8rem;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .info-item .info-value {
+        font-weight: 600;
+        color: #333;
+        font-size: 0.95rem;
+    }
+
+    .badge-status {
+        padding: 0.35rem 0.85rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .badge-planejado { background: #E3F2FD; color: #1565C0; }
+    .badge-andamento { background: #FFF3E0; color: #E65100; }
+    .badge-confirmado { background: #E8F5E9; color: #2E7D32; }
+    .badge-concluido { background: #F3E5F5; color: #7B1FA2; }
+    .badge-cancelado { background: #FFEBEE; color: #C62828; }
+
+    .acoes-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .acoes-card h5 {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 1.2rem;
+        font-size: 1.1rem;
+    }
+
+    .acao-link {
+        display: flex;
+        align-items: center;
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #333;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        margin-bottom: 0.5rem;
+    }
+
+    .acao-link:hover {
+        background: #f5f1ed;
+        color: #8B0000;
+        transform: translateX(4px);
+    }
+
+    .acao-link .acao-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        margin-right: 0.8rem;
+        flex-shrink: 0;
+    }
+
+    .acao-icon.edit { background: linear-gradient(135deg, #1565C0, #42A5F5); color: #fff; }
+    .acao-icon.pedidos { background: linear-gradient(135deg, #2E7D32, #66BB6A); color: #fff; }
+    .acao-icon.convites { background: linear-gradient(135deg, #7B1FA2, #AB47BC); color: #fff; }
+    .acao-icon.orcamento { background: linear-gradient(135deg, #E65100, #FF8F00); color: #fff; }
+    .acao-icon.chat { background: linear-gradient(135deg, #00838F, #26C6DA); color: #fff; }
+    .acao-icon.ia { background: linear-gradient(135deg, #4527A0, #7E57C2); color: #fff; }
+    .acao-icon.voltar { background: linear-gradient(135deg, #546E7A, #90A4AE); color: #fff; }
+
+    .desc-box {
+        background: #f9f7f5;
+        border-radius: 12px;
+        padding: 1.2rem;
+        color: #555;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        border-left: 4px solid #8B0000;
+    }
+</style>
+
+<div class="details-wrapper">
+    <section class="details-header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <div class="header-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div>
+                    <h1>@Model.NomeEvento</h1>
+                    <p>Detalhes e informações do evento</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="row g-4">
+            <!-- Coluna Principal -->
+            <div class="col-lg-8">
+                <!-- Informações do Evento -->
+                <div class="info-card">
+                    <h5><i class="fas fa-info-circle me-2"></i>Informações do Evento</h5>
+
+                    <div class="info-item">
+                        <div class="info-icon icon-date"><i class="fas fa-calendar-day"></i></div>
+                        <div>
+                            <div class="info-label">Data</div>
+                            <div class="info-value">@Model.DataEvento.ToString("dd 'de' MMMM 'de' yyyy", ptBR)</div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon icon-time"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <div class="info-label">Horário</div>
+                            <div class="info-value">@Model.HoraInicio - @Model.HoraFim</div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon icon-type"><i class="fas fa-tag"></i></div>
+                        <div>
+                            <div class="info-label">Tipo</div>
+                            <div class="info-value">@Model.TipoEvento</div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon icon-status"><i class="fas fa-flag"></i></div>
+                        <div>
+                            <div class="info-label">Status</div>
+                            <div class="info-value">
+                                <span class="badge-status @StatusBadgeClass(Model.StatusEvento)">@Model.StatusEvento</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon icon-people"><i class="fas fa-users"></i></div>
+                        <div>
+                            <div class="info-label">Público Estimado</div>
+                            <div class="info-value">@Model.PublicoEstimado pessoas</div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon icon-cost"><i class="fas fa-money-bill-wave"></i></div>
+                        <div>
+                            <div class="info-label">Custo Estimado</div>
+                            <div class="info-value" style="color: #8B0000;">R$ @Model.CustoEstimado.ToString("N2", ptBR)</div>
+                        </div>
+                    </div>
+
+                    @if (Model.Organizador?.Pessoa != null)
+                    {
+                        <div class="info-item">
+                            <div class="info-icon icon-org"><i class="fas fa-user-tie"></i></div>
+                            <div>
+                                <div class="info-label">Organizador</div>
+                                <div class="info-value">@Model.Organizador.Pessoa.Nome</div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Local != null)
+                    {
+                        <div class="info-item">
+                            <div class="info-icon icon-local"><i class="fas fa-map-marker-alt"></i></div>
+                            <div>
+                                <div class="info-label">Local</div>
+                                <div class="info-value">@Model.Local.NomeLocal</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Descrição -->
+                @if (!string.IsNullOrWhiteSpace(Model.DescricaoEvento))
+                {
+                    <div class="info-card">
+                        <h5><i class="fas fa-align-left me-2"></i>Descrição</h5>
+                        <div class="desc-box">
+                            @Model.DescricaoEvento
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Coluna Lateral -->
+            <div class="col-lg-4">
+                <div class="acoes-card">
+                    <h5><i class="fas fa-bolt me-2"></i>Ações</h5>
+
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="acao-link">
+                        <div class="acao-icon edit"><i class="fas fa-pen"></i></div>
+                        <div>
+                            <div>Editar Evento</div>
+                            <small style="color: #999; font-weight: 400;">Alterar informações</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Pedido" asp-action="Index" asp-route-eventoId="@Model.Id" class="acao-link">
+                        <div class="acao-icon pedidos"><i class="fas fa-shopping-bag"></i></div>
+                        <div>
+                            <div>Pedidos</div>
+                            <small style="color: #999; font-weight: 400;">Gerenciar pedidos do evento</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Convite" asp-action="Criar" asp-route-eventoId="@Model.Id" class="acao-link">
+                        <div class="acao-icon convites"><i class="fas fa-envelope"></i></div>
+                        <div>
+                            <div>Convidar Pessoas</div>
+                            <small style="color: #999; font-weight: 400;">Enviar convites</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Administracao" asp-action="Index" asp-route-eventoId="@Model.Id" class="acao-link">
+                        <div class="acao-icon orcamento"><i class="fas fa-chart-pie"></i></div>
+                        <div>
+                            <div>Gerenciar Orçamento</div>
+                            <small style="color: #999; font-weight: 400;">Despesas e gastos</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Chat" asp-action="Chat" asp-route-eventoId="@Model.Id" class="acao-link">
+                        <div class="acao-icon chat"><i class="fas fa-comments"></i></div>
+                        <div>
+                            <div>Chat do Evento</div>
+                            <small style="color: #999; font-weight: 400;">Conversar com a equipe</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="IA" asp-action="Index" class="acao-link">
+                        <div class="acao-icon ia"><i class="fas fa-robot"></i></div>
+                        <div>
+                            <div>Assistente Virtual</div>
+                            <small style="color: #999; font-weight: 400;">Ajuda com IA</small>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="acoes-card">
+                    <h5><i class="fas fa-arrow-left me-2"></i>Navegação</h5>
+                    <a asp-action="Index" class="acao-link">
+                        <div class="acao-icon voltar"><i class="fas fa-list"></i></div>
+                        <div>
+                            <div>Voltar para a Lista</div>
+                            <small style="color: #999; font-weight: 400;">Ver todos os eventos</small>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

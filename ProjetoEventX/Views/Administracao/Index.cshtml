@@ -2,6 +2,7 @@
     ViewData["Title"] = "Administração - Gastos";
     var evento = ViewBag.Evento as ProjetoEventX.Models.Evento;
     var despesas = ViewBag.Despesas as IEnumerable<ProjetoEventX.Models.Despesa>;
+    var ptBR = System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
     var totalGasto = (decimal)(ViewBag.TotalGasto ?? 0m);
     var totalPedidos = (decimal)(ViewBag.TotalPedidos ?? 0m);
     var totalGeral = (decimal)(ViewBag.TotalGeral ?? 0m);
@@ -352,21 +353,21 @@
             <div class="col-md-4">
                 <div class="resumo-card">
                     <div class="card-icon despesas"><i class="fas fa-file-invoice-dollar"></i></div>
-                    <div class="valor">R$ @totalGasto.ToString("N2")</div>
+                    <div class="valor">R$ @totalGasto.ToString("N2", ptBR)</div>
                     <div class="label">Total em Despesas</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="resumo-card">
                     <div class="card-icon pedidos"><i class="fas fa-shopping-cart"></i></div>
-                    <div class="valor">R$ @totalPedidos.ToString("N2")</div>
+                    <div class="valor">R$ @totalPedidos.ToString("N2", ptBR)</div>
                     <div class="label">Total em Pedidos</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="resumo-card">
                     <div class="card-icon total"><i class="fas fa-coins"></i></div>
-                    <div class="valor" style="color: #8B0000;">R$ @totalGeral.ToString("N2")</div>
+                    <div class="valor" style="color: #8B0000;">R$ @totalGeral.ToString("N2", ptBR)</div>
                     <div class="label">Total Geral</div>
                 </div>
             </div>
@@ -416,7 +417,7 @@
                                     <div class="despesa-desc">@despesa.Descricao</div>
                                     <div class="despesa-data">@despesa.DataDespesa.ToString("dd/MM/yyyy 'às' HH:mm")</div>
                                 </div>
-                                <div class="despesa-valor">R$ @despesa.Valor.ToString("N2")</div>
+                                <div class="despesa-valor">R$ @despesa.Valor.ToString("N2", ptBR)</div>
                                 <div class="despesa-acoes">
                                     <button class="btn-desp-acao btn-desp-editar" title="Editar" data-bs-toggle="modal" data-bs-target="#editDesp-@despesa.Id">
                                         <i class="fas fa-pen"></i>
@@ -476,15 +477,15 @@
                     </div>
                     <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
                         <span style="color: #888;">Valor Despesas</span>
-                        <span style="font-weight: 600; color: #E65100;">R$ @totalGasto.ToString("N2")</span>
+                        <span style="font-weight: 600; color: #E65100;">R$ @totalGasto.ToString("N2", ptBR)</span>
                     </div>
                     <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
                         <span style="color: #888;">Valor Pedidos</span>
-                        <span style="font-weight: 600; color: #1565C0;">R$ @totalPedidos.ToString("N2")</span>
+                        <span style="font-weight: 600; color: #1565C0;">R$ @totalPedidos.ToString("N2", ptBR)</span>
                     </div>
                     <div class="d-flex justify-content-between py-2">
                         <span style="font-weight: 700; color: #333;">Total Geral</span>
-                        <span style="font-weight: 700; color: #8B0000; font-size: 1.1rem;">R$ @totalGeral.ToString("N2")</span>
+                        <span style="font-weight: 700; color: #8B0000; font-size: 1.1rem;">R$ @totalGeral.ToString("N2", ptBR)</span>
                     </div>
                 </div>
             </div>
@@ -517,7 +518,7 @@
                                 <label class="form-label">Valor (R$)</label>
                                 <div class="input-valor-wrapper">
                                     <span class="prefixo">R$</span>
-                                    <input type="text" name="Valor" class="form-control input-valor-edit" value="@despesa.Valor.ToString("N2").Replace('.', ',')" inputmode="decimal" required />
+                                    <input type="text" name="Valor" class="form-control input-valor-edit" value="@despesa.Valor.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))" inputmode="decimal" required />
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end gap-2">
@@ -544,7 +545,7 @@
                         <i class="fas fa-exclamation-triangle" style="font-size: 2.5rem; color: #E65100; margin-bottom: 1rem;"></i>
                         <p style="font-weight: 600; color: #333;">Tem certeza que deseja excluir?</p>
                         <p style="font-size: 1.1rem; font-weight: 700; color: #8B0000;">@despesa.Descricao</p>
-                        <p style="font-size: 0.9rem; color: #666;">R$ @despesa.Valor.ToString("N2")</p>
+                        <p style="font-size: 0.9rem; color: #666;">R$ @despesa.Valor.ToString("N2", ptBR)</p>
                         <p style="font-size: 0.8rem; color: #999;">Esta ação não pode ser desfeita.</p>
                     </div>
                     <div class="modal-footer justify-content-center" style="border: none;">
@@ -568,26 +569,23 @@
     document.addEventListener('DOMContentLoaded', function () {
         var valorInput = document.getElementById('valorDespesa');
 
-        valorInput.addEventListener('input', function () {
-            this.value = this.value.replace(/[^0-9.,]/g, '');
-        });
+        // Máscara de moeda brasileira (formato: 1.234,56)
+        function aplicarMascaraMoeda(input) {
+            input.addEventListener('input', function () {
+                var valor = this.value.replace(/[^0-9]/g, '');
+                if (valor === '') { this.value = ''; return; }
+                valor = (parseInt(valor, 10) / 100).toFixed(2);
+                valor = valor.replace('.', ',');
+                valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                this.value = valor;
+            });
+        }
 
-        document.getElementById('formDespesa').addEventListener('submit', function () {
-            valorInput.value = valorInput.value.replace(',', '.');
-        });
+        aplicarMascaraMoeda(valorInput);
 
         // Aplicar máscara nos inputs de edição também
         document.querySelectorAll('.input-valor-edit').forEach(function (input) {
-            input.addEventListener('input', function () {
-                this.value = this.value.replace(/[^0-9.,]/g, '');
-            });
-        });
-
-        document.querySelectorAll('.form-edit-despesa').forEach(function (form) {
-            form.addEventListener('submit', function () {
-                var input = form.querySelector('.input-valor-edit');
-                if (input) input.value = input.value.replace(',', '.');
-            });
+            aplicarMascaraMoeda(input);
         });
     });
 </script>

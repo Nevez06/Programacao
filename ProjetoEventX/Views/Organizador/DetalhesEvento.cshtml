@@ -1,60 +1,565 @@
 @model ProjetoEventX.Models.Evento
 @{
     ViewData["Title"] = "Detalhes do Evento";
+    var ptBR = System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
+    var totalConvidados = Model.ListasConvidados?.Count ?? 0;
+    var confirmados = Model.ListasConvidados?.Count(c => c.ConfirmaPresenca == "Confirmado") ?? 0;
+    var pendentes = Model.ListasConvidados?.Count(c => c.ConfirmaPresenca == "Pendente" || c.ConfirmaPresenca == null) ?? 0;
+    var diasRestantes = (Model.DataEvento - DateTime.Now).Days;
+
+    string StatusBadgeStyle(string status) => status switch
+    {
+        "Planejado" => "background: #E3F2FD; color: #1565C0;",
+        "Em Andamento" => "background: #FFF3E0; color: #E65100;",
+        "Confirmado" => "background: #E8F5E9; color: #2E7D32;",
+        "Concluído" => "background: #F3E5F5; color: #7B1FA2;",
+        "Cancelado" => "background: #FFEBEE; color: #C62828;",
+        _ => "background: #E3F2FD; color: #1565C0;"
+    };
 }
 
-<div class="container">
-    <h1 class="mb-4" style="color: var(--eventx-primary);">@Model.NomeEvento</h1>
-    
-    <div class="row">
-        <div class="col-md-8">
-            <div class="dashboard-card">
-                <h3>Detalhes do Evento</h3>
-                <p><strong>Data:</strong> @Model.DataEvento.ToString("dd/MM/yyyy")</p>
-                <p><strong>Tipo:</strong> @Model.TipoEvento</p>
-                <p><strong>Status:</strong> <span class="badge badge-eventx badge-pendente">@Model.StatusEvento</span></p>
-                <p><strong>Hora:</strong> @Model.HoraInicio - @Model.HoraFim</p>
-                <p><strong>Público Estimado:</strong> @Model.PublicoEstimado pessoas</p>
-                <p><strong>Custo Estimado:</strong> R$ @Model.CustoEstimado.ToString("N2")</p>
-                <p><strong>Descrição:</strong> @Model.DescricaoEvento</p>
-            </div>
-            
-            <div class="dashboard-card mt-4">
-                <h3>Convidados (@Model.ListasConvidados?.Count ?? 0)</h3>
-                @if (Model.ListasConvidados != null && Model.ListasConvidados.Any())
-                {
-                    <ul class="list-group">
-                        @foreach (var convidado in Model.ListasConvidados)
+<style>
+    .det-wrapper {
+        background: #f5f1ed;
+        min-height: 100vh;
+        padding-bottom: 3rem;
+    }
+
+    .det-header {
+        background: linear-gradient(135deg, #8B0000 0%, #B22222 40%, #D4A574 100%);
+        color: #fff;
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .det-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+    }
+
+    .det-header p {
+        opacity: 0.85;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .det-header .header-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-right: 1rem;
+    }
+
+    .det-countdown {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255,255,255,0.15);
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .det-countdown i { margin-right: 0.4rem; }
+
+    .stats-row .stat-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .stat-card .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .stat-icon.icon-date { background: #FFF3E0; color: #E65100; }
+    .stat-icon.icon-people { background: #E3F2FD; color: #1565C0; }
+    .stat-icon.icon-cost { background: #FBE9E7; color: #BF360C; }
+    .stat-icon.icon-status { background: #E8F5E9; color: #2E7D32; }
+
+    .stat-card .stat-value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .stat-card .stat-label {
+        font-size: 0.8rem;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .info-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card h5 {
+        font-weight: 700;
+        color: #8B0000;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-item:last-child { border-bottom: none; }
+
+    .info-item .info-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .ii-date { background: #FFF3E0; color: #E65100; }
+    .ii-time { background: #F3E5F5; color: #7B1FA2; }
+    .ii-type { background: #E8F5E9; color: #2E7D32; }
+    .ii-status { background: #E3F2FD; color: #1565C0; }
+    .ii-people { background: #E0F7FA; color: #00838F; }
+    .ii-cost { background: #FBE9E7; color: #BF360C; }
+    .ii-desc { background: #F1F8E9; color: #558B2F; }
+
+    .info-item .info-label {
+        font-size: 0.75rem;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .info-item .info-value {
+        font-weight: 600;
+        color: #333;
+        font-size: 0.95rem;
+    }
+
+    .det-badge {
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .desc-box {
+        background: #f9f7f5;
+        border-radius: 12px;
+        padding: 1.2rem;
+        color: #555;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        border-left: 4px solid #8B0000;
+    }
+
+    .convidados-card .convidado-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .convidados-card .convidado-item:last-child { border-bottom: none; }
+
+    .convidado-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8B0000, #D4A574);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-right: 0.8rem;
+        flex-shrink: 0;
+    }
+
+    .convidado-info { flex: 1; }
+    .convidado-info .nome { font-weight: 600; color: #333; font-size: 0.9rem; }
+    .convidado-info .email { font-size: 0.8rem; color: #999; }
+
+    .convidado-status {
+        padding: 0.25rem 0.7rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-confirmado { background: #E8F5E9; color: #2E7D32; }
+    .status-pendente { background: #FFF3E0; color: #E65100; }
+    .status-rejeitado { background: #FFEBEE; color: #C62828; }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #999;
+    }
+
+    .empty-state i { font-size: 2.5rem; margin-bottom: 0.8rem; display: block; color: #ccc; }
+
+    .btn-add-convidado {
+        background: linear-gradient(135deg, #8B0000, #B22222);
+        color: #fff;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s;
+    }
+
+    .btn-add-convidado:hover { 
+        transform: translateY(-2px); 
+        box-shadow: 0 4px 12px rgba(139,0,0,0.3);
+        color: #fff; 
+    }
+
+    .acoes-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .acoes-card h5 {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 1.2rem;
+        font-size: 1.1rem;
+    }
+
+    .acao-link {
+        display: flex;
+        align-items: center;
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #333;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        margin-bottom: 0.4rem;
+    }
+
+    .acao-link:hover {
+        background: #f5f1ed;
+        color: #8B0000;
+        transform: translateX(4px);
+    }
+
+    .acao-link .acao-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        margin-right: 0.8rem;
+        flex-shrink: 0;
+    }
+
+    .ai-pedidos { background: linear-gradient(135deg, #2E7D32, #66BB6A); color: #fff; }
+    .ai-convites { background: linear-gradient(135deg, #7B1FA2, #AB47BC); color: #fff; }
+    .ai-orcamento { background: linear-gradient(135deg, #E65100, #FF8F00); color: #fff; }
+    .ai-chat { background: linear-gradient(135deg, #00838F, #26C6DA); color: #fff; }
+    .ai-ia { background: linear-gradient(135deg, #4527A0, #7E57C2); color: #fff; }
+    .ai-editar { background: linear-gradient(135deg, #1565C0, #42A5F5); color: #fff; }
+    .ai-voltar { background: linear-gradient(135deg, #546E7A, #90A4AE); color: #fff; }
+</style>
+
+<div class="det-wrapper">
+    <section class="det-header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <div class="header-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div>
+                    <h1>@Model.NomeEvento</h1>
+                    <p>@Model.TipoEvento &bull; @Model.DataEvento.ToString("dd 'de' MMMM 'de' yyyy", ptBR)</p>
+                    <div class="det-countdown">
+                        <i class="fas fa-clock"></i>
+                        @if (diasRestantes > 0)
                         {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>@convidado.Convidado.Pessoa.Nome</strong><br>
-                                    <small>@convidado.Convidado.Pessoa.Email</small>
-                                </div>
-                                <span class="badge badge-eventx @(convidado.ConfirmaPresenca == "Confirmado" ? "badge-confirmado" : "badge-pendente")">
-                                    @convidado.ConfirmaPresenca
-                                </span>
-                            </li>
+                            <span>Faltam <strong>@diasRestantes dias</strong> para o evento</span>
                         }
-                    </ul>
-                }
-                else
-                {
-                    <p>Nenhum convidado adicionado ainda.</p>
-                }
-                <a asp-controller="Convite" asp-action="Criar" asp-route-eventoId="@Model.Id" class="btn btn-eventx-primary mt-3">Adicionar Convidado</a>
+                        else if (diasRestantes == 0)
+                        {
+                            <span><strong>O evento é hoje!</strong></span>
+                        }
+                        else
+                        {
+                            <span>Evento realizado há <strong>@Math.Abs(diasRestantes) dias</strong></span>
+                        }
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <div class="col-md-4">
-            <div class="dashboard-card">
-                <h3>Ações</h3>
-                <div class="d-grid gap-2">
-                    <a asp-controller="Pedido" asp-action="Index" asp-route-eventoId="@Model.Id" class="btn btn-eventx-secondary">🛒 Pedidos</a>
-                    <a asp-controller="Convite" asp-action="Criar" asp-route-eventoId="@Model.Id" class="btn btn-eventx-secondary">📧 Convidar Pessoas</a>
-                    <a asp-controller="Administracao" asp-action="Index" asp-route-eventoId="@Model.Id" class="btn btn-eventx-secondary">💰 Gerenciar Orçamento</a>
-                    <a asp-controller="Chat" asp-action="Chat" asp-route-eventoId="@Model.Id" class="btn btn-eventx-secondary">💬 Chat do Evento</a>
-                    <a asp-controller="IAController" asp-action="Index" class="btn btn-eventx-secondary">🤖 Assistente Virtual</a>
+    </section>
+
+    <div class="container">
+        <!-- Cards de Resumo -->
+        <div class="row g-3 mb-4 stats-row">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon icon-date"><i class="fas fa-calendar-day"></i></div>
+                    <div class="stat-value">@Model.DataEvento.ToString("dd/MM/yyyy")</div>
+                    <div class="stat-label">Data</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon icon-people"><i class="fas fa-users"></i></div>
+                    <div class="stat-value">@totalConvidados / @Model.PublicoEstimado</div>
+                    <div class="stat-label">Convidados</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon icon-cost"><i class="fas fa-money-bill-wave"></i></div>
+                    <div class="stat-value" style="color: #8B0000;">R$ @Model.CustoEstimado.ToString("N2", ptBR)</div>
+                    <div class="stat-label">Custo Estimado</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon icon-status"><i class="fas fa-flag"></i></div>
+                    <div class="stat-value">
+                        <span class="det-badge" style="@StatusBadgeStyle(Model.StatusEvento)">@Model.StatusEvento</span>
+                    </div>
+                    <div class="stat-label">Status</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Coluna Principal -->
+            <div class="col-lg-8">
+                <!-- Informações -->
+                <div class="info-card">
+                    <h5><i class="fas fa-info-circle me-2"></i>Informações do Evento</h5>
+
+                    <div class="info-item">
+                        <div class="info-icon ii-date"><i class="fas fa-calendar-day"></i></div>
+                        <div>
+                            <div class="info-label">Data</div>
+                            <div class="info-value">@Model.DataEvento.ToString("dd 'de' MMMM 'de' yyyy", ptBR)</div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon ii-time"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <div class="info-label">Horário</div>
+                            <div class="info-value">@Model.HoraInicio - @Model.HoraFim</div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon ii-type"><i class="fas fa-tag"></i></div>
+                        <div>
+                            <div class="info-label">Tipo</div>
+                            <div class="info-value">@Model.TipoEvento</div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon ii-status"><i class="fas fa-flag"></i></div>
+                        <div>
+                            <div class="info-label">Status</div>
+                            <div class="info-value">
+                                <span class="det-badge" style="@StatusBadgeStyle(Model.StatusEvento)">@Model.StatusEvento</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon ii-people"><i class="fas fa-users"></i></div>
+                        <div>
+                            <div class="info-label">Público Estimado</div>
+                            <div class="info-value">@Model.PublicoEstimado pessoas</div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon ii-cost"><i class="fas fa-money-bill-wave"></i></div>
+                        <div>
+                            <div class="info-label">Custo Estimado</div>
+                            <div class="info-value" style="color: #8B0000;">R$ @Model.CustoEstimado.ToString("N2", ptBR)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Descrição -->
+                @if (!string.IsNullOrWhiteSpace(Model.DescricaoEvento))
+                {
+                    <div class="info-card">
+                        <h5><i class="fas fa-align-left me-2"></i>Descrição</h5>
+                        <div class="desc-box">@Model.DescricaoEvento</div>
+                    </div>
+                }
+
+                <!-- Convidados -->
+                <div class="info-card convidados-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="fas fa-user-friends me-2"></i>Convidados (@totalConvidados)</h5>
+                        <a asp-controller="Convite" asp-action="Criar" asp-route-eventoId="@Model.Id" class="btn-add-convidado">
+                            <i class="fas fa-plus me-1"></i> Adicionar
+                        </a>
+                    </div>
+
+                    @if (totalConvidados > 0)
+                    {
+                        <div class="d-flex gap-3 mb-3">
+                            <small><span style="color: #2E7D32; font-weight: 600;">@confirmados confirmados</span></small>
+                            <small><span style="color: #E65100; font-weight: 600;">@pendentes pendentes</span></small>
+                        </div>
+
+                        @foreach (var convidado in Model.ListasConvidados)
+                        {
+                            var iniciais = "";
+                            try { iniciais = convidado.Convidado?.Pessoa?.Nome?.Substring(0, 1).ToUpper() ?? "?"; } catch { iniciais = "?"; }
+                            var statusClass = convidado.ConfirmaPresenca == "Confirmado" ? "status-confirmado" :
+                                              convidado.ConfirmaPresenca == "Rejeitado" ? "status-rejeitado" : "status-pendente";
+
+                            <div class="convidado-item">
+                                <div class="convidado-avatar">@iniciais</div>
+                                <div class="convidado-info">
+                                    <div class="nome">@(convidado.Convidado?.Pessoa?.Nome ?? "Convidado")</div>
+                                    <div class="email">@(convidado.Convidado?.Pessoa?.Email ?? "")</div>
+                                </div>
+                                <span class="convidado-status @statusClass">@(convidado.ConfirmaPresenca ?? "Pendente")</span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-user-friends"></i>
+                            <p class="mb-1"><strong>Nenhum convidado adicionado ainda</strong></p>
+                            <small>Comece adicionando pessoas à lista de convidados</small>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Coluna Lateral -->
+            <div class="col-lg-4">
+                <div class="acoes-card">
+                    <h5><i class="fas fa-bolt me-2"></i>Ações</h5>
+
+                    <a asp-controller="Pedido" asp-action="Index" asp-route-eventoId="@Model.Id" class="acao-link">
+                        <div class="acao-icon ai-pedidos"><i class="fas fa-shopping-bag"></i></div>
+                        <div>
+                            <div>Pedidos</div>
+                            <small style="color: #999; font-weight: 400;">Gerenciar pedidos do evento</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Convite" asp-action="Criar" asp-route-eventoId="@Model.Id" class="acao-link">
+                        <div class="acao-icon ai-convites"><i class="fas fa-envelope"></i></div>
+                        <div>
+                            <div>Convidar Pessoas</div>
+                            <small style="color: #999; font-weight: 400;">Enviar convites</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Administracao" asp-action="Index" asp-route-eventoId="@Model.Id" class="acao-link">
+                        <div class="acao-icon ai-orcamento"><i class="fas fa-chart-pie"></i></div>
+                        <div>
+                            <div>Gerenciar Orçamento</div>
+                            <small style="color: #999; font-weight: 400;">Despesas e controle financeiro</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Chat" asp-action="Chat" asp-route-eventoId="@Model.Id" class="acao-link">
+                        <div class="acao-icon ai-chat"><i class="fas fa-comments"></i></div>
+                        <div>
+                            <div>Chat do Evento</div>
+                            <small style="color: #999; font-weight: 400;">Conversar com a equipe</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="IA" asp-action="Index" class="acao-link">
+                        <div class="acao-icon ai-ia"><i class="fas fa-robot"></i></div>
+                        <div>
+                            <div>Assistente Virtual</div>
+                            <small style="color: #999; font-weight: 400;">Ajuda com IA</small>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Resumo Rápido -->
+                <div class="acoes-card">
+                    <h5><i class="fas fa-chart-bar me-2"></i>Resumo</h5>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Horário</span>
+                        <span style="font-weight: 600;">@Model.HoraInicio - @Model.HoraFim</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Convidados</span>
+                        <span style="font-weight: 600;">@totalConvidados pessoa(s)</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Confirmados</span>
+                        <span style="font-weight: 600; color: #2E7D32;">@confirmados</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Custo Estimado</span>
+                        <span style="font-weight: 600; color: #8B0000;">R$ @Model.CustoEstimado.ToString("N2", ptBR)</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2">
+                        <span style="color: #888;">Dias restantes</span>
+                        <span style="font-weight: 700; color: @(diasRestantes <= 7 ? "#C62828" : diasRestantes <= 30 ? "#E65100" : "#2E7D32");">
+                            @(diasRestantes > 0 ? $"{diasRestantes} dias" : diasRestantes == 0 ? "Hoje!" : "Encerrado")
+                        </span>
+                    </div>
+                </div>
+
+                <div class="acoes-card">
+                    <a asp-controller="Organizador" asp-action="Dashboard" class="acao-link">
+                        <div class="acao-icon ai-voltar"><i class="fas fa-arrow-left"></i></div>
+                        <div>
+                            <div>Voltar ao Dashboard</div>
+                            <small style="color: #999; font-weight: 400;">Painel do organizador</small>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>

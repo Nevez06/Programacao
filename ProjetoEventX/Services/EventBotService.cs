@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using ProjetoEventX.Data;
@@ -13,6 +14,10 @@ namespace ProjetoEventX.Services
         private readonly GeminiEventService _geminiEventService;
         private readonly HttpClient _httpClient;
         private readonly string _geminiApiKey;
+        private static readonly CultureInfo _ptBR = CultureInfo.GetCultureInfo("pt-BR");
+
+        // Formata valor decimal no padrão brasileiro: 200.000,00
+        private static string Moeda(decimal valor) => valor.ToString("N2", _ptBR);
 
         public EventBotService(EventXContext context, GeminiEventService geminiEventService, HttpClient httpClient)
         {
@@ -38,7 +43,12 @@ namespace ProjetoEventX.Services
             try
             {
                 // Verificar se é uma pergunta sobre criação de orçamento
-                if ((pergunta.ToLower().Contains("orçamento") && pergunta.ToLower().Contains("criar")) || 
+                if ((pergunta.ToLower().Contains("orçamento") && 
+                    (pergunta.ToLower().Contains("criar") || pergunta.ToLower().Contains("crie") || 
+                     pergunta.ToLower().Contains("monte") || pergunta.ToLower().Contains("montar") ||
+                     pergunta.ToLower().Contains("faça") || pergunta.ToLower().Contains("fazer") ||
+                     pergunta.ToLower().Contains("gerar") || pergunta.ToLower().Contains("gere") ||
+                     pergunta.ToLower().Contains("personalizado") || pergunta.ToLower().Contains("sugerido"))) || 
                     (pergunta.ToLower().Contains("planejar") && pergunta.ToLower().Contains("evento")) ||
                     pergunta.ToLower().Contains("sugerir fornecedor") ||
                     pergunta.ToLower().Contains("recomendar"))
@@ -146,8 +156,8 @@ namespace ProjetoEventX.Services
                    $"### 👥 Convidados\n" +
                    $"- **Confirmados:** {convidadosConfirmados} de {totalConvidados} ({(totalConvidados > 0 ? (convidadosConfirmados * 100.0 / totalConvidados):0):F0}%)\n\n" +
                    $"### 💰 Orçamento\n" +
-                   $"- **Gasto:** R$ {despesasTotal:F2} de R$ {evento.CustoEstimado:F2} ({percentualOrcamento:F0}%)\n" +
-                   $"- **Restante:** R$ {(evento.CustoEstimado - despesasTotal):F2}\n\n" +
+                   $"- **Gasto:** R$ {Moeda(despesasTotal)} de R$ {Moeda(evento.CustoEstimado)} ({percentualOrcamento:F0}%)\n" +
+                   $"- **Restante:** R$ {Moeda(evento.CustoEstimado - despesasTotal)}\n\n" +
                    $"### 🎯 **Próximos Passos Recomendados:**\n" +
                    (tarefasTotal - tarefasConcluidas > 0 ? $"- Focar nas {tarefasTotal - tarefasConcluidas} tarefas pendentes\n" : "") +
                    (convidadosConfirmados < totalConvidados * 0.7 ? $"- Fazer follow-up dos convites (apenas {(convidadosConfirmados * 100.0 / totalConvidados):F0}% confirmaram)\n" : "") +
@@ -259,7 +269,7 @@ namespace ProjetoEventX.Services
                 var totalEventos = await _context.Eventos.CountAsync();
                 var orcamentoTotalGeral = await _context.Eventos.SumAsync(e => e.CustoEstimado);
                 return $"💰 **Resumo Financeiro Geral**\n\n" +
-                       $"Você tem **{totalEventos} eventos** com orçamento total de **R$ {orcamentoTotalGeral:F2}**.\n\n" +
+                       $"Você tem **{totalEventos} eventos** com orçamento total de **R$ {Moeda(orcamentoTotalGeral)}**.\n\n" +
                        $"Selecione um evento específico para análise financeira detalhada! 🎯";
             }
 
@@ -287,22 +297,22 @@ namespace ProjetoEventX.Services
                 .ToList();
 
             var categoriasMaiorGasto = string.Join("\n", categorias.Select(c => 
-                $"- **{c.Categoria}:** R$ {c.Total:F2} ({(totalGasto > 0 ? c.Total / totalGasto * 100 : 0):F0}%)"));
+                $"- **{c.Categoria}:** R$ {Moeda(c.Total)} ({(totalGasto > 0 ? c.Total / totalGasto * 100 : 0):F0}%)"));
 
             return $"## 💰 Análise Financeira: **{evento.NomeEvento}**\n\n" +
                    $"### 📊 Status Atual\n" +
                    $"- **Situação:** {statusFinanceiro}\n" +
-                   $"- **Orçamento total:** R$ {evento.CustoEstimado:F2}\n" +
-                   $"- **Gasto atual:** R$ {totalGasto:F2} ({percentualGasto:F0}%)\n" +
-                   $"- **Disponível:** R$ {orcamentoRestante:F2}\n" +
+                   $"- **Orçamento total:** R$ {Moeda(evento.CustoEstimado)}\n" +
+                   $"- **Gasto atual:** R$ {Moeda(totalGasto)} ({percentualGasto:F0}%)\n" +
+                   $"- **Disponível:** R$ {Moeda(orcamentoRestante)}\n" +
                    $"- **Dias restantes:** {diasRestantes}\n\n" +
                    $"### 💸 **Maiores Gastos:**\n" +
                    (categorias.Any() ? categoriasMaiorGasto : "Nenhuma despesa cadastrada ainda") + "\n\n" +
                    $"### 🎯 **Recomendações:**\n" +
                    (percentualGasto > 90 ? $"- 🚨 **ALERTA:** Orçamento quase esgotado!\n" : "") +
-                   (orcamentoRestante < 0 ? $"- 💸 **EXCESSO:** R$ {Math.Abs(orcamentoRestante):F2} acima do orçamento!\n" : "") +
-                   (diasRestantes > 0 && orcamentoRestante > 0 ? $"- 💡 Você pode gastar R$ {(orcamentoRestante / Math.Max(diasRestantes, 1)):F2} por dia até o evento\n" : "") +
-                   (percentualGasto < 50 && diasRestantes < 30 ? $"- ✅ Ótimo controle! Ainda há R$ {orcamentoRestante:F2} disponíveis\n" : "") +
+                   (orcamentoRestante < 0 ? $"- 💸 **EXCESSO:** R$ {Moeda(Math.Abs(orcamentoRestante))} acima do orçamento!\n" : "") +
+                   (diasRestantes > 0 && orcamentoRestante > 0 ? $"- 💡 Você pode gastar R$ {Moeda(orcamentoRestante / Math.Max(diasRestantes, 1))} por dia até o evento\n" : "") +
+                   (percentualGasto < 50 && diasRestantes < 30 ? $"- ✅ Ótimo controle! Ainda há R$ {Moeda(orcamentoRestante)} disponíveis\n" : "") +
                    $"- 📊 Monitore os gastos principais regularmente";
         }
 
@@ -355,7 +365,7 @@ namespace ProjetoEventX.Services
                 foreach (var fornecedor in maisEconomicos)
                 {
                     var precoMedio = fornecedor.Produtos.Any() ? fornecedor.Produtos.Average(p => p.Preco) : 0;
-                    resultado.AppendLine($"- **{fornecedor.Pessoa.Nome}** - Média R$ {precoMedio:F2}");
+                    resultado.AppendLine($"- **{fornecedor.Pessoa.Nome}** - Média R$ {Moeda(precoMedio)}");
                 }
                 resultado.AppendLine();
             }
@@ -383,8 +393,8 @@ namespace ProjetoEventX.Services
                 var percentualGasto = evento.CustoEstimado > 0 ? (gastoAtual / evento.CustoEstimado) * 100 : 0;
                 
                 resultado.AppendLine($"### 📊 Situação Atual: **{evento.NomeEvento}**");
-                resultado.AppendLine($"- Gasto atual: R$ {gastoAtual:F2} ({percentualGasto:F0}% do orçamento)");
-                resultado.AppendLine($"- Restante: R$ {(evento.CustoEstimado - gastoAtual):F2}\n");
+                resultado.AppendLine($"- Gasto atual: R$ {Moeda(gastoAtual)} ({percentualGasto:F0}% do orçamento)");
+                resultado.AppendLine($"- Restante: R$ {Moeda(evento.CustoEstimado - gastoAtual)}\n");
             }
 
             resultado.AppendLine($"### 🎯 **Estratégias de Economia:**");
@@ -477,14 +487,14 @@ namespace ProjetoEventX.Services
                    $"### 📊 Informações Básicas\n" +
                    $"- **Tipo:** {evento.TipoEvento}\n" +
                    $"- **Público:** {evento.PublicoEstimado} pessoas\n" +
-                   $"- **Orçamento total:** R$ {evento.CustoEstimado:F2}\n" +
-                   $"- **Por pessoa:** R$ {orcamentoPorPessoa:F2}\n\n" +
+                   $"- **Orçamento total:** R$ {Moeda(evento.CustoEstimado)}\n" +
+                   $"- **Por pessoa:** R$ {Moeda(orcamentoPorPessoa)}\n\n" +
                    $"### 🎯 **Distribuição Sugerida do Orçamento:**\n" +
-                   $"- 🏠 **Local (40%):** R$ {(evento.CustoEstimado * 0.4m):F2}\n" +
-                   $"- 🍽️ **Alimentação (30%):** R$ {(evento.CustoEstimado * 0.3m):F2}\n" +
-                   $"- 🎨 **Decoração (15%):** R$ {(evento.CustoEstimado * 0.15m):F2}\n" +
-                   $"- 🎵 **Entretenimento (10%):** R$ {(evento.CustoEstimado * 0.1m):F2}\n" +
-                   $"- 🛡️ **Reserva (5%):** R$ {(evento.CustoEstimado * 0.05m):F2}\n\n" +
+                   $"- 🏠 **Local (40%):** R$ {Moeda(evento.CustoEstimado * 0.4m)}\n" +
+                   $"- 🍽️ **Alimentação (30%):** R$ {Moeda(evento.CustoEstimado * 0.3m)}\n" +
+                   $"- 🎨 **Decoração (15%):** R$ {Moeda(evento.CustoEstimado * 0.15m)}\n" +
+                   $"- 🎵 **Entretenimento (10%):** R$ {Moeda(evento.CustoEstimado * 0.1m)}\n" +
+                   $"- 🛡️ **Reserva (5%):** R$ {Moeda(evento.CustoEstimado * 0.05m)}\n\n" +
                    $"### 💡 **Próximos Passos:**\n" +
                    $"1. 🏪 Cadastre fornecedores no sistema para orçamentos detalhados\n" +
                    $"2. 📋 Compare preços de diferentes prestadores\n" +
@@ -507,9 +517,9 @@ namespace ProjetoEventX.Services
             };
 
             resultado.AppendLine($"### 📊 Resumo do Orçamento");
-            resultado.AppendLine($"- **Orçamento Total:** R$ {evento.CustoEstimado:F2}");
+            resultado.AppendLine($"- **Orçamento Total:** R$ {Moeda(evento.CustoEstimado)}");
             resultado.AppendLine($"- **Público Estimado:** {evento.PublicoEstimado} pessoas");
-            resultado.AppendLine($"- **Por pessoa:** R$ {evento.CustoEstimado / Math.Max(evento.PublicoEstimado, 1):F2}\n");
+            resultado.AppendLine($"- **Por pessoa:** R$ {Moeda(evento.CustoEstimado / Math.Max(evento.PublicoEstimado, 1))}\n");
 
             resultado.AppendLine($"### 🛍️ **Fornecedores Recomendados:**");
 
@@ -523,7 +533,7 @@ namespace ProjetoEventX.Services
 
                 if (fornecedoresDaCategoria.Any())
                 {
-                    resultado.AppendLine($"\n**{categoria.Key}** - Orçamento: R$ {categoria.Value:F2}");
+                    resultado.AppendLine($"\n**{categoria.Key}** - Orçamento: R$ {Moeda(categoria.Value)}");
                     foreach (var fornecedor in fornecedoresDaCategoria)
                     {
                         var produtosDaCategoria = fornecedor.Produtos
@@ -534,7 +544,7 @@ namespace ProjetoEventX.Services
                         resultado.AppendLine($"- **{fornecedor.Pessoa.Nome}** (⭐ {fornecedor.AvaliacaoMedia:F1})");
                         foreach (var produto in produtosDaCategoria)
                         {
-                            resultado.AppendLine($"  • {produto.Nome} - R$ {produto.Preco:F2}");
+                            resultado.AppendLine($"  • {produto.Nome} - R$ {Moeda(produto.Preco)}");
                         }
                     }
                 }

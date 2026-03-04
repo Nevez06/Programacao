@@ -63,8 +63,8 @@ namespace ProjetoEventX.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AdicionarDespesa(int eventoId, string Descricao, string Valor)
         {
-            // Converter valor (aceitar vírgula ou ponto)
-            var valorLimpo = Valor.Replace(",", ".");
+            // Converter valor no formato brasileiro (ponto = milhares, vírgula = decimal)
+            var valorLimpo = Valor.Replace(".", "").Replace(",", ".");
             if (!decimal.TryParse(valorLimpo, System.Globalization.NumberStyles.Any, 
                 System.Globalization.CultureInfo.InvariantCulture, out var valorDecimal) || valorDecimal <= 0)
             {
@@ -123,7 +123,8 @@ namespace ProjetoEventX.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditarDespesa(int despesaId, int eventoId, string Descricao, string Valor)
         {
-            var valorLimpo = Valor.Replace(",", ".");
+            // Converter valor no formato brasileiro (ponto = milhares, vírgula = decimal)
+            var valorLimpo = Valor.Replace(".", "").Replace(",", ".");
             if (!decimal.TryParse(valorLimpo, System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, out var valorDecimal) || valorDecimal <= 0)
             {
