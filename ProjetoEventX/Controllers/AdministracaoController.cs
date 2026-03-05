@@ -30,6 +30,7 @@ namespace ProjetoEventX.Controllers
             var evento = await _context.Eventos
                 .Include(e => e.Pedidos)
                 .Include(e => e.Despesas)
+                .Include(e => e.ListasConvidados)
                 .FirstOrDefaultAsync(e => e.Id == eventoId);
 
             if (evento == null)
@@ -52,6 +53,31 @@ namespace ProjetoEventX.Controllers
             var administracao = await _context.Administracoes
                 .FirstOrDefaultAsync(a => a.IdEvento == eventoId);
 
+            // === DADOS ANALÍTICOS ===
+
+            // Distribuição de gastos por categoria (baseado na descrição)
+            var categoriasGastos = CategorizarDespesas(despesas);
+
+            // Evolução de despesas ao longo do tempo (agrupado por dia)
+            var evolucaoDespesas = despesas
+                .GroupBy(d => d.DataDespesa.Date)
+                .OrderBy(g => g.Key)
+                .Select(g => new { Data = g.Key.ToString("dd/MM"), Valor = g.Sum(d => d.Valor) })
+                .ToList();
+
+            // Convidados
+            var convidados = evento.ListasConvidados ?? new List<ListaConvidado>();
+            var totalConvidados = convidados.Count;
+            var convidadosConfirmados = convidados.Count(c => c.ConfirmaPresenca == "Confirmado");
+            var convidadosPendentes = convidados.Count(c => c.ConfirmaPresenca == "Pendente");
+            var convidadosRecusados = totalConvidados - convidadosConfirmados - convidadosPendentes;
+
+            // Pedidos por status
+            var pedidos = evento.Pedidos ?? new List<Pedido>();
+            var pedidosAprovados = pedidos.Count(p => p.StatusPedido == "Pago" || p.StatusPedido == "Entregue");
+            var pedidosPendentes = pedidos.Count(p => p.StatusPedido == "Pendente");
+            var pedidosCancelados = pedidos.Count(p => p.StatusPedido != "Pago" && p.StatusPedido != "Entregue" && p.StatusPedido != "Pendente");
+
             ViewBag.Evento = evento;
             ViewBag.Despesas = despesas;
             ViewBag.TotalGasto = totalGasto;
@@ -59,7 +85,53 @@ namespace ProjetoEventX.Controllers
             ViewBag.TotalGeral = totalGeral;
             ViewBag.Administracao = administracao;
 
+            // Analíticos
+            ViewBag.CategoriasLabels = categoriasGastos.Select(c => c.Categoria).ToList();
+            ViewBag.CategoriasValores = categoriasGastos.Select(c => c.Valor).ToList();
+            ViewBag.EvolucaoLabels = evolucaoDespesas.Select(e => e.Data).ToList();
+            ViewBag.EvolucaoValores = evolucaoDespesas.Select(e => e.Valor).ToList();
+            ViewBag.TotalConvidados = totalConvidados;
+            ViewBag.ConvidadosConfirmados = convidadosConfirmados;
+            ViewBag.ConvidadosPendentes = convidadosPendentes;
+            ViewBag.ConvidadosRecusados = convidadosRecusados;
+            ViewBag.PedidosAprovados = pedidosAprovados;
+            ViewBag.PedidosPendentes = pedidosPendentes;
+            ViewBag.PedidosCancelados = pedidosCancelados;
+            ViewBag.TotalPedidosCount = pedidos.Count;
+
             return View();
+        }
+
+        private List<(string Categoria, decimal Valor)> CategorizarDespesas(List<Despesa> despesas)
+        {
+            var categorias = new Dictionary<string, decimal>
+            {
+                { "Buffet", 0m },
+                { "Decoração", 0m },
+                { "Som", 0m },
+                { "Fotografia", 0m },
+                { "Outros", 0m }
+            };
+
+            foreach (var d in despesas)
+            {
+                var desc = d.Descricao?.ToLower() ?? "";
+                if (desc.Contains("buffet") || desc.Contains("comida") || desc.Contains("alimenta") || desc.Contains("refei") || desc.Contains("catering"))
+                    categorias["Buffet"] += d.Valor;
+                else if (desc.Contains("decora") || desc.Contains("flores") || desc.Contains("arranjo") || desc.Contains("ornament"))
+                    categorias["Decoração"] += d.Valor;
+                else if (desc.Contains("som") || desc.Contains("dj") || desc.Contains("música") || desc.Contains("musica") || desc.Contains("audio") || desc.Contains("áudio"))
+                    categorias["Som"] += d.Valor;
+                else if (desc.Contains("foto") || desc.Contains("vídeo") || desc.Contains("video") || desc.Contains("filmag") || desc.Contains("câmera") || desc.Contains("camera"))
+                    categorias["Fotografia"] += d.Valor;
+                else
+                    categorias["Outros"] += d.Valor;
+            }
+
+            return categorias
+                .Where(c => c.Value > 0)
+                .Select(c => (c.Key, c.Value))
+                .ToList();
         }
 
         [HttpPost]

@@ -1,0 +1,431 @@
+@{
+    ViewData["Title"] = "Check-in do Evento";
+    var evento = ViewBag.Evento as ProjetoEventX.Models.Evento;
+    var convidados = ViewBag.Convidados as List<ProjetoEventX.Models.ListaConvidado> ?? new List<ProjetoEventX.Models.ListaConvidado>();
+    var totalConvidados = (int)(ViewBag.TotalConvidados ?? 0);
+    var presentes = (int)(ViewBag.Presentes ?? 0);
+    var ausentes = totalConvidados - presentes;
+    var pctPresentes = totalConvidados > 0 ? (int)Math.Round((double)presentes / totalConvidados * 100) : 0;
+}
+
+<style>
+    .checkin-wrapper { background: #f5f1ed; min-height: 100vh; padding-bottom: 3rem; }
+    .checkin-header {
+        background: linear-gradient(135deg, #2E7D32 0%, #43A047 50%, #66BB6A 100%);
+        color: #fff; padding: 2.5rem 0; margin-bottom: 2rem;
+    }
+    .checkin-header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .checkin-header p { opacity: 0.85; font-size: 1rem; margin: 0; }
+    .checkin-header .header-icon {
+        width: 60px; height: 60px; background: rgba(255,255,255,0.2);
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; margin-right: 1rem;
+    }
+
+    .stat-row .stat-card {
+        background: #fff; border-radius: 16px; padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); text-align: center; height: 100%;
+    }
+    .stat-card .stat-icon {
+        width: 48px; height: 48px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; color: #fff; margin: 0 auto 0.8rem;
+    }
+    .stat-card .stat-val { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .stat-card .stat-lbl { font-size: 0.85rem; color: #888; margin-top: 4px; }
+
+    .scanner-card {
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem;
+    }
+    .scanner-card h5 { color: #2E7D32; font-weight: 700; margin-bottom: 1rem; }
+
+    #scanner-container {
+        width: 100%; max-width: 400px; margin: 0 auto;
+        border-radius: 12px; overflow: hidden; background: #111;
+    }
+    #scanner-container video { border-radius: 12px; }
+
+    .btn-scanner {
+        padding: 12px 28px; border-radius: 12px; border: none; cursor: pointer;
+        font-weight: 700; font-size: 1rem; transition: all 0.3s;
+    }
+    .btn-iniciar {
+        background: linear-gradient(135deg, #2E7D32, #43A047); color: #fff;
+    }
+    .btn-iniciar:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(46,125,50,0.3); color: #fff; }
+    .btn-parar {
+        background: linear-gradient(135deg, #C62828, #E53935); color: #fff;
+    }
+    .btn-parar:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(198,40,40,0.3); color: #fff; }
+
+    #resultado-scan {
+        margin-top: 1rem; padding: 1rem 1.5rem; border-radius: 12px;
+        font-weight: 600; display: none; animation: fadeIn 0.3s;
+    }
+    #resultado-scan.sucesso { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; display: block; }
+    #resultado-scan.erro { background: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A; display: block; }
+    @@keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .lista-card {
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem;
+    }
+    .lista-card h5 { font-weight: 700; color: #333; margin-bottom: 1.2rem; }
+
+    .conv-item {
+        display: flex; align-items: center; padding: 0.8rem 1rem;
+        border-radius: 12px; background: #f8f9fa; margin-bottom: 0.5rem;
+        transition: all 0.2s;
+    }
+    .conv-item:hover { background: #f0ebe5; }
+    .conv-item.presente { border-left: 4px solid #2E7D32; }
+    .conv-item.ausente { border-left: 4px solid #E0E0E0; }
+    .conv-avatar {
+        width: 38px; height: 38px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 0.9rem; color: #fff; margin-right: 1rem; flex-shrink: 0;
+    }
+    .conv-avatar.pres { background: linear-gradient(135deg, #2E7D32, #66BB6A); }
+    .conv-avatar.aus { background: #CFD8DC; color: #607D8B; }
+    .conv-info { flex: 1; }
+    .conv-nome { font-weight: 600; color: #333; font-size: 0.9rem; }
+    .conv-hora { font-size: 0.75rem; color: #888; }
+    .conv-badge {
+        font-size: 0.7rem; padding: 3px 10px; border-radius: 20px; font-weight: 600;
+    }
+    .conv-badge.badge-pres { background: #E8F5E9; color: #2E7D32; }
+    .conv-badge.badge-aus { background: #f0f0f0; color: #999; }
+    .conv-actions { display: flex; gap: 6px; margin-left: 8px; }
+    .btn-qr-small, .btn-undo-small {
+        width: 32px; height: 32px; border-radius: 8px; border: none;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-qr-small { background: #E3F2FD; color: #1565C0; }
+    .btn-qr-small:hover { background: #1565C0; color: #fff; }
+    .btn-undo-small { background: #FFF3E0; color: #E65100; }
+    .btn-undo-small:hover { background: #E65100; color: #fff; }
+
+    .acoes-card {
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1rem;
+    }
+    .acoes-card h5 { font-weight: 700; color: #333; margin-bottom: 1.2rem; }
+    .acao-link {
+        display: flex; align-items: center; gap: 12px; padding: 1rem;
+        border-radius: 12px; background: #f8f9fa; margin-bottom: 0.6rem;
+        text-decoration: none; color: #333; transition: all 0.2s; font-weight: 600;
+    }
+    .acao-link:hover { background: #f0ebe5; transform: translateX(5px); color: #8B0000; }
+    .acao-link .acao-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 1rem; flex-shrink: 0;
+    }
+
+    .progress-bar-ci { height: 10px; border-radius: 5px; background: #f0ece8; overflow: hidden; margin-top: 4px; }
+    .progress-bar-ci-fill { height: 100%; border-radius: 5px; background: linear-gradient(135deg, #2E7D32, #66BB6A); transition: width 0.5s; }
+
+    .alert-sucesso { background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; border-radius: 12px; padding: 1rem 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+    .empty-state { text-align: center; padding: 2rem; color: #bbb; }
+    .empty-state i { font-size: 2.5rem; opacity: 0.3; margin-bottom: 0.5rem; }
+
+    .search-input {
+        border-radius: 10px; border: 2px solid #e0e0e0; padding: 10px 14px 10px 40px;
+        width: 100%; transition: border-color 0.3s; font-size: 0.9rem;
+    }
+    .search-input:focus { border-color: #2E7D32; box-shadow: 0 0 0 3px rgba(46,125,50,0.1); outline: none; }
+    .search-wrapper { position: relative; margin-bottom: 1rem; }
+    .search-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #bbb; }
+</style>
+
+<div class="checkin-wrapper">
+    <section class="checkin-header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <div class="header-icon"><i class="fas fa-qrcode"></i></div>
+                <div>
+                    <h1>Check-in — @(evento?.NomeEvento ?? "Evento")</h1>
+                    <p>Escaneie o QR Code dos convidados para registrar presença</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="alert-sucesso"><i class="fas fa-check-circle me-2"></i>@TempData["Sucesso"]</div>
+        }
+
+        <!-- Stats -->
+        <div class="row g-3 mb-4 stat-row">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #7B1FA2, #AB47BC);"><i class="fas fa-users"></i></div>
+                    <div class="stat-val" style="color: #7B1FA2;">@totalConvidados</div>
+                    <div class="stat-lbl">Total Convidados</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #2E7D32, #66BB6A);"><i class="fas fa-user-check"></i></div>
+                    <div class="stat-val" style="color: #2E7D32;">@presentes</div>
+                    <div class="stat-lbl">Presentes</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #E65100, #FF8F00);"><i class="fas fa-user-clock"></i></div>
+                    <div class="stat-val" style="color: #E65100;">@ausentes</div>
+                    <div class="stat-lbl">Aguardando</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-val" style="color: #2E7D32; font-size: 1.5rem;">@(pctPresentes)%</div>
+                    <div class="stat-lbl">Presença</div>
+                    <div class="progress-bar-ci">
+                        <div class="progress-bar-ci-fill" style="width: @(pctPresentes)%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <!-- Scanner -->
+                <div class="scanner-card">
+                    <h5><i class="fas fa-camera me-2"></i>Leitor de QR Code</h5>
+                    <div class="text-center mb-3">
+                        <button id="btnIniciar" class="btn-scanner btn-iniciar" onclick="iniciarScanner()">
+                            <i class="fas fa-play me-2"></i>Abrir Câmera
+                        </button>
+                        <button id="btnParar" class="btn-scanner btn-parar" style="display: none;" onclick="pararScanner()">
+                            <i class="fas fa-stop me-2"></i>Fechar Câmera
+                        </button>
+                    </div>
+                    <div id="scanner-container"></div>
+                    <div id="resultado-scan"></div>
+                </div>
+
+                <!-- Lista de Convidados -->
+                <div class="lista-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Lista de Convidados</h5>
+                        <span style="font-size: 0.85rem; color: #888;">@presentes / @totalConvidados presentes</span>
+                    </div>
+
+                    <div class="search-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchConvidado" class="search-input" placeholder="Buscar convidado..." />
+                    </div>
+
+                    @if (convidados.Any())
+                    {
+                        <div id="listaConvidados">
+                            @foreach (var c in convidados)
+                            {
+                                var nome = c.Convidado?.Pessoa?.Nome ?? "Convidado";
+                                var inicial = nome.Length > 0 ? nome[..1].ToUpper() : "?";
+                                <div class="conv-item @(c.CheckInRealizado ? "presente" : "ausente")" data-nome="@nome.ToLower()">
+                                    <div class="conv-avatar @(c.CheckInRealizado ? "pres" : "aus")">@inicial</div>
+                                    <div class="conv-info">
+                                        <div class="conv-nome">@nome</div>
+                                        @if (c.CheckInRealizado)
+                                        {
+                                            <div class="conv-hora"><i class="fas fa-check me-1"></i>Check-in às @c.DataCheckIn?.ToString("HH:mm")</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="conv-hora">RSVP: @(c.ConfirmaPresenca)</div>
+                                        }
+                                    </div>
+                                    <span class="conv-badge @(c.CheckInRealizado ? "badge-pres" : "badge-aus")">
+                                        @(c.CheckInRealizado ? "Presente" : "Aguardando")
+                                    </span>
+                                    <div class="conv-actions">
+                                        <a href="@Url.Action("QRCode", "CheckIn", new { eventoId = evento?.Id, convidadoId = c.ConvidadoId })"
+                                           class="btn-qr-small" title="Ver QR Code">
+                                            <i class="fas fa-qrcode"></i>
+                                        </a>
+                                        @if (c.CheckInRealizado)
+                                        {
+                                            <form asp-action="DesfazerCheckIn" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@c.Id" />
+                                                <input type="hidden" name="eventoId" value="@evento?.Id" />
+                                                <button type="submit" class="btn-undo-small" title="Desfazer check-in">
+                                                    <i class="fas fa-undo"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-users d-block"></i>
+                            <p>Nenhum convidado neste evento.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="acoes-card">
+                    <h5><i class="fas fa-bolt me-2"></i>Navegação</h5>
+                    <a asp-controller="Administracao" asp-action="Index" asp-route-eventoId="@evento?.Id" class="acao-link">
+                        <div class="acao-icon" style="background: linear-gradient(135deg, #E65100, #FF8F00);"><i class="fas fa-chart-pie"></i></div>
+                        <div>
+                            <div>Administração</div>
+                            <small style="color: #999; font-weight: 400;">Controle financeiro</small>
+                        </div>
+                    </a>
+                    <a asp-controller="Organizador" asp-action="DetalhesEvento" asp-route-id="@evento?.Id" class="acao-link">
+                        <div class="acao-icon" style="background: linear-gradient(135deg, #8B0000, #D4A574);"><i class="fas fa-arrow-left"></i></div>
+                        <div>
+                            <div>Voltar ao Evento</div>
+                            <small style="color: #999; font-weight: 400;">Detalhes do evento</small>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Resumo presença -->
+                <div class="acoes-card">
+                    <h5><i class="fas fa-info-circle me-2"></i>Resumo</h5>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Total</span>
+                        <span style="font-weight: 600;">@totalConvidados</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Presentes</span>
+                        <span style="font-weight: 600; color: #2E7D32;">@presentes</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Aguardando</span>
+                        <span style="font-weight: 600; color: #E65100;">@ausentes</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2">
+                        <span style="color: #888;">Data do evento</span>
+                        <span style="font-weight: 700; color: #8B0000;">@evento?.DataEvento.ToString("dd/MM/yyyy")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- html5-qrcode library -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+    var html5QrCode = null;
+    var eventoId = @(evento?.Id ?? 0);
+    var antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value
+        || '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)?.[1] || '';
+
+    // Extrair token do primeiro form na página
+    document.addEventListener('DOMContentLoaded', function () {
+        var tokenEl = document.querySelector('input[name="__RequestVerificationToken"]');
+        if (tokenEl) antiForgeryToken = tokenEl.value;
+    });
+
+    function iniciarScanner() {
+        document.getElementById('btnIniciar').style.display = 'none';
+        document.getElementById('btnParar').style.display = 'inline-flex';
+
+        html5QrCode = new Html5Qrcode("scanner-container");
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            function (decodedText) {
+                processarQR(decodedText);
+            },
+            function () { }
+        ).catch(function (err) {
+            mostrarResultado('Erro ao iniciar câmera: ' + err, false);
+            pararScanner();
+        });
+    }
+
+    function pararScanner() {
+        document.getElementById('btnIniciar').style.display = 'inline-flex';
+        document.getElementById('btnParar').style.display = 'none';
+        if (html5QrCode) {
+            html5QrCode.stop().then(function () {
+                html5QrCode.clear();
+            }).catch(function () { });
+        }
+    }
+
+    function processarQR(codigo) {
+        // Pausar scanner brevemente para evitar scans duplicados
+        if (html5QrCode) {
+            html5QrCode.pause(true);
+        }
+
+        fetch('@Url.Action("Validar", "CheckIn")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': antiForgeryToken
+            },
+            body: JSON.stringify({ codigoQR: codigo, eventoId: eventoId })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            mostrarResultado(
+                data.sucesso
+                    ? '<i class="fas fa-check-circle me-2"></i>' + data.nome + ' — Check-in às ' + data.hora
+                    : '<i class="fas fa-exclamation-circle me-2"></i>' + data.mensagem,
+                data.sucesso
+            );
+            // Retomar scanner após 2s
+            setTimeout(function () {
+                if (html5QrCode) {
+                    try { html5QrCode.resume(); } catch (e) { }
+                }
+            }, 2000);
+
+            if (data.sucesso) {
+                // Recarregar após 3s para atualizar a lista
+                setTimeout(function () { location.reload(); }, 3000);
+            }
+        })
+        .catch(function () {
+            mostrarResultado('<i class="fas fa-exclamation-triangle me-2"></i>Erro de conexão.', false);
+            setTimeout(function () {
+                if (html5QrCode) {
+                    try { html5QrCode.resume(); } catch (e) { }
+                }
+            }, 2000);
+        });
+    }
+
+    function mostrarResultado(msg, sucesso) {
+        var el = document.getElementById('resultado-scan');
+        el.className = sucesso ? 'sucesso' : 'erro';
+        el.innerHTML = msg;
+        el.style.display = 'block';
+        setTimeout(function () { el.style.display = 'none'; }, 5000);
+    }
+
+    // Busca de convidados
+    document.addEventListener('DOMContentLoaded', function () {
+        var searchInput = document.getElementById('searchConvidado');
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                var q = this.value.toLowerCase();
+                document.querySelectorAll('.conv-item').forEach(function (item) {
+                    var nome = item.getAttribute('data-nome') || '';
+                    item.style.display = nome.includes(q) ? '' : 'none';
+                });
+            });
+        }
+    });
+</script>

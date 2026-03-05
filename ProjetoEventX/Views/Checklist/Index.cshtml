@@ -1,0 +1,358 @@
+@{
+    ViewData["Title"] = "Checklist do Evento";
+    var evento = ViewBag.Evento as ProjetoEventX.Models.Evento;
+    var checklist = ViewBag.Checklist as List<ProjetoEventX.Models.ChecklistEvento> ?? new List<ProjetoEventX.Models.ChecklistEvento>();
+    var total = (int)(ViewBag.Total ?? 0);
+    var concluidos = (int)(ViewBag.Concluidos ?? 0);
+    var progresso = (int)(ViewBag.Progresso ?? 0);
+}
+
+<style>
+    .checklist-wrapper { background: #f5f1ed; min-height: 100vh; padding-bottom: 3rem; }
+    .checklist-header {
+        background: linear-gradient(135deg, #8B0000 0%, #B22222 40%, #D4A574 100%);
+        color: #fff; padding: 2.5rem 0; margin-bottom: 2rem;
+    }
+    .checklist-header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .checklist-header p { opacity: 0.85; font-size: 1rem; margin: 0; }
+    .checklist-header .header-icon {
+        width: 60px; height: 60px; background: rgba(255,255,255,0.2);
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; margin-right: 1rem;
+    }
+    .progress-card {
+        background: #fff; border-radius: 16px; padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem;
+    }
+    .progress-card h5 { font-weight: 700; color: #333; margin-bottom: 1rem; }
+    .progress-bar-custom {
+        height: 12px; border-radius: 6px; background: #f0ece8; overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%; border-radius: 6px;
+        background: linear-gradient(135deg, #8B0000, #B22222);
+        transition: width 0.5s ease;
+    }
+    .progress-stats { display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.85rem; color: #888; }
+    .form-card {
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem;
+    }
+    .form-card h5 { color: #8B0000; font-weight: 700; margin-bottom: 1.5rem; }
+    .form-card .form-label { font-weight: 600; color: #555; font-size: 0.9rem; }
+    .form-card .form-control, .form-card .form-select {
+        border-radius: 10px; border: 2px solid #e0e0e0; padding: 10px 14px; transition: border-color 0.3s;
+    }
+    .form-card .form-control:focus, .form-card .form-select:focus {
+        border-color: #8B0000; box-shadow: 0 0 0 3px rgba(139,0,0,0.1);
+    }
+    .btn-adicionar {
+        background: linear-gradient(135deg, #8B0000, #B22222); color: #fff;
+        border: none; padding: 12px 28px; border-radius: 10px;
+        font-weight: 600; font-size: 1rem; transition: all 0.3s;
+    }
+    .btn-adicionar:hover {
+        background: linear-gradient(135deg, #6B0000, #8B0000);
+        transform: translateY(-2px); box-shadow: 0 4px 12px rgba(139,0,0,0.3); color: #fff;
+    }
+    .checklist-card {
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .checklist-card h5 { font-weight: 700; color: #333; margin-bottom: 1.2rem; }
+    .checklist-item {
+        display: flex; align-items: center; padding: 1rem;
+        border-radius: 12px; background: #f8f9fa; margin-bottom: 0.6rem;
+        transition: background 0.2s;
+    }
+    .checklist-item:hover { background: #f0ebe5; }
+    .checklist-item.concluido { opacity: 0.7; }
+    .checklist-item.concluido .item-titulo { text-decoration: line-through; color: #999; }
+    .item-check {
+        width: 36px; height: 36px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; margin-right: 1rem; flex-shrink: 0; cursor: pointer;
+        border: none; transition: all 0.2s;
+    }
+    .item-check.pendente { background: #f0ece8; color: #999; }
+    .item-check.pendente:hover { background: #E8F5E9; color: #2E7D32; }
+    .item-check.feito { background: #E8F5E9; color: #2E7D32; }
+    .item-info { flex: 1; }
+    .item-titulo { font-weight: 600; color: #333; font-size: 0.95rem; }
+    .item-desc { font-size: 0.8rem; color: #999; }
+    .item-categoria {
+        font-size: 0.7rem; font-weight: 500; padding: 2px 8px;
+        border-radius: 6px; background: #E3F2FD; color: #1565C0;
+    }
+    .item-acoes { display: flex; gap: 6px; flex-shrink: 0; }
+    .btn-item-acao {
+        width: 32px; height: 32px; border-radius: 8px; border: none;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-item-editar { background: #E3F2FD; color: #1565C0; }
+    .btn-item-editar:hover { background: #1565C0; color: #fff; }
+    .btn-item-excluir { background: #FFEBEE; color: #C62828; }
+    .btn-item-excluir:hover { background: #C62828; color: #fff; }
+    .acoes-card {
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1rem;
+    }
+    .acoes-card h5 { font-weight: 700; color: #333; margin-bottom: 1.2rem; }
+    .acao-link {
+        display: flex; align-items: center; gap: 12px; padding: 1rem;
+        border-radius: 12px; background: #f8f9fa; margin-bottom: 0.6rem;
+        text-decoration: none; color: #333; transition: all 0.2s; font-weight: 600;
+    }
+    .acao-link:hover { background: #f0ebe5; transform: translateX(5px); color: #8B0000; }
+    .acao-link .acao-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 1rem; flex-shrink: 0;
+    }
+    .acao-icon.voltar { background: linear-gradient(135deg, #8B0000, #D4A574); }
+    .acao-icon.timeline { background: linear-gradient(135deg, #1565C0, #42A5F5); }
+    .acao-icon.admin { background: linear-gradient(135deg, #E65100, #FF8F00); }
+    .alert-sucesso { background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; border-radius: 12px; padding: 1rem 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+    .alert-erro { background: #FFEBEE; border: 1px solid #EF9A9A; color: #C62828; border-radius: 12px; padding: 1rem 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+    .empty-state { text-align: center; padding: 2rem; color: #999; }
+    .empty-state i { font-size: 2.5rem; opacity: 0.3; margin-bottom: 0.8rem; }
+</style>
+
+<div class="checklist-wrapper">
+    <section class="checklist-header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <div class="header-icon"><i class="fas fa-tasks"></i></div>
+                <div>
+                    <h1>Checklist — @(evento?.NomeEvento ?? "Evento")</h1>
+                    <p>Acompanhe e organize as tarefas do seu evento</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="alert-sucesso"><i class="fas fa-check-circle me-2"></i>@TempData["Sucesso"]</div>
+        }
+        @if (TempData["Erro"] != null)
+        {
+            <div class="alert-erro"><i class="fas fa-exclamation-circle me-2"></i>@TempData["Erro"]</div>
+        }
+
+        <!-- Barra de Progresso -->
+        <div class="progress-card">
+            <h5><i class="fas fa-chart-line me-2" style="color: #8B0000;"></i>Progresso do Evento</h5>
+            <div class="progress-bar-custom">
+                <div class="progress-bar-fill" style="width: @(progresso)%;"></div>
+            </div>
+            <div class="progress-stats">
+                <span>@concluidos de @total tarefa(s) concluída(s)</span>
+                <span style="font-weight: 700; color: @(progresso >= 75 ? "#2E7D32" : progresso >= 40 ? "#E65100" : "#C62828");">@(progresso)%</span>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <!-- Formulário Adicionar -->
+                <div class="form-card">
+                    <h5><i class="fas fa-plus-circle me-2"></i>Adicionar Tarefa</h5>
+                    <form asp-action="Adicionar" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="eventoId" value="@evento?.Id" />
+                        <div class="row">
+                            <div class="col-md-5 mb-3">
+                                <label class="form-label"><i class="fas fa-tag me-1 text-muted"></i> Título</label>
+                                <input type="text" name="titulo" class="form-control" placeholder="Ex: Contratar buffet" required />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label"><i class="fas fa-align-left me-1 text-muted"></i> Descrição</label>
+                                <input type="text" name="descricao" class="form-control" placeholder="Detalhes (opcional)" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label"><i class="fas fa-folder me-1 text-muted"></i> Categoria</label>
+                                <select name="categoria" class="form-select">
+                                    <option value="">Geral</option>
+                                    <option value="Planejamento">Planejamento</option>
+                                    <option value="Fornecedores">Fornecedores</option>
+                                    <option value="Comunicação">Comunicação</option>
+                                    <option value="Logística">Logística</option>
+                                    <option value="Financeiro">Financeiro</option>
+                                    <option value="Decoração">Decoração</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn-adicionar"><i class="fas fa-plus me-2"></i>Adicionar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Lista do Checklist -->
+                <div class="checklist-card">
+                    <h5><i class="fas fa-clipboard-list me-2"></i>Tarefas do Evento</h5>
+                    @if (checklist.Any())
+                    {
+                        @foreach (var item in checklist)
+                        {
+                            <div class="checklist-item @(item.Concluido ? "concluido" : "")">
+                                <form asp-action="AlternarStatus" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="eventoId" value="@evento?.Id" />
+                                    <button type="submit" class="item-check @(item.Concluido ? "feito" : "pendente")" title="@(item.Concluido ? "Reabrir" : "Concluir")">
+                                        <i class="fas @(item.Concluido ? "fa-check" : "fa-square")"></i>
+                                    </button>
+                                </form>
+                                <div class="item-info">
+                                    <div class="item-titulo">
+                                        @item.Titulo
+                                        @if (!string.IsNullOrEmpty(item.Categoria))
+                                        {
+                                            <span class="item-categoria ms-2">@item.Categoria</span>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(item.Descricao))
+                                    {
+                                        <div class="item-desc">@item.Descricao</div>
+                                    }
+                                    @if (item.Concluido && item.DataConclusao.HasValue)
+                                    {
+                                        <div class="item-desc"><i class="fas fa-check-circle me-1" style="color: #2E7D32;"></i>Concluída em @item.DataConclusao.Value.ToString("dd/MM/yyyy")</div>
+                                    }
+                                </div>
+                                <div class="item-acoes">
+                                    <button class="btn-item-acao btn-item-editar" title="Editar" data-bs-toggle="modal" data-bs-target="#editCheck-@item.Id">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                    <form asp-action="Excluir" method="post" class="d-inline" onsubmit="return confirm('Excluir esta tarefa?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="eventoId" value="@evento?.Id" />
+                                        <button type="submit" class="btn-item-acao btn-item-excluir" title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard-list d-block"></i>
+                            <p class="mb-0">Nenhuma tarefa no checklist.</p>
+                            <small>Adicione tarefas usando o formulário acima.</small>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Coluna Lateral -->
+            <div class="col-lg-4">
+                <div class="acoes-card">
+                    <h5><i class="fas fa-bolt me-2"></i>Navegação</h5>
+                    <a asp-controller="Timeline" asp-action="Index" asp-route-eventoId="@evento?.Id" class="acao-link">
+                        <div class="acao-icon timeline"><i class="fas fa-stream"></i></div>
+                        <div>
+                            <div>Cronograma</div>
+                            <small style="color: #999; font-weight: 400;">Timeline do evento</small>
+                        </div>
+                    </a>
+                    <a asp-controller="Administracao" asp-action="Index" asp-route-eventoId="@evento?.Id" class="acao-link">
+                        <div class="acao-icon admin"><i class="fas fa-chart-pie"></i></div>
+                        <div>
+                            <div>Administração</div>
+                            <small style="color: #999; font-weight: 400;">Controle financeiro</small>
+                        </div>
+                    </a>
+                    <a asp-controller="Organizador" asp-action="DetalhesEvento" asp-route-id="@evento?.Id" class="acao-link">
+                        <div class="acao-icon voltar"><i class="fas fa-arrow-left"></i></div>
+                        <div>
+                            <div>Voltar ao Evento</div>
+                            <small style="color: #999; font-weight: 400;">Detalhes do evento</small>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Resumo -->
+                <div class="acoes-card">
+                    <h5><i class="fas fa-info-circle me-2"></i>Resumo</h5>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Total de tarefas</span>
+                        <span style="font-weight: 600;">@total</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Concluídas</span>
+                        <span style="font-weight: 600; color: #2E7D32;">@concluidos</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Pendentes</span>
+                        <span style="font-weight: 600; color: #E65100;">@(total - concluidos)</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2">
+                        <span style="font-weight: 700; color: #333;">Progresso</span>
+                        <span style="font-weight: 700; color: #8B0000;">@(progresso)%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modais de Edição -->
+@foreach (var item in checklist)
+{
+    <div class="modal fade" id="editCheck-@item.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: #1565C0; color: #fff;">
+                    <h5 class="modal-title"><i class="fas fa-pen me-2"></i>Editar Tarefa</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form asp-action="Editar" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <input type="hidden" name="eventoId" value="@evento?.Id" />
+                        <div class="mb-3">
+                            <label class="form-label">Título</label>
+                            <input type="text" name="titulo" class="form-control" value="@item.Titulo" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descrição</label>
+                            <input type="text" name="descricao" class="form-control" value="@item.Descricao" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Categoria</label>
+                            @{
+                                var categorias = new[] { ("", "Geral"), ("Planejamento", "Planejamento"), ("Fornecedores", "Fornecedores"), ("Comunicação", "Comunicação"), ("Logística", "Logística"), ("Financeiro", "Financeiro"), ("Decoração", "Decoração") };
+                            }
+                            <select name="categoria" class="form-select">
+                                @foreach (var (val, label) in categorias)
+                                {
+                                    if ((string.IsNullOrEmpty(val) && string.IsNullOrEmpty(item.Categoria)) || val == item.Categoria)
+                                    {
+                                        <option value="@val" selected>@label</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@val">@label</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn" style="background: #e0e0e0; color: #333; font-weight: 600; border-radius: 8px;" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn" style="background: #1565C0; color: #fff; font-weight: 600; border-radius: 8px;">
+                                <i class="fas fa-save me-1"></i>Salvar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}

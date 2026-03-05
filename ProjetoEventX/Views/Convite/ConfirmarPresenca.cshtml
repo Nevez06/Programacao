@@ -1,77 +1,141 @@
 @{
     ViewData["Title"] = "Confirmação de Presença - EventX";
+    var nome = ViewBag.NomeConvidado as string ?? "Convidado";
+    var nomeEvento = ViewBag.NomeEvento as string ?? "Evento";
+    var dataEvento = ViewBag.DataEvento as string ?? "";
+    var horaInicio = ViewBag.HoraInicio as string ?? "";
+    var statusAtual = ViewBag.StatusAtual as string ?? "Pendente";
+    var eventoId = (int)(ViewBag.EventoId ?? 0);
+    var convidadoId = (int)(ViewBag.ConvidadoId ?? 0);
+    var jaRespondeu = statusAtual != "Pendente";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-lg border-success">
-                <div class="card-header bg-success text-white text-center">
-                    <i class="fas fa-check-circle fa-3x mb-2"></i>
-                    <h3 class="mb-0">✅ PRESENÇA CONFIRMADA!</h3>
-                </div>
-                <div class="card-body text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-calendar-check fa-4x text-success"></i>
-                    </div>
-                    
-                    <h4 class="text-success mb-3">Obrigado por confirmar sua presença!</h4>
-                    
-                    <div class="alert alert-info">
-                        <h5><i class="fas fa-user-check"></i> Confirmação Recebida</h5>
-                        <hr>
-                        <p><strong>👤 Convidado:</strong> @ViewBag.NomeConvidado</p>
-                        <p><strong>🎉 Evento:</strong> @ViewBag.NomeEvento</p>
-                        <p><strong>📅 Data:</strong> @ViewBag.DataEvento</p>
-                        <p><strong>✅ Status:</strong> Confirmado</p>
-                    </div>
+<style>
+    body { background: #f5f1ed; }
+    .rsvp-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .rsvp-card {
+        background: #fff; border-radius: 24px; max-width: 520px; width: 100%;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.1); overflow: hidden;
+    }
+    .rsvp-header {
+        background: linear-gradient(135deg, #8B0000 0%, #B22222 50%, #D4A574 100%);
+        color: #fff; padding: 2.5rem 2rem; text-align: center;
+    }
+    .rsvp-header .event-icon {
+        width: 70px; height: 70px; background: rgba(255,255,255,0.2);
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 2rem; margin: 0 auto 1rem;
+    }
+    .rsvp-header h2 { font-weight: 700; font-size: 1.5rem; margin-bottom: 0.3rem; }
+    .rsvp-header p { opacity: 0.85; font-size: 0.95rem; margin: 0; }
+    .rsvp-body { padding: 2rem; }
+    .rsvp-greeting { font-size: 1.1rem; color: #333; margin-bottom: 1.5rem; text-align: center; }
+    .rsvp-greeting strong { color: #8B0000; }
+    .rsvp-info {
+        display: flex; align-items: center; padding: 1rem; border-radius: 12px;
+        background: #faf7f4; margin-bottom: 0.6rem;
+    }
+    .rsvp-info .info-icon {
+        width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #8B0000, #D4A574);
+        display: flex; align-items: center; justify-content: center; color: #fff;
+        font-size: 0.9rem; margin-right: 1rem; flex-shrink: 0;
+    }
+    .rsvp-info .info-label { font-size: 0.75rem; color: #999; font-weight: 600; text-transform: uppercase; }
+    .rsvp-info .info-value { font-weight: 600; color: #333; font-size: 0.95rem; }
+    .rsvp-status {
+        text-align: center; padding: 1rem; border-radius: 12px; margin: 1.5rem 0;
+        font-weight: 600; font-size: 0.9rem;
+    }
+    .rsvp-status.pendente { background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; }
+    .rsvp-status.confirmado { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
+    .rsvp-status.recusado { background: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A; }
+    .rsvp-buttons { display: flex; gap: 12px; margin-top: 1.5rem; }
+    .btn-confirmar {
+        flex: 1; padding: 14px; border-radius: 14px; border: none; cursor: pointer;
+        font-weight: 700; font-size: 1rem; transition: all 0.3s;
+        background: linear-gradient(135deg, #2E7D32, #43A047); color: #fff;
+    }
+    .btn-confirmar:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(46,125,50,0.3); }
+    .btn-recusar {
+        flex: 1; padding: 14px; border-radius: 14px; border: none; cursor: pointer;
+        font-weight: 700; font-size: 1rem; transition: all 0.3s;
+        background: linear-gradient(135deg, #C62828, #E53935); color: #fff;
+    }
+    .btn-recusar:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(198,40,40,0.3); }
+    .rsvp-footer { text-align: center; padding: 1rem 2rem 1.5rem; color: #bbb; font-size: 0.8rem; }
+</style>
 
-                    <div class="alert alert-warning">
-                        <i class="fas fa-clock"></i>
-                        <strong>⏰ Importante:</strong> Chegue com antecedência no local do evento.
-                    </div>
+<div class="rsvp-wrapper">
+    <div class="rsvp-card">
+        <div class="rsvp-header">
+            <div class="event-icon"><i class="fas fa-envelope-open-text"></i></div>
+            <h2>@nomeEvento</h2>
+            <p>Confirmação de Presença</p>
+        </div>
 
-                    <div class="mt-4">
-                        <a href="@Url.Action("Index", "Home")" class="btn btn-success me-2">
-                            <i class="fas fa-home"></i> Voltar para Home
-                        </a>
-                        <a href="javascript:window.close()" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Fechar
-                        </a>
-                    </div>
-                </div>
-                <div class="card-footer text-center text-muted">
-                    <small>EventX - Sistema de Gerenciamento de Eventos</small>
+        <div class="rsvp-body">
+            <div class="rsvp-greeting">
+                Olá <strong>@nome</strong>! Você foi convidado(a) para este evento.
+            </div>
+
+            <div class="rsvp-info">
+                <div class="info-icon"><i class="fas fa-calendar-day"></i></div>
+                <div>
+                    <div class="info-label">Data</div>
+                    <div class="info-value">@dataEvento</div>
                 </div>
             </div>
+            @if (!string.IsNullOrEmpty(horaInicio))
+            {
+                <div class="rsvp-info">
+                    <div class="info-icon"><i class="fas fa-clock"></i></div>
+                    <div>
+                        <div class="info-label">Horário</div>
+                        <div class="info-value">@horaInicio</div>
+                    </div>
+                </div>
+            }
+
+            @if (jaRespondeu)
+            {
+                <div class="rsvp-status @(statusAtual == "Confirmado" ? "confirmado" : "recusado")">
+                    <i class="fas @(statusAtual == "Confirmado" ? "fa-check-circle" : "fa-times-circle") me-2"></i>
+                    Você já respondeu: <strong>@statusAtual</strong>
+                </div>
+                <p style="text-align: center; color: #888; font-size: 0.85rem;">Você pode alterar sua resposta abaixo:</p>
+            }
+            else
+            {
+                <div class="rsvp-status pendente">
+                    <i class="fas fa-hourglass-half me-2"></i>
+                    Status: <strong>Aguardando resposta</strong>
+                </div>
+            }
+
+            <div class="rsvp-buttons">
+                <form asp-controller="Convite" asp-action="ResponderRSVP" method="post" style="flex: 1;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="eventoId" value="@eventoId" />
+                    <input type="hidden" name="convidadoId" value="@convidadoId" />
+                    <input type="hidden" name="resposta" value="Confirmado" />
+                    <button type="submit" class="btn-confirmar" style="width: 100%;">
+                        <i class="fas fa-check me-2"></i>Confirmar Presença
+                    </button>
+                </form>
+                <form asp-controller="Convite" asp-action="ResponderRSVP" method="post" style="flex: 1;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="eventoId" value="@eventoId" />
+                    <input type="hidden" name="convidadoId" value="@convidadoId" />
+                    <input type="hidden" name="resposta" value="Recusado" />
+                    <button type="submit" class="btn-recusar" style="width: 100%;">
+                        <i class="fas fa-times me-2"></i>Não Irei
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="rsvp-footer">
+            EventX — Sistema de Gerenciamento de Eventos
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        // Auto-close após 10 segundos
-        setTimeout(function() {
-            window.close();
-        }, 10000);
-    </script>
-}
-
-@section Styles {
-    <style>
-        .card {
-            border-radius: 15px;
-        }
-        .card-header {
-            border-radius: 15px 15px 0 0 !important;
-        }
-        .fa-check-circle {
-            animation: bounce 1s infinite;
-        }
-        @@keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
-        }
-    </style>
-}

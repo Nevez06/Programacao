@@ -1,0 +1,338 @@
+@{
+    ViewData["Title"] = "Simulador de Orçamento";
+    var evento = ViewBag.Evento as ProjetoEventX.Models.Evento;
+    var simulacoes = ViewBag.Simulacoes as List<ProjetoEventX.Models.OrcamentoSimulado> ?? new List<ProjetoEventX.Models.OrcamentoSimulado>();
+    var totalEstimado = (decimal)(ViewBag.TotalEstimado ?? 0m);
+    var temSimulacao = simulacoes.Any();
+}
+
+<style>
+    .sim-wrapper { background: #f5f1ed; min-height: 100vh; padding-bottom: 3rem; }
+
+    .sim-header {
+        background: linear-gradient(135deg, #1565C0 0%, #1976D2 40%, #42A5F5 100%);
+        color: #fff; padding: 2.5rem 0; margin-bottom: 2rem;
+    }
+    .sim-header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .sim-header p { opacity: 0.85; font-size: 1rem; margin: 0; }
+    .sim-header .header-icon {
+        width: 60px; height: 60px; background: rgba(255,255,255,0.2);
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; margin-right: 1rem;
+    }
+
+    .form-card {
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem;
+    }
+    .form-card h5 { color: #1565C0; font-weight: 700; margin-bottom: 1.5rem; }
+    .form-card .form-label { font-weight: 600; color: #555; font-size: 0.9rem; }
+    .form-card .form-control, .form-card .form-select {
+        border-radius: 10px; border: 2px solid #e0e0e0; padding: 10px 14px; transition: border-color 0.3s;
+    }
+    .form-card .form-control:focus, .form-card .form-select:focus {
+        border-color: #1565C0; box-shadow: 0 0 0 3px rgba(21,101,192,0.1);
+    }
+    .btn-simular {
+        background: linear-gradient(135deg, #1565C0, #1976D2); color: #fff;
+        border: none; padding: 12px 30px; border-radius: 10px;
+        font-weight: 600; font-size: 1rem; transition: all 0.3s;
+    }
+    .btn-simular:hover {
+        background: linear-gradient(135deg, #0D47A1, #1565C0);
+        transform: translateY(-2px); box-shadow: 0 4px 12px rgba(21,101,192,0.3); color: #fff;
+    }
+    .btn-limpar {
+        background: #FFEBEE; color: #C62828;
+        border: none; padding: 12px 24px; border-radius: 10px;
+        font-weight: 600; font-size: 0.9rem; transition: all 0.3s;
+    }
+    .btn-limpar:hover { background: #C62828; color: #fff; }
+
+    .result-card {
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem;
+    }
+    .result-card h5 { color: #333; font-weight: 700; margin-bottom: 1.5rem; }
+    .orcamento-item {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 1rem 1.2rem; border-radius: 12px; background: #f8f9fa;
+        margin-bottom: 0.6rem; transition: all 0.2s;
+    }
+    .orcamento-item:hover { background: #EDE7F6; transform: translateX(3px); }
+    .orcamento-item .cat-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 1rem; margin-right: 1rem; flex-shrink: 0;
+    }
+    .orcamento-item .cat-info { flex: 1; }
+    .orcamento-item .cat-nome { font-weight: 600; color: #333; font-size: 0.95rem; }
+    .orcamento-item .cat-valor { font-weight: 700; color: #1565C0; font-size: 1.1rem; }
+    .total-box {
+        background: linear-gradient(135deg, #1565C0, #42A5F5);
+        color: #fff; border-radius: 16px; padding: 2rem; text-align: center;
+        margin-top: 1rem; box-shadow: 0 4px 16px rgba(21,101,192,0.2);
+    }
+    .total-box .total-label { font-size: 0.9rem; opacity: 0.85; }
+    .total-box .total-valor { font-size: 2.2rem; font-weight: 800; }
+
+    .chart-card {
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem;
+    }
+    .chart-card h5 { color: #333; font-weight: 700; margin-bottom: 1rem; }
+
+    .acoes-card {
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1rem;
+    }
+    .acoes-card h5 { font-weight: 700; color: #333; margin-bottom: 1.2rem; }
+    .acao-link {
+        display: flex; align-items: center; gap: 12px; padding: 1rem;
+        border-radius: 12px; background: #f8f9fa; margin-bottom: 0.6rem;
+        text-decoration: none; color: #333; transition: all 0.2s; font-weight: 600;
+    }
+    .acao-link:hover { background: #f0ebe5; transform: translateX(5px); color: #8B0000; }
+    .acao-link .acao-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 1rem; flex-shrink: 0;
+    }
+    .acao-icon.checklist { background: linear-gradient(135deg, #2E7D32, #43A047); }
+    .acao-icon.timeline { background: linear-gradient(135deg, #8B0000, #B22222); }
+    .acao-icon.voltar { background: linear-gradient(135deg, #8B0000, #D4A574); }
+
+    .alert-sucesso { background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; border-radius: 12px; padding: 1rem 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+    .alert-erro { background: #FFEBEE; border: 1px solid #EF9A9A; color: #C62828; border-radius: 12px; padding: 1rem 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+
+    .empty-state { text-align: center; padding: 3rem 2rem; }
+    .empty-state .empty-icon { font-size: 3rem; color: #BBC; margin-bottom: 1rem; }
+    .empty-state h5 { color: #888; font-weight: 600; }
+    .empty-state p { color: #aaa; font-size: 0.9rem; }
+</style>
+
+<div class="sim-wrapper">
+    <section class="sim-header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <div class="header-icon"><i class="fas fa-calculator"></i></div>
+                <div>
+                    <h1>Simulador de Orçamento — @(evento?.NomeEvento ?? "Evento")</h1>
+                    <p>Estime o custo do seu evento com inteligência</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="alert-sucesso"><i class="fas fa-check-circle me-2"></i>@TempData["Sucesso"]</div>
+        }
+        @if (TempData["Erro"] != null)
+        {
+            <div class="alert-erro"><i class="fas fa-exclamation-circle me-2"></i>@TempData["Erro"]</div>
+        }
+
+        <!-- Formulário de Simulação -->
+        <div class="form-card">
+            <h5><i class="fas fa-sliders-h me-2"></i>Parâmetros da Simulação</h5>
+            <form asp-action="Simular" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="eventoId" value="@evento?.Id" />
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label"><i class="fas fa-users me-1 text-muted"></i> Nº de Convidados</label>
+                        <input type="number" name="quantidadeConvidados" class="form-control" min="1" max="10000" placeholder="Ex: 150" required />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label"><i class="fas fa-champagne-glasses me-1 text-muted"></i> Tipo do Evento</label>
+                        <select name="tipoEvento" class="form-select" required>
+                            <option value="">Selecione</option>
+                            <option value="casamento">Casamento</option>
+                            <option value="aniversário">Aniversário</option>
+                            <option value="corporativo">Corporativo</option>
+                            <option value="formatura">Formatura</option>
+                            <option value="conferência">Conferência</option>
+                            <option value="festa">Festa</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label"><i class="fas fa-map-marker-alt me-1 text-muted"></i> Região</label>
+                        <select name="regiao" class="form-select" required>
+                            <option value="">Selecione</option>
+                            <option value="sudeste">Sudeste</option>
+                            <option value="sul">Sul</option>
+                            <option value="nordeste">Nordeste</option>
+                            <option value="norte">Norte</option>
+                            <option value="centro-oeste">Centro-Oeste</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-end">
+                    @if (temSimulacao)
+                    {
+                        <form asp-action="Limpar" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="eventoId" value="@evento?.Id" />
+                            <button type="submit" class="btn-limpar"><i class="fas fa-eraser me-2"></i>Limpar</button>
+                        </form>
+                    }
+                    <button type="submit" class="btn-simular"><i class="fas fa-magic me-2"></i>Simular Orçamento</button>
+                </div>
+            </form>
+        </div>
+
+        @if (temSimulacao)
+        {
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <!-- Resultados -->
+                    <div class="result-card">
+                        <h5><i class="fas fa-clipboard-list me-2" style="color: #1565C0;"></i>Estimativa por Categoria</h5>
+                        @{
+                            var cores = new[] { "#1565C0", "#2E7D32", "#E65100", "#7B1FA2", "#C62828", "#00838F" };
+                            var icones = new Dictionary<string, string>
+                            {
+                                {"Buffet","fa-utensils"},{"Decoração","fa-palette"},{"Som / DJ","fa-music"},
+                                {"Fotografia","fa-camera"},{"Local do evento","fa-map-pin"},{"Bebidas","fa-wine-glass-alt"}
+                            };
+                            var idx = 0;
+                        }
+                        @foreach (var sim in simulacoes)
+                        {
+                            var cor = cores[idx % cores.Length];
+                            var icone = icones.ContainsKey(sim.Categoria) ? icones[sim.Categoria] : "fa-tag";
+                            <div class="orcamento-item">
+                                <div class="d-flex align-items-center">
+                                    <div class="cat-icon" style="background: @cor;">
+                                        <i class="fas @icone"></i>
+                                    </div>
+                                    <div class="cat-info">
+                                        <div class="cat-nome">@sim.Categoria</div>
+                                    </div>
+                                </div>
+                                <div class="cat-valor">R$ @sim.ValorEstimado.ToString("N2")</div>
+                            </div>
+                            idx++;
+                        }
+                        <div class="total-box">
+                            <div class="total-label">Custo Total Estimado</div>
+                            <div class="total-valor">R$ @totalEstimado.ToString("N2")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <!-- Gráfico -->
+                    <div class="chart-card">
+                        <h5><i class="fas fa-chart-pie me-2" style="color: #7B1FA2;"></i>Distribuição</h5>
+                        <canvas id="orcamentoChart" height="280"></canvas>
+                    </div>
+
+                    <!-- Navegação -->
+                    <div class="acoes-card">
+                        <h5><i class="fas fa-bolt me-2"></i>Navegação</h5>
+                        <a asp-controller="Checklist" asp-action="Index" asp-route-eventoId="@evento?.Id" class="acao-link">
+                            <div class="acao-icon checklist"><i class="fas fa-tasks"></i></div>
+                            <div>
+                                <div>Checklist</div>
+                                <small style="color: #999; font-weight: 400;">Tarefas do evento</small>
+                            </div>
+                        </a>
+                        <a asp-controller="Timeline" asp-action="Index" asp-route-eventoId="@evento?.Id" class="acao-link">
+                            <div class="acao-icon timeline"><i class="fas fa-stream"></i></div>
+                            <div>
+                                <div>Cronograma</div>
+                                <small style="color: #999; font-weight: 400;">Linha do tempo</small>
+                            </div>
+                        </a>
+                        <a asp-controller="Organizador" asp-action="DetalhesEvento" asp-route-id="@evento?.Id" class="acao-link">
+                            <div class="acao-icon voltar"><i class="fas fa-arrow-left"></i></div>
+                            <div>
+                                <div>Voltar ao Evento</div>
+                                <small style="color: #999; font-weight: 400;">Detalhes do evento</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="result-card">
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="fas fa-calculator"></i></div>
+                    <h5>Nenhuma simulação realizada</h5>
+                    <p>Preencha os parâmetros acima e clique em "Simular Orçamento" para gerar uma estimativa.</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6 offset-lg-3">
+                    <div class="acoes-card">
+                        <h5><i class="fas fa-bolt me-2"></i>Navegação</h5>
+                        <a asp-controller="Checklist" asp-action="Index" asp-route-eventoId="@evento?.Id" class="acao-link">
+                            <div class="acao-icon checklist"><i class="fas fa-tasks"></i></div>
+                            <div>
+                                <div>Checklist</div>
+                                <small style="color: #999; font-weight: 400;">Tarefas do evento</small>
+                            </div>
+                        </a>
+                        <a asp-controller="Timeline" asp-action="Index" asp-route-eventoId="@evento?.Id" class="acao-link">
+                            <div class="acao-icon timeline"><i class="fas fa-stream"></i></div>
+                            <div>
+                                <div>Cronograma</div>
+                                <small style="color: #999; font-weight: 400;">Linha do tempo</small>
+                            </div>
+                        </a>
+                        <a asp-controller="Organizador" asp-action="DetalhesEvento" asp-route-id="@evento?.Id" class="acao-link">
+                            <div class="acao-icon voltar"><i class="fas fa-arrow-left"></i></div>
+                            <div>
+                                <div>Voltar ao Evento</div>
+                                <small style="color: #999; font-weight: 400;">Detalhes do evento</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (temSimulacao)
+{
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var ctx = document.getElementById('orcamentoChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", simulacoes.Select(s => $"'{s.Categoria}'")))],
+                    datasets: [{
+                        data: [@Html.Raw(string.Join(",", simulacoes.Select(s => s.ValorEstimado.ToString(System.Globalization.CultureInfo.InvariantCulture))))],
+                        backgroundColor: ['#1565C0', '#2E7D32', '#E65100', '#7B1FA2', '#C62828', '#00838F'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 16, font: { size: 12 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    var value = context.parsed;
+                                    var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    var pct = Math.round(value / total * 100);
+                                    return context.label + ': R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' (' + pct + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

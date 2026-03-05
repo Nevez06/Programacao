@@ -1,0 +1,336 @@
+@{
+    ViewData["Title"] = "Cronograma do Evento";
+    var evento = ViewBag.Evento as ProjetoEventX.Models.Evento;
+    var timeline = ViewBag.Timeline as List<ProjetoEventX.Models.TimelineEvento> ?? new List<ProjetoEventX.Models.TimelineEvento>();
+    var diasParaEvento = (int)(ViewBag.DiasParaEvento ?? 0);
+    var total = (int)(ViewBag.Total ?? 0);
+    var concluidos = (int)(ViewBag.Concluidos ?? 0);
+    var progresso = total > 0 ? (int)Math.Round((double)concluidos / total * 100) : 0;
+    var grupos = timeline.GroupBy(t => t.DiasAntesEvento).OrderByDescending(g => g.Key).ToList();
+}
+
+<style>
+    .timeline-wrapper { background: #f5f1ed; min-height: 100vh; padding-bottom: 3rem; }
+    .timeline-header {
+        background: linear-gradient(135deg, #8B0000 0%, #B22222 40%, #D4A574 100%);
+        color: #fff; padding: 2.5rem 0; margin-bottom: 2rem;
+    }
+    .timeline-header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .timeline-header p { opacity: 0.85; font-size: 1rem; margin: 0; }
+    .timeline-header .header-icon {
+        width: 60px; height: 60px; background: rgba(255,255,255,0.2);
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; margin-right: 1rem;
+    }
+    .countdown-badge {
+        display: inline-flex; align-items: center; background: rgba(255,255,255,0.15);
+        padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.9rem; margin-top: 0.5rem;
+    }
+    .progress-card {
+        background: #fff; border-radius: 16px; padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem;
+    }
+    .progress-card h5 { font-weight: 700; color: #333; margin-bottom: 1rem; }
+    .progress-bar-custom { height: 12px; border-radius: 6px; background: #f0ece8; overflow: hidden; }
+    .progress-bar-fill {
+        height: 100%; border-radius: 6px;
+        background: linear-gradient(135deg, #1565C0, #42A5F5);
+        transition: width 0.5s ease;
+    }
+    .progress-stats { display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.85rem; color: #888; }
+
+    /* Timeline vertical */
+    .timeline-container { position: relative; padding-left: 40px; }
+    .timeline-container::before {
+        content: ''; position: absolute; left: 15px; top: 0; bottom: 0;
+        width: 3px; background: linear-gradient(to bottom, #8B0000, #D4A574);
+        border-radius: 2px;
+    }
+    .timeline-group { margin-bottom: 2rem; position: relative; }
+    .timeline-marker {
+        position: absolute; left: -40px; width: 32px; height: 32px;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 0.75rem; font-weight: 700; z-index: 1;
+    }
+    .timeline-marker.passado { background: #E8F5E9; color: #2E7D32; border: 3px solid #A5D6A7; }
+    .timeline-marker.atual { background: #FFF3E0; color: #E65100; border: 3px solid #FFB74D; }
+    .timeline-marker.futuro { background: #E3F2FD; color: #1565C0; border: 3px solid #90CAF9; }
+    .timeline-dias {
+        font-size: 0.85rem; font-weight: 700; color: #8B0000;
+        margin-bottom: 0.5rem; padding-left: 0.5rem;
+    }
+    .timeline-dias .data-real { font-weight: 400; color: #999; font-size: 0.78rem; margin-left: 0.5rem; }
+    .timeline-item {
+        display: flex; align-items: center; padding: 0.8rem 1rem;
+        border-radius: 12px; background: #fff; margin-bottom: 0.5rem;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.04); transition: all 0.2s;
+    }
+    .timeline-item:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.08); transform: translateX(3px); }
+    .timeline-item.concluido { opacity: 0.7; }
+    .timeline-item.concluido .tl-titulo { text-decoration: line-through; color: #999; }
+    .tl-check {
+        width: 30px; height: 30px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.85rem; margin-right: 0.8rem; flex-shrink: 0;
+        cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .tl-check.pendente { background: #f0ece8; color: #999; }
+    .tl-check.pendente:hover { background: #E8F5E9; color: #2E7D32; }
+    .tl-check.feito { background: #E8F5E9; color: #2E7D32; }
+    .tl-info { flex: 1; }
+    .tl-titulo { font-weight: 600; color: #333; font-size: 0.9rem; }
+    .tl-categoria {
+        font-size: 0.68rem; font-weight: 500; padding: 2px 6px;
+        border-radius: 5px; background: #F3E5F5; color: #7B1FA2; margin-left: 6px;
+    }
+    .tl-excluir {
+        width: 28px; height: 28px; border-radius: 7px; border: none;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.75rem; cursor: pointer; transition: all 0.2s;
+        background: #FFEBEE; color: #C62828;
+    }
+    .tl-excluir:hover { background: #C62828; color: #fff; }
+
+    .form-card {
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem;
+    }
+    .form-card h5 { color: #8B0000; font-weight: 700; margin-bottom: 1.5rem; }
+    .form-card .form-label { font-weight: 600; color: #555; font-size: 0.9rem; }
+    .form-card .form-control, .form-card .form-select {
+        border-radius: 10px; border: 2px solid #e0e0e0; padding: 10px 14px; transition: border-color 0.3s;
+    }
+    .form-card .form-control:focus, .form-card .form-select:focus {
+        border-color: #8B0000; box-shadow: 0 0 0 3px rgba(139,0,0,0.1);
+    }
+    .btn-adicionar {
+        background: linear-gradient(135deg, #8B0000, #B22222); color: #fff;
+        border: none; padding: 10px 24px; border-radius: 10px;
+        font-weight: 600; font-size: 0.95rem; transition: all 0.3s;
+    }
+    .btn-adicionar:hover {
+        background: linear-gradient(135deg, #6B0000, #8B0000);
+        transform: translateY(-2px); box-shadow: 0 4px 12px rgba(139,0,0,0.3); color: #fff;
+    }
+    .acoes-card {
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1rem;
+    }
+    .acoes-card h5 { font-weight: 700; color: #333; margin-bottom: 1.2rem; }
+    .acao-link {
+        display: flex; align-items: center; gap: 12px; padding: 1rem;
+        border-radius: 12px; background: #f8f9fa; margin-bottom: 0.6rem;
+        text-decoration: none; color: #333; transition: all 0.2s; font-weight: 600;
+    }
+    .acao-link:hover { background: #f0ebe5; transform: translateX(5px); color: #8B0000; }
+    .acao-link .acao-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 1rem; flex-shrink: 0;
+    }
+    .acao-icon.checklist { background: linear-gradient(135deg, #2E7D32, #43A047); }
+    .acao-icon.admin { background: linear-gradient(135deg, #E65100, #FF8F00); }
+    .acao-icon.voltar { background: linear-gradient(135deg, #8B0000, #D4A574); }
+
+    .alert-sucesso { background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; border-radius: 12px; padding: 1rem 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+    .alert-erro { background: #FFEBEE; border: 1px solid #EF9A9A; color: #C62828; border-radius: 12px; padding: 1rem 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+</style>
+
+<div class="timeline-wrapper">
+    <section class="timeline-header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <div class="header-icon"><i class="fas fa-stream"></i></div>
+                <div>
+                    <h1>Cronograma — @(evento?.NomeEvento ?? "Evento")</h1>
+                    <p>Organize as etapas do seu evento no tempo</p>
+                    <div class="countdown-badge">
+                        <i class="fas fa-clock me-2"></i>
+                        @if (diasParaEvento > 0)
+                        {
+                            @:Faltam @diasParaEvento dia(s) para o evento
+                        }
+                        else if (diasParaEvento == 0)
+                        {
+                            @:O evento é hoje!
+                        }
+                        else
+                        {
+                            @:Evento já ocorreu
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="alert-sucesso"><i class="fas fa-check-circle me-2"></i>@TempData["Sucesso"]</div>
+        }
+        @if (TempData["Erro"] != null)
+        {
+            <div class="alert-erro"><i class="fas fa-exclamation-circle me-2"></i>@TempData["Erro"]</div>
+        }
+
+        <!-- Progresso -->
+        <div class="progress-card">
+            <h5><i class="fas fa-chart-line me-2" style="color: #1565C0;"></i>Progresso do Cronograma</h5>
+            <div class="progress-bar-custom">
+                <div class="progress-bar-fill" style="width: @(progresso)%;"></div>
+            </div>
+            <div class="progress-stats">
+                <span>@concluidos de @total etapa(s) concluída(s)</span>
+                <span style="font-weight: 700; color: @(progresso >= 75 ? "#2E7D32" : progresso >= 40 ? "#E65100" : "#C62828");">@(progresso)%</span>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <!-- Timeline Vertical -->
+                <div class="timeline-container">
+                    @foreach (var grupo in grupos)
+                    {
+                        var diasAntes = grupo.Key;
+                        var dataAlvo = evento!.DataEvento.AddDays(-diasAntes);
+                        var statusGrupo = diasParaEvento > diasAntes ? "futuro" : diasParaEvento >= diasAntes - 5 ? "atual" : "passado";
+
+                        <div class="timeline-group">
+                            <div class="timeline-marker @statusGrupo">
+                                <i class="fas @(statusGrupo == "passado" ? "fa-check" : statusGrupo == "atual" ? "fa-clock" : "fa-calendar")"></i>
+                            </div>
+                            <div class="timeline-dias">
+                                @if (diasAntes == 0)
+                                {
+                                    @:Dia do evento
+                                }
+                                else if (diasAntes == 1)
+                                {
+                                    @:1 dia antes
+                                }
+                                else
+                                {
+                                    @:@diasAntes dias antes
+                                }
+                                <span class="data-real">@dataAlvo.ToString("dd/MM/yyyy")</span>
+                            </div>
+
+                            @foreach (var item in grupo.OrderBy(i => i.Ordem))
+                            {
+                                <div class="timeline-item @(item.Concluido ? "concluido" : "")">
+                                    <form asp-action="AlternarStatus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="eventoId" value="@evento?.Id" />
+                                        <button type="submit" class="tl-check @(item.Concluido ? "feito" : "pendente")">
+                                            <i class="fas @(item.Concluido ? "fa-check" : "fa-circle")"></i>
+                                        </button>
+                                    </form>
+                                    <div class="tl-info">
+                                        <span class="tl-titulo">
+                                            @item.Titulo
+                                            @if (!string.IsNullOrEmpty(item.Categoria))
+                                            {
+                                                <span class="tl-categoria">@item.Categoria</span>
+                                            }
+                                        </span>
+                                    </div>
+                                    <form asp-action="Excluir" method="post" class="d-inline" onsubmit="return confirm('Excluir esta etapa?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="eventoId" value="@evento?.Id" />
+                                        <button type="submit" class="tl-excluir" title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <!-- Adicionar Etapa -->
+                <div class="form-card mt-3">
+                    <h5><i class="fas fa-plus-circle me-2"></i>Adicionar Etapa ao Cronograma</h5>
+                    <form asp-action="Adicionar" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="eventoId" value="@evento?.Id" />
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label"><i class="fas fa-tag me-1 text-muted"></i> Título</label>
+                                <input type="text" name="titulo" class="form-control" placeholder="Ex: Contratar DJ" required />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label"><i class="fas fa-calendar me-1 text-muted"></i> Dias antes do evento</label>
+                                <input type="number" name="diasAntesEvento" class="form-control" min="0" max="365" placeholder="Ex: 30" required />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label"><i class="fas fa-folder me-1 text-muted"></i> Categoria</label>
+                                <select name="categoria" class="form-select">
+                                    <option value="">Geral</option>
+                                    <option value="Planejamento">Planejamento</option>
+                                    <option value="Fornecedores">Fornecedores</option>
+                                    <option value="Comunicação">Comunicação</option>
+                                    <option value="Logística">Logística</option>
+                                    <option value="Financeiro">Financeiro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn-adicionar"><i class="fas fa-plus me-2"></i>Adicionar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Coluna Lateral -->
+            <div class="col-lg-4">
+                <div class="acoes-card">
+                    <h5><i class="fas fa-bolt me-2"></i>Navegação</h5>
+                    <a asp-controller="Checklist" asp-action="Index" asp-route-eventoId="@evento?.Id" class="acao-link">
+                        <div class="acao-icon checklist"><i class="fas fa-tasks"></i></div>
+                        <div>
+                            <div>Checklist</div>
+                            <small style="color: #999; font-weight: 400;">Tarefas do evento</small>
+                        </div>
+                    </a>
+                    <a asp-controller="Administracao" asp-action="Index" asp-route-eventoId="@evento?.Id" class="acao-link">
+                        <div class="acao-icon admin"><i class="fas fa-chart-pie"></i></div>
+                        <div>
+                            <div>Administração</div>
+                            <small style="color: #999; font-weight: 400;">Controle financeiro</small>
+                        </div>
+                    </a>
+                    <a asp-controller="Organizador" asp-action="DetalhesEvento" asp-route-id="@evento?.Id" class="acao-link">
+                        <div class="acao-icon voltar"><i class="fas fa-arrow-left"></i></div>
+                        <div>
+                            <div>Voltar ao Evento</div>
+                            <small style="color: #999; font-weight: 400;">Detalhes do evento</small>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="acoes-card">
+                    <h5><i class="fas fa-info-circle me-2"></i>Resumo</h5>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Total de etapas</span>
+                        <span style="font-weight: 600;">@total</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Concluídas</span>
+                        <span style="font-weight: 600; color: #2E7D32;">@concluidos</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #888;">Pendentes</span>
+                        <span style="font-weight: 600; color: #E65100;">@(total - concluidos)</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2">
+                        <span style="color: #888;">Data do evento</span>
+                        <span style="font-weight: 700; color: #8B0000;">@evento?.DataEvento.ToString("dd/MM/yyyy")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

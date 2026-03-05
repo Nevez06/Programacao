@@ -34,6 +34,9 @@ namespace ProjetoEventX.Data
         public DbSet<MensagemChat> MensagensChat { get; set; }
         public DbSet<LogsAcesso> LogsAcessos { get; set; }
         public DbSet<Auditoria> Auditorias { get; set; }
+        public DbSet<ChecklistEvento> ChecklistEventos { get; set; }
+        public DbSet<TimelineEvento> TimelineEventos { get; set; }
+        public DbSet<OrcamentoSimulado> OrcamentosSimulados { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

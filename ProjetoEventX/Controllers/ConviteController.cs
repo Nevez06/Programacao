@@ -317,6 +317,7 @@ namespace ProjetoEventX.Controllers
                     Evento = evento!,
                     DataInclusao = DateTime.UtcNow,
                     ConfirmaPresenca = "Pendente",
+                    CodigoQR = $"EVTX-{eventoId}-{convidado.Id}-{Guid.NewGuid().ToString("N")[..8]}",
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -464,6 +465,7 @@ namespace ProjetoEventX.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> ConfirmarPresenca(int eventoId, int convidadoId)
         {
             try
@@ -480,31 +482,72 @@ namespace ProjetoEventX.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
-                // Atualizar confirmação
-                listaConvidado.ConfirmaPresenca = "Confirmado";
-                listaConvidado.UpdatedAt = DateTime.UtcNow;
-
-                _context.Update(listaConvidado);
-                await _context.SaveChangesAsync();
-
-                // Registrar confirmação
-                await _auditoriaService.RegistrarAcaoAsync("ListaConvidado", listaConvidado.Id, "UPDATE", 
-                    $"Presença confirmada: {listaConvidado.Convidado.Pessoa.Nome} no evento {listaConvidado.Evento.NomeEvento}", 
-                    new { listaConvidado.Id, listaConvidado.ConfirmaPresenca }, 
-                    new { listaConvidado.Id, ConfirmaPresenca = "Confirmado" });
-
-                ViewBag.NomeConvidado = listaConvidado.Convidado.Pessoa.Nome;
-                ViewBag.NomeEvento = listaConvidado.Evento.NomeEvento;
-                ViewBag.DataEvento = listaConvidado.Evento.DataEvento.ToString("dd/MM/yyyy");
+                ViewBag.NomeConvidado = listaConvidado.Convidado?.Pessoa?.Nome ?? "Convidado";
+                ViewBag.NomeEvento = listaConvidado.Evento?.NomeEvento ?? "Evento";
+                ViewBag.DataEvento = listaConvidado.Evento?.DataEvento.ToString("dd/MM/yyyy") ?? "";
+                ViewBag.HoraInicio = listaConvidado.Evento?.HoraInicio ?? "";
+                ViewBag.StatusAtual = listaConvidado.ConfirmaPresenca;
+                ViewBag.EventoId = eventoId;
+                ViewBag.ConvidadoId = convidadoId;
 
                 return View();
             }
             catch (Exception ex)
             {
-                await _auditoriaService.RegistrarAcaoAsync("ListaConvidado", 0, "UPDATE", 
-                    $"Erro ao confirmar presença: {ex.Message}", null, null, false, ex.Message);
+                await _auditoriaService.RegistrarAcaoAsync("ListaConvidado", 0, "VIEW", 
+                    $"Erro ao exibir RSVP: {ex.Message}", null, null, false, ex.Message);
 
-                TempData["ErrorMessage"] = "❌ Erro ao confirmar presença.";
+                TempData["ErrorMessage"] = "❌ Erro ao carregar convite.";
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResponderRSVP(int eventoId, int convidadoId, string resposta)
+        {
+            try
+            {
+                var listaConvidado = await _context.ListasConvidados
+                    .Include(l => l.Convidado)
+                    .ThenInclude(c => c.Pessoa)
+                    .Include(l => l.Evento)
+                    .FirstOrDefaultAsync(l => l.EventoId == eventoId && l.ConvidadoId == convidadoId);
+
+                if (listaConvidado == null)
+                {
+                    TempData["ErrorMessage"] = "❌ Convite não encontrado.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                var statusAnterior = listaConvidado.ConfirmaPresenca;
+                var novoStatus = resposta == "Confirmado" ? "Confirmado" : "Recusado";
+
+                listaConvidado.ConfirmaPresenca = novoStatus;
+                listaConvidado.UpdatedAt = DateTime.UtcNow;
+
+                _context.Update(listaConvidado);
+                await _context.SaveChangesAsync();
+
+                await _auditoriaService.RegistrarAcaoAsync("ListaConvidado", listaConvidado.Id, "UPDATE",
+                    $"RSVP: {listaConvidado.Convidado?.Pessoa?.Nome} respondeu '{novoStatus}' no evento {listaConvidado.Evento?.NomeEvento}",
+                    new { listaConvidado.Id, ConfirmaPresenca = statusAnterior },
+                    new { listaConvidado.Id, ConfirmaPresenca = novoStatus });
+
+                ViewBag.NomeConvidado = listaConvidado.Convidado?.Pessoa?.Nome ?? "Convidado";
+                ViewBag.NomeEvento = listaConvidado.Evento?.NomeEvento ?? "Evento";
+                ViewBag.DataEvento = listaConvidado.Evento?.DataEvento.ToString("dd/MM/yyyy") ?? "";
+                ViewBag.Resposta = novoStatus;
+
+                return View("RespostaRSVP");
+            }
+            catch (Exception ex)
+            {
+                await _auditoriaService.RegistrarAcaoAsync("ListaConvidado", 0, "UPDATE",
+                    $"Erro no RSVP: {ex.Message}", null, null, false, ex.Message);
+
+                TempData["ErrorMessage"] = "❌ Erro ao registrar resposta.";
                 return RedirectToAction("Index", "Home");
             }
         }

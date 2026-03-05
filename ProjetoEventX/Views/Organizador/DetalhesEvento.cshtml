@@ -299,6 +299,9 @@
     .ai-orcamento { background: linear-gradient(135deg, #E65100, #FF8F00); color: #fff; }
     .ai-chat { background: linear-gradient(135deg, #00838F, #26C6DA); color: #fff; }
     .ai-ia { background: linear-gradient(135deg, #4527A0, #7E57C2); color: #fff; }
+    .ai-checklist { background: linear-gradient(135deg, #2E7D32, #43A047); color: #fff; }
+    .ai-timeline { background: linear-gradient(135deg, #8B0000, #B22222); color: #fff; }
+    .ai-simulador { background: linear-gradient(135deg, #1565C0, #42A5F5); color: #fff; }
     .ai-editar { background: linear-gradient(135deg, #1565C0, #42A5F5); color: #fff; }
     .ai-voltar { background: linear-gradient(135deg, #546E7A, #90A4AE); color: #fff; }
 </style>
@@ -521,6 +524,34 @@
                         <div>
                             <div>Assistente Virtual</div>
                             <small style="color: #999; font-weight: 400;">Ajuda com IA</small>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="acoes-card">
+                    <h5><i class="fas fa-clipboard-list me-2"></i>Planejamento</h5>
+
+                    <a asp-controller="Checklist" asp-action="Index" asp-route-eventoId="@Model.Id" class="acao-link">
+                        <div class="acao-icon ai-checklist"><i class="fas fa-tasks"></i></div>
+                        <div>
+                            <div>Checklist</div>
+                            <small style="color: #999; font-weight: 400;">Lista de tarefas do evento</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Timeline" asp-action="Index" asp-route-eventoId="@Model.Id" class="acao-link">
+                        <div class="acao-icon ai-timeline"><i class="fas fa-stream"></i></div>
+                        <div>
+                            <div>Cronograma</div>
+                            <small style="color: #999; font-weight: 400;">Linha do tempo do evento</small>
+                        </div>
+                    </a>
+
+                    <a asp-controller="SimuladorOrcamento" asp-action="Index" asp-route-eventoId="@Model.Id" class="acao-link">
+                        <div class="acao-icon ai-simulador"><i class="fas fa-calculator"></i></div>
+                        <div>
+                            <div>Simulador de Orçamento</div>
+                            <small style="color: #999; font-weight: 400;">Estime custos com inteligência</small>
                         </div>
                     </a>
                 </div>

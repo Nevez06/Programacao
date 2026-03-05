@@ -1,0 +1,100 @@
+@{
+    ViewData["Title"] = "Resposta Registrada - EventX";
+    var nome = ViewBag.NomeConvidado as string ?? "Convidado";
+    var nomeEvento = ViewBag.NomeEvento as string ?? "Evento";
+    var dataEvento = ViewBag.DataEvento as string ?? "";
+    var resposta = ViewBag.Resposta as string ?? "";
+    var confirmou = resposta == "Confirmado";
+}
+
+<style>
+    body { background: #f5f1ed; }
+    .rsvp-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .rsvp-card {
+        background: #fff; border-radius: 24px; max-width: 480px; width: 100%;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.1); overflow: hidden; text-align: center;
+    }
+    .rsvp-header-ok {
+        padding: 2.5rem 2rem 1.5rem;
+        background: @(confirmou ? "linear-gradient(135deg, #2E7D32, #43A047)" : "linear-gradient(135deg, #C62828, #E53935)");
+        color: #fff;
+    }
+    .rsvp-header-ok .resp-icon {
+        width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.5rem; margin: 0 auto 1rem; animation: scaleIn 0.5s ease;
+    }
+    @@keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
+    .rsvp-header-ok h2 { font-weight: 700; font-size: 1.4rem; margin: 0; }
+    .rsvp-body { padding: 2rem; }
+    .rsvp-detail {
+        display: flex; align-items: center; padding: 0.8rem 1rem; border-radius: 10px;
+        background: #faf7f4; margin-bottom: 0.5rem; text-align: left;
+    }
+    .rsvp-detail i { color: #8B0000; margin-right: 12px; font-size: 1rem; width: 20px; text-align: center; }
+    .rsvp-detail .dl { font-size: 0.75rem; color: #999; }
+    .rsvp-detail .dv { font-weight: 600; color: #333; }
+    .rsvp-msg {
+        margin: 1.5rem 0; padding: 1rem; border-radius: 12px; font-weight: 600; font-size: 0.9rem;
+        background: @(confirmou ? "#E8F5E9" : "#FFEBEE");
+        color: @(confirmou ? "#2E7D32" : "#C62828");
+        border: 1px solid @(confirmou ? "#A5D6A7" : "#EF9A9A");
+    }
+    .btn-home {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 12px 28px; border-radius: 12px; text-decoration: none;
+        background: linear-gradient(135deg, #8B0000, #D4A574); color: #fff;
+        font-weight: 600; transition: all 0.3s; border: none;
+    }
+    .btn-home:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(139,0,0,0.3); color: #fff; }
+    .rsvp-footer { padding: 1rem; color: #bbb; font-size: 0.8rem; }
+</style>
+
+<div class="rsvp-wrapper">
+    <div class="rsvp-card">
+        <div class="rsvp-header-ok">
+            <div class="resp-icon">
+                <i class="fas @(confirmou ? "fa-check" : "fa-times")"></i>
+            </div>
+            <h2>@(confirmou ? "Presença Confirmada!" : "Resposta Registrada")</h2>
+        </div>
+
+        <div class="rsvp-body">
+            <div class="rsvp-detail">
+                <i class="fas fa-user"></i>
+                <div><div class="dl">Convidado</div><div class="dv">@nome</div></div>
+            </div>
+            <div class="rsvp-detail">
+                <i class="fas fa-calendar-alt"></i>
+                <div><div class="dl">Evento</div><div class="dv">@nomeEvento</div></div>
+            </div>
+            <div class="rsvp-detail">
+                <i class="fas fa-calendar-day"></i>
+                <div><div class="dl">Data</div><div class="dv">@dataEvento</div></div>
+            </div>
+            <div class="rsvp-detail">
+                <i class="fas @(confirmou ? "fa-check-circle" : "fa-times-circle")"></i>
+                <div><div class="dl">Status</div><div class="dv">@resposta</div></div>
+            </div>
+
+            <div class="rsvp-msg">
+                @if (confirmou)
+                {
+                    <i class="fas fa-party-horn me-1"></i>
+                    @:Obrigado por confirmar! Esperamos você no evento. Chegue com antecedência.
+                }
+                else
+                {
+                    <i class="fas fa-heart me-1"></i>
+                    @:Entendemos. Sua resposta foi registrada. Esperamos vê-lo(a) em uma próxima oportunidade!
+                }
+            </div>
+
+            <a href="@Url.Action("Index", "Home")" class="btn-home">
+                <i class="fas fa-home"></i> Voltar para Home
+            </a>
+        </div>
+
+        <div class="rsvp-footer">EventX — Sistema de Gerenciamento de Eventos</div>
+    </div>
+</div>

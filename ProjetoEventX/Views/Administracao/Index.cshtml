@@ -1,11 +1,26 @@
 @{
-    ViewData["Title"] = "Administração - Gastos";
+    ViewData["Title"] = "Dashboard - Administração";
     var evento = ViewBag.Evento as ProjetoEventX.Models.Evento;
     var despesas = ViewBag.Despesas as IEnumerable<ProjetoEventX.Models.Despesa>;
     var ptBR = System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
     var totalGasto = (decimal)(ViewBag.TotalGasto ?? 0m);
     var totalPedidos = (decimal)(ViewBag.TotalPedidos ?? 0m);
     var totalGeral = (decimal)(ViewBag.TotalGeral ?? 0m);
+
+    // Analíticos
+    var catLabels = ViewBag.CategoriasLabels as List<string> ?? new List<string>();
+    var catValores = ViewBag.CategoriasValores as List<decimal> ?? new List<decimal>();
+    var evoLabels = ViewBag.EvolucaoLabels as List<string> ?? new List<string>();
+    var evoValores = ViewBag.EvolucaoValores as List<decimal> ?? new List<decimal>();
+    var totalConvidados = (int)(ViewBag.TotalConvidados ?? 0);
+    var confirmados = (int)(ViewBag.ConvidadosConfirmados ?? 0);
+    var pendentesConv = (int)(ViewBag.ConvidadosPendentes ?? 0);
+    var recusados = (int)(ViewBag.ConvidadosRecusados ?? 0);
+    var pedAprovados = (int)(ViewBag.PedidosAprovados ?? 0);
+    var pedPendentes = (int)(ViewBag.PedidosPendentes ?? 0);
+    var pedCancelados = (int)(ViewBag.PedidosCancelados ?? 0);
+    var totalPedCount = (int)(ViewBag.TotalPedidosCount ?? 0);
+    var pctConfirmados = totalConvidados > 0 ? (int)Math.Round((double)confirmados / totalConvidados * 100) : 0;
 }
 
 <style>
@@ -82,6 +97,34 @@
         color: #333;
         line-height: 1.1;
     }
+
+    /* Cards analíticos */
+    .analytics-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        height: 100%;
+    }
+    .analytics-card h6 { font-weight: 700; color: #333; margin-bottom: 1rem; font-size: 0.95rem; }
+    .analytics-stat {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0.6rem 0; border-bottom: 1px solid #f5f2ef;
+    }
+    .analytics-stat:last-child { border-bottom: none; }
+    .analytics-stat .stat-dot {
+        width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; flex-shrink: 0;
+    }
+    .analytics-stat .stat-name { font-weight: 500; color: #555; font-size: 0.88rem; flex: 1; }
+    .analytics-stat .stat-num { font-weight: 700; font-size: 1rem; }
+    .analytics-progress-bar { height: 8px; border-radius: 4px; background: #f0ece8; overflow: hidden; margin-top: 0.8rem; }
+    .analytics-progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+    .analytics-pct { text-align: right; font-size: 0.75rem; color: #888; margin-top: 4px; }
+    .chart-card {
+        background: #fff; border-radius: 16px; padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem;
+    }
+    .chart-card h6 { font-weight: 700; color: #333; margin-bottom: 1rem; font-size: 0.95rem; }
 
     .resumo-card .label {
         font-size: 0.85rem;
@@ -373,6 +416,135 @@
             </div>
         </div>
 
+        <!-- Cards Analíticos: Convidados, Pedidos, Gráficos -->
+        <div class="row g-3 mb-4">
+            <!-- Card Convidados -->
+            <div class="col-md-3">
+                <div class="analytics-card">
+                    <h6><i class="fas fa-user-friends me-2" style="color: #7B1FA2;"></i>Convidados</h6>
+                    <div class="analytics-stat">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-dot" style="background: #7B1FA2;"></div>
+                            <span class="stat-name">Total</span>
+                        </div>
+                        <span class="stat-num" style="color: #7B1FA2;">@totalConvidados</span>
+                    </div>
+                    <div class="analytics-stat">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-dot" style="background: #2E7D32;"></div>
+                            <span class="stat-name">Confirmados</span>
+                        </div>
+                        <span class="stat-num" style="color: #2E7D32;">@confirmados</span>
+                    </div>
+                    <div class="analytics-stat">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-dot" style="background: #E65100;"></div>
+                            <span class="stat-name">Pendentes</span>
+                        </div>
+                        <span class="stat-num" style="color: #E65100;">@pendentesConv</span>
+                    </div>
+                    <div class="analytics-stat">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-dot" style="background: #C62828;"></div>
+                            <span class="stat-name">Recusados</span>
+                        </div>
+                        <span class="stat-num" style="color: #C62828;">@recusados</span>
+                    </div>
+                    <div class="analytics-progress-bar">
+                        <div class="analytics-progress-fill" style="width: @(pctConfirmados)%; background: linear-gradient(135deg, #2E7D32, #66BB6A);"></div>
+                    </div>
+                    <div class="analytics-pct">@(pctConfirmados)% confirmados</div>
+                </div>
+            </div>
+
+            <!-- Card Pedidos -->
+            <div class="col-md-3">
+                <div class="analytics-card">
+                    <h6><i class="fas fa-shopping-bag me-2" style="color: #1565C0;"></i>Pedidos</h6>
+                    <div class="analytics-stat">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-dot" style="background: #1565C0;"></div>
+                            <span class="stat-name">Total</span>
+                        </div>
+                        <span class="stat-num" style="color: #1565C0;">@totalPedCount</span>
+                    </div>
+                    <div class="analytics-stat">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-dot" style="background: #2E7D32;"></div>
+                            <span class="stat-name">Aprovados</span>
+                        </div>
+                        <span class="stat-num" style="color: #2E7D32;">@pedAprovados</span>
+                    </div>
+                    <div class="analytics-stat">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-dot" style="background: #E65100;"></div>
+                            <span class="stat-name">Pendentes</span>
+                        </div>
+                        <span class="stat-num" style="color: #E65100;">@pedPendentes</span>
+                    </div>
+                    <div class="analytics-stat">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-dot" style="background: #C62828;"></div>
+                            <span class="stat-name">Cancelados</span>
+                        </div>
+                        <span class="stat-num" style="color: #C62828;">@pedCancelados</span>
+                    </div>
+                    @{
+                        var pctPedAprov = totalPedCount > 0 ? (int)Math.Round((double)pedAprovados / totalPedCount * 100) : 0;
+                    }
+                    <div class="analytics-progress-bar">
+                        <div class="analytics-progress-fill" style="width: @(pctPedAprov)%; background: linear-gradient(135deg, #1565C0, #42A5F5);"></div>
+                    </div>
+                    <div class="analytics-pct">@(pctPedAprov)% aprovados</div>
+                </div>
+            </div>
+
+            <!-- Gráfico Presença (Doughnut) -->
+            <div class="col-md-3">
+                <div class="chart-card" style="height: 100%;">
+                    <h6><i class="fas fa-chart-pie me-2" style="color: #2E7D32;"></i>Presença</h6>
+                    @if (totalConvidados > 0)
+                    {
+                        <canvas id="presencaChart" height="200"></canvas>
+                    }
+                    else
+                    {
+                        <div style="text-align: center; padding: 2rem 0; color: #bbb;">
+                            <i class="fas fa-users" style="font-size: 2rem; opacity: 0.3;"></i>
+                            <p style="margin-top: 0.5rem; font-size: 0.85rem;">Sem convidados ainda</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Gráfico Distribuição Gastos (Doughnut) -->
+            <div class="col-md-3">
+                <div class="chart-card" style="height: 100%;">
+                    <h6><i class="fas fa-chart-doughnut me-2" style="color: #E65100;"></i>Gastos por Categoria</h6>
+                    @if (catLabels.Any())
+                    {
+                        <canvas id="categoriasChart" height="200"></canvas>
+                    }
+                    else
+                    {
+                        <div style="text-align: center; padding: 2rem 0; color: #bbb;">
+                            <i class="fas fa-receipt" style="font-size: 2rem; opacity: 0.3;"></i>
+                            <p style="margin-top: 0.5rem; font-size: 0.85rem;">Sem despesas ainda</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico Evolução de Despesas -->
+        @if (evoLabels.Any())
+        {
+            <div class="chart-card mb-4">
+                <h6><i class="fas fa-chart-line me-2" style="color: #1565C0;"></i>Evolução das Despesas ao Longo do Tempo</h6>
+                <canvas id="evolucaoChart" height="80"></canvas>
+            </div>
+        }
+
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="form-card mb-4">
@@ -605,6 +777,108 @@
         document.querySelectorAll('.input-valor-edit').forEach(function (input) {
             aplicarMascaraMoeda(input);
         });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Gráfico de Presença (Doughnut)
+        var presencaEl = document.getElementById('presencaChart');
+        if (presencaEl) {
+            new Chart(presencaEl.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Confirmados', 'Pendentes', 'Recusados'],
+                    datasets: [{
+                        data: [@confirmados, @pendentesConv, @recusados],
+                        backgroundColor: ['#2E7D32', '#E65100', '#C62828'],
+                        borderWidth: 2, borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 10, font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de Categorias de Gastos (Doughnut)
+        var catEl = document.getElementById('categoriasChart');
+        if (catEl) {
+            new Chart(catEl.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", catLabels.Select(l => $"'{l}'")))],
+                    datasets: [{
+                        data: [@Html.Raw(string.Join(",", catValores.Select(v => v.ToString(System.Globalization.CultureInfo.InvariantCulture))))],
+                        backgroundColor: ['#E65100', '#7B1FA2', '#1565C0', '#2E7D32', '#546E7A'],
+                        borderWidth: 2, borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 10, font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function (ctx) {
+                                    return ctx.label + ': R$ ' + ctx.parsed.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de Evolução de Despesas (Line)
+        var evoEl = document.getElementById('evolucaoChart');
+        if (evoEl) {
+            new Chart(evoEl.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", evoLabels.Select(l => $"'{l}'")))],
+                    datasets: [{
+                        label: 'Despesas (R$)',
+                        data: [@Html.Raw(string.Join(",", evoValores.Select(v => v.ToString(System.Globalization.CultureInfo.InvariantCulture))))],
+                        borderColor: '#8B0000',
+                        backgroundColor: 'rgba(139, 0, 0, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#8B0000',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (ctx) {
+                                    return 'R$ ' + ctx.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (val) { return 'R$ ' + val.toLocaleString('pt-BR'); }
+                            },
+                            grid: { color: 'rgba(0,0,0,0.04)' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
     });
 </script>
 

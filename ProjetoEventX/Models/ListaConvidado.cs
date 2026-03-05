@@ -25,6 +25,12 @@ namespace ProjetoEventX.Models
         [StringLength(50)]
         public string ConfirmaPresenca { get; set; } = "Pendente";
 
+        public bool CheckInRealizado { get; set; } = false;
+        public DateTime? DataCheckIn { get; set; }
+
+        [StringLength(100)]
+        public string? CodigoQR { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
     }

@@ -61,5 +61,8 @@ namespace ProjetoEventX.Models
         public ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
         public ICollection<Administracao> Administracoes { get; set; } = new List<Administracao>();
         public ICollection<Despesa> Despesas { get; set; } = new List<Despesa>();
+        public ICollection<ChecklistEvento> ChecklistEventos { get; set; } = new List<ChecklistEvento>();
+        public ICollection<TimelineEvento> TimelineEventos { get; set; } = new List<TimelineEvento>();
+        public ICollection<OrcamentoSimulado> OrcamentosSimulados { get; set; } = new List<OrcamentoSimulado>();
     }
 }
