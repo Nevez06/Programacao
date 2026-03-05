@@ -43,7 +43,10 @@ namespace ProjetoEventX.Controllers
                 .ToListAsync();
 
             var totalGasto = despesas.Sum(d => d.Valor);
-            var totalPedidos = evento.Pedidos.Sum(p => p.PrecoTotal);
+            // Pedidos que ainda NÃO geraram despesa automática (evitar dupla contagem)
+            var totalPedidos = evento.Pedidos
+                .Where(p => !p.DespesaGerada)
+                .Sum(p => p.PrecoTotal);
             var totalGeral = totalGasto + totalPedidos;
 
             var administracao = await _context.Administracoes

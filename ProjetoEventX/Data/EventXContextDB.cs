@@ -119,6 +119,14 @@ namespace ProjetoEventX.Data
                 .HasForeignKey(p => p.ProdutoId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<Despesa>()
+                .HasOne(d => d.Pedido)
+                .WithMany()
+                .HasForeignKey(d => d.PedidoId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<Pedido>().Property(p => p.DespesaGerada).HasDefaultValue(false);
+
             // Restrições para status
             builder.Entity<Evento>().Property(e => e.StatusEvento).HasDefaultValue("Planejado");
             builder.Entity<Pedido>().Property(p => p.StatusPedido).HasDefaultValue("Pendente");

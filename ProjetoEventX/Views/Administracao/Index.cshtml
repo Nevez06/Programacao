@@ -412,12 +412,29 @@
                         @foreach (var despesa in despesas)
                         {
                             <div class="despesa-item">
-                                <div class="despesa-icon"><i class="fas fa-receipt"></i></div>
+                                <div class="despesa-icon">
+                                    @if (!string.IsNullOrEmpty(despesa.Origem))
+                                    {
+                                        <i class="fas fa-shopping-cart"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-receipt"></i>
+                                    }
+                                </div>
                                 <div class="despesa-info">
-                                    <div class="despesa-desc">@despesa.Descricao</div>
+                                    <div class="despesa-desc">
+                                        @despesa.Descricao
+                                        @if (!string.IsNullOrEmpty(despesa.Origem))
+                                        {
+                                            <span class="badge bg-info text-white ms-1" style="font-size: 0.7rem; font-weight: 500;">@despesa.Origem</span>
+                                        }
+                                    </div>
                                     <div class="despesa-data">@despesa.DataDespesa.ToString("dd/MM/yyyy 'às' HH:mm")</div>
                                 </div>
                                 <div class="despesa-valor">R$ @despesa.Valor.ToString("N2", ptBR)</div>
+                                @if (string.IsNullOrEmpty(despesa.Origem))
+                                {
                                 <div class="despesa-acoes">
                                     <button class="btn-desp-acao btn-desp-editar" title="Editar" data-bs-toggle="modal" data-bs-target="#editDesp-@despesa.Id">
                                         <i class="fas fa-pen"></i>
@@ -426,6 +443,7 @@
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
+                                }
                             </div>
                         }
                     }

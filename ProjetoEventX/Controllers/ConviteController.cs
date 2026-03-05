@@ -61,7 +61,21 @@ namespace ProjetoEventX.Controllers
 
             ViewBag.EventoId = eventoId;
             ViewBag.NomeEvento = evento.NomeEvento;
+            ViewBag.DescricaoEvento = evento.DescricaoEvento ?? "Descrição não informada";
+            ViewBag.TipoEvento = evento.TipoEvento ?? "Outro";
+            ViewBag.DataEvento = evento.DataEvento.ToString("dd/MM/yyyy");
+            ViewBag.HoraInicio = evento.HoraInicio ?? "";
+            ViewBag.HoraFim = evento.HoraFim ?? "";
+            ViewBag.NomeLocal = evento.Local?.NomeLocal ?? "Local não informado";
             ViewBag.EnderecoLocal = evento.Local?.EnderecoLocal ?? "Local não informado";
+
+            // Buscar templates do organizador para este evento
+            var templates = await _context.TemplatesConvites
+                .Where(t => t.OrganizadorId == user.Id && t.EventoId == eventoId && t.Ativo)
+                .OrderByDescending(t => t.PadraoSistema)
+                .ThenByDescending(t => t.CreatedAt)
+                .ToListAsync();
+            ViewBag.Templates = templates;
 
             var listaConvidado = new ListaConvidado
             {

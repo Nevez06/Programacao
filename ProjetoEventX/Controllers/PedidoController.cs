@@ -183,14 +183,58 @@ namespace ProjetoEventX.Controllers
             if (user == null)
                 return RedirectToAction("LoginOrganizador", "Auth");
 
-            var pedido = await _context.Pedidos.FindAsync(id);
+            var pedido = await _context.Pedidos
+                .Include(p => p.Produto)
+                    .ThenInclude(pr => pr!.Fornecedor)
+                        .ThenInclude(f => f.Pessoa)
+                .Include(p => p.Evento)
+                .FirstOrDefaultAsync(p => p.Id == id);
             if (pedido == null)
                 return NotFound();
 
             pedido.StatusPedido = novoStatus;
+
+            // Gerar despesa automaticamente quando status mudar para "Pago"
+            if (novoStatus == "Pago" && !pedido.DespesaGerada)
+            {
+                var nomeFornecedor = pedido.Produto?.Fornecedor?.Pessoa?.Nome
+                    ?? pedido.Produto?.Fornecedor?.TipoServico
+                    ?? pedido.Produto?.Nome
+                    ?? "Fornecedor";
+
+                var despesa = new Despesa
+                {
+                    EventoId = pedido.EventoId,
+                    Evento = pedido.Evento!,
+                    Descricao = $"Pedido pago - {nomeFornecedor}",
+                    Valor = pedido.PrecoTotal,
+                    DataDespesa = DateTime.UtcNow,
+                    Origem = "Pedido automático",
+                    PedidoId = pedido.Id
+                };
+
+                _context.Despesas.Add(despesa);
+                pedido.DespesaGerada = true;
+
+                // Atualizar administração do evento
+                var administracao = await _context.Administracoes
+                    .FirstOrDefaultAsync(a => a.IdEvento == pedido.EventoId);
+                if (administracao != null)
+                {
+                    administracao.ValorTotal = await _context.Despesas
+                        .Where(d => d.EventoId == pedido.EventoId)
+                        .SumAsync(d => d.Valor) + pedido.PrecoTotal;
+                }
+
+                TempData["SuccessMessage"] = $"✅ Pagamento confirmado. Despesa de R$ {pedido.PrecoTotal:N2} adicionada automaticamente.";
+            }
+            else
+            {
+                TempData["SuccessMessage"] = $"✅ Status atualizado para '{novoStatus}'.";
+            }
+
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = $"✅ Status atualizado para '{novoStatus}'.";
             return RedirectToAction("Index", new { eventoId = pedido.EventoId });
         }
 

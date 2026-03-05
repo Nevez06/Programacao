@@ -22,5 +22,13 @@ namespace ProjetoEventX.Models
         public decimal Valor { get; set; }
 
         public DateTime DataDespesa { get; set; } = DateTime.Now;
+
+        [StringLength(50)]
+        public string? Origem { get; set; }
+
+        public Guid? PedidoId { get; set; }
+
+        [ForeignKey("PedidoId")]
+        public Pedido? Pedido { get; set; }
     }
 }

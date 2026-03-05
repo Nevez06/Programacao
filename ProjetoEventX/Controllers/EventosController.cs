@@ -234,30 +234,43 @@ namespace ProjetoEventX.Controllers
                 return RedirectToAction("AccessDenied", "Auth");
             }
 
-            // Limpar validação de propriedades não vindas do form quando necessário
+            // Limpar validação de propriedades de navegação não vindas do form
             ModelState.Remove("Organizador");
+            ModelState.Remove("Local");
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Sanitizar dados
-                    evento.NomeEvento = SecurityValidator.SanitizeInput(evento.NomeEvento);
-                    evento.DescricaoEvento = SecurityValidator.SanitizeHtml(evento.DescricaoEvento);
-                    evento.TipoEvento = SecurityValidator.SanitizeInput(evento.TipoEvento);
-                    evento.UpdatedAt = DateTime.UtcNow;
+                    // Buscar evento existente no banco
+                    var eventoExistente = await _context.Eventos.FindAsync(id);
+                    if (eventoExistente == null)
+                    {
+                        return NotFound();
+                    }
 
-                    // Registrar dados antigos para auditoria
-                    var eventoAntigo = await _context.Eventos.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
-                    
-                    _context.Update(evento);
+                    // Registrar dados antigos para auditoria (cópia antes da alteração)
+                    var eventoAntigoNome = eventoExistente.NomeEvento;
+
+                    // Atualizar apenas os campos editáveis (sanitizados)
+                    eventoExistente.NomeEvento = SecurityValidator.SanitizeInput(evento.NomeEvento);
+                    eventoExistente.DescricaoEvento = SecurityValidator.SanitizeHtml(evento.DescricaoEvento);
+                    eventoExistente.TipoEvento = SecurityValidator.SanitizeInput(evento.TipoEvento);
+                    eventoExistente.StatusEvento = evento.StatusEvento;
+                    eventoExistente.DataEvento = evento.DataEvento;
+                    eventoExistente.HoraInicio = evento.HoraInicio;
+                    eventoExistente.HoraFim = evento.HoraFim;
+                    eventoExistente.PublicoEstimado = evento.PublicoEstimado;
+                    eventoExistente.CustoEstimado = evento.CustoEstimado;
+                    eventoExistente.UpdatedAt = DateTime.UtcNow;
+
                     await _context.SaveChangesAsync();
 
                     // Registrar atualização
-                    await _auditoriaService.RegistrarAcaoAsync("Evento", evento.Id, "UPDATE", 
-                        $"Evento atualizado: {evento.NomeEvento}", eventoAntigo, evento);
+                    await _auditoriaService.RegistrarAcaoAsync("Evento", eventoExistente.Id, "UPDATE", 
+                        $"Evento atualizado: {eventoExistente.NomeEvento}");
 
-                    TempData["SuccessMessage"] = $"✅ Evento '{evento.NomeEvento}' atualizado com sucesso!";
+                    TempData["SuccessMessage"] = $"✅ Evento '{eventoExistente.NomeEvento}' atualizado com sucesso!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)

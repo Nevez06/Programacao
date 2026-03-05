@@ -220,6 +220,9 @@
 
                 <form asp-action="Edit" id="eventoForm">
                     <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="OrganizadorId" />
+                    <input type="hidden" asp-for="CreatedAt" />
+                    <input type="hidden" asp-for="LocalId" />
                     <div asp-validation-summary="ModelOnly" class="alert-erro mb-3" role="alert"></div>
 
                     <!-- Informações Básicas -->

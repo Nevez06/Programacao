@@ -32,5 +32,7 @@ namespace ProjetoEventX.Models
         public string StatusPedido { get; set; } = "Pendente"; // Pendente, Pago, Entregue
 
         public DateTime DataPedido { get; set; } = DateTime.Now;
+
+        public bool DespesaGerada { get; set; } = false;
     }
 }
