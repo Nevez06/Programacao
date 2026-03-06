@@ -72,6 +72,7 @@ builder.Services.AddHttpClient();
 // Registra os serviços de IA
 builder.Services.AddHttpClient<GeminiEventService>();
 builder.Services.AddScoped<EventBotService>();
+builder.Services.AddScoped<ProjetoEventX.Services.EmailService>();
 
 // ================================
 // 🔹 SERVIÇOS DE SEGURANÇA - NOVO 🆕

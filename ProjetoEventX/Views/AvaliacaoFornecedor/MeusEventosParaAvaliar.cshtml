@@ -1,0 +1,156 @@
+@{
+    ViewData["Title"] = "Avaliar Fornecedores";
+    var pendentes = ViewBag.Pendentes as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+}
+
+<style>
+    .avaliar-wrapper {
+        background: #f5f1ed;
+        min-height: 100vh;
+        padding-bottom: 3rem;
+    }
+
+    .avaliar-header {
+        background: linear-gradient(135deg, #8B0000 0%, #B22222 40%, #D4A574 100%);
+        color: #fff;
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .avaliar-header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .avaliar-header p { opacity: 0.85; font-size: 1rem; margin: 0; }
+
+    .avaliar-header .header-icon {
+        width: 60px; height: 60px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; margin-right: 1rem;
+    }
+
+    .fornecedor-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        margin-bottom: 1rem;
+        border-left: 5px solid #8B0000;
+        transition: transform 0.2s;
+    }
+
+    .fornecedor-card:hover { transform: translateY(-2px); }
+
+    .fornecedor-avatar-lg {
+        width: 50px; height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8B0000, #B22222);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; font-weight: 700; color: #fff;
+        flex-shrink: 0;
+    }
+
+    .evento-tag {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        background: #FFF3E0; color: #E65100;
+        padding: 0.35rem 0.8rem; border-radius: 8px;
+        font-size: 0.85rem; font-weight: 500;
+        margin: 0.2rem;
+    }
+
+    .btn-avaliar-sm {
+        background: linear-gradient(135deg, #8B0000, #B22222);
+        color: #fff; border: none;
+        padding: 0.4rem 1rem; border-radius: 8px;
+        font-weight: 600; font-size: 0.85rem;
+        text-decoration: none; transition: all 0.2s;
+    }
+
+    .btn-avaliar-sm:hover {
+        box-shadow: 0 3px 12px rgba(139,0,0,0.3);
+        color: #fff;
+    }
+
+    .empty-state {
+        text-align: center; padding: 3rem 1rem; color: #999;
+    }
+
+    .empty-state i { font-size: 3rem; margin-bottom: 1rem; color: #ddd; }
+</style>
+
+<div class="avaliar-wrapper">
+    <section class="avaliar-header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <div class="header-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div>
+                    <h1>Avaliar Fornecedores</h1>
+                    <p>Avalie os fornecedores dos seus eventos</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                @if (pendentes.Any())
+                {
+                    <div class="mb-3">
+                        <span class="badge" style="background:#8B0000;font-size:0.9rem;padding:0.5rem 1rem;border-radius:10px;">
+                            <i class="fas fa-exclamation-circle me-1"></i> @pendentes.Count() avaliação(ões) pendente(s)
+                        </span>
+                    </div>
+
+                    @foreach (var item in pendentes)
+                    {
+                        var forn = (ProjetoEventX.Models.Fornecedor)item.Fornecedor;
+                        var eventos = (List<ProjetoEventX.Models.Evento>)item.Eventos;
+                        <div class="fornecedor-card">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="fornecedor-avatar-lg">
+                                    @forn.Pessoa?.Nome?.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 fw-bold">@forn.Pessoa?.Nome</h6>
+                                    <small class="text-muted">@forn.TipoServico &bull; @forn.Cidade/@forn.UF</small>
+                                </div>
+                                <a asp-action="Avaliacoes" asp-route-fornecedorId="@forn.Id" class="text-muted" title="Ver avaliações">
+                                    <i class="fas fa-star me-1"></i> @forn.AvaliacaoMedia.ToString("N1")
+                                </a>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var ev in eventos)
+                                {
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="evento-tag">
+                                            <i class="fas fa-calendar-alt"></i> @ev.NomeEvento
+                                        </span>
+                                        <a asp-action="Criar" asp-route-fornecedorId="@forn.Id" asp-route-eventoId="@ev.Id" class="btn-avaliar-sm">
+                                            <i class="fas fa-star me-1"></i> Avaliar
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="fornecedor-card empty-state">
+                        <i class="fas fa-check-circle d-block" style="color:#4CAF50;"></i>
+                        <h5>Tudo em dia!</h5>
+                        <p class="mb-0">Não há fornecedores pendentes de avaliação.</p>
+                    </div>
+                }
+
+                <div class="text-center mt-3">
+                    <a asp-controller="Organizador" asp-action="Dashboard" class="btn btn-outline-secondary" style="border-radius:10px;">
+                        <i class="fas fa-arrow-left me-1"></i> Voltar ao Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

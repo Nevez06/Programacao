@@ -49,6 +49,12 @@ namespace ProjetoEventX.Models
         [ForeignKey("LocalId")]
         public Local? Local { get; set; }
 
+        [StringLength(300)]
+        public string? Slug { get; set; }
+
+        [StringLength(500)]
+        public string? ImagemCapa { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 

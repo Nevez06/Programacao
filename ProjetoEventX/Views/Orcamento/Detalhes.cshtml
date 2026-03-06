@@ -1,0 +1,651 @@
+@model ProjetoEventX.Models.Quote
+@{
+    ViewData["Title"] = "Detalhes do Orçamento";
+    var tipoUsuario = ViewBag.TipoUsuario as string ?? "";
+    var unreadMessages = (int)(ViewBag.UnreadMessages ?? 0);
+    var currentUserId = (int)(ViewBag.CurrentUserId ?? 0);
+}
+
+<div class="container py-4">
+    <div class="mb-4">
+        <a asp-action="Index" class="btn btn-outline-dark" style="border-radius: 8px;">
+            <i class="fas fa-arrow-left me-2"></i>Voltar aos Orçamentos
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Coluna Principal -->
+        <div class="col-lg-8">
+            <!-- Card do Orçamento -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px; overflow: hidden;">
+                <div class="card-header py-3 px-4" style="background: linear-gradient(135deg, #8B0000, #a52a2a); color: white;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0 fw-bold">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>Orçamento #@Model.Id
+                        </h4>
+                        @{
+                            var badgeStyle = Model.Status switch
+                            {
+                                "Pendente" => "background: #fff3cd; color: #856404;",
+                                "Respondido" => "background: #cce5ff; color: #004085;",
+                                "Aceito" => "background: #d4edda; color: #155724;",
+                                "Recusado" => "background: #f8d7da; color: #721c24;",
+                                "Cancelado" => "background: #e2e3e5; color: #383d41;",
+                                _ => "background: #e2e3e5; color: #383d41;"
+                            };
+                        }
+                        <span class="badge px-3 py-2" style="@badgeStyle border-radius: 20px; font-size: 0.9em;">
+                            @Model.Status
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Informações do Serviço -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-3" style="color: #8B0000;">
+                            <i class="fas fa-concierge-bell me-2"></i>Serviço Solicitado
+                        </h5>
+                        <div class="p-3 rounded" style="background: #f8f9fa; border-left: 4px solid #8B0000;">
+                            <h6 class="fw-bold mb-1">@Model.ServiceName</h6>
+                            <p class="mb-0 text-muted">@Model.Description</p>
+                        </div>
+                    </div>
+
+                    <!-- Valores -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 rounded text-center" style="background: #fff8e1; border: 1px solid #ffecb3;">
+                                <small class="text-muted d-block mb-1">Valor Estimado</small>
+                                <h4 class="fw-bold mb-0" style="color: #f57f17;">R$ @Model.EstimatedValue.ToString("N2")</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded text-center" style="background: @(Model.ResponseValue.HasValue ? "#e8f5e9" : "#f5f5f5"); border: 1px solid @(Model.ResponseValue.HasValue ? "#c8e6c9" : "#e0e0e0");">
+                                <small class="text-muted d-block mb-1">Valor Proposto</small>
+                                @if (Model.ResponseValue.HasValue)
+                                {
+                                    <h4 class="fw-bold mb-0" style="color: #2e7d32;">R$ @Model.ResponseValue.Value.ToString("N2")</h4>
+                                }
+                                else
+                                {
+                                    <h4 class="fw-bold mb-0 text-muted">Aguardando</h4>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informações Adicionais -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-calendar-alt me-2 text-muted"></i>
+                                <div>
+                                    <small class="text-muted d-block">Data da Solicitação</small>
+                                    <span class="fw-medium">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                            </div>
+                        </div>
+                        @if (Model.ResponseDate.HasValue)
+                        {
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-reply me-2 text-muted"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Data da Resposta</small>
+                                        <span class="fw-medium">@Model.ResponseDate.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resposta do Fornecedor -->
+            @if (!string.IsNullOrEmpty(Model.ResponseMessage))
+            {
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+                    <div class="card-header py-3 px-4" style="background: #e3f2fd;">
+                        <h5 class="mb-0 fw-bold" style="color: #1565c0;">
+                            <i class="fas fa-comment-dots me-2"></i>Resposta do Fornecedor
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="mb-0" style="white-space: pre-line;">@Model.ResponseMessage</p>
+                    </div>
+                </div>
+            }
+
+            <!-- Formulário de Resposta (Fornecedor) -->
+            @if (tipoUsuario == "Fornecedor" && Model.Status == "Pendente")
+            {
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+                    <div class="card-header py-3 px-4" style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9);">
+                        <h5 class="mb-0 fw-bold" style="color: #2e7d32;">
+                            <i class="fas fa-pen me-2"></i>Responder Orçamento
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <form asp-action="Responder" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Valor Proposto (R$) *</label>
+                                <input type="number" name="responseValue" step="0.01" min="0" class="form-control"
+                                       style="border-radius: 8px;" placeholder="Ex: 5000.00" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Mensagem de Resposta *</label>
+                                <textarea name="responseMessage" class="form-control" rows="4"
+                                          style="border-radius: 8px;" placeholder="Descreva sua proposta, condições, prazos..." required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-lg w-100" style="background: linear-gradient(135deg, #2e7d32, #43a047); color: white; border: none; border-radius: 10px; font-weight: 600;">
+                                <i class="fas fa-paper-plane me-2"></i>Enviar Proposta
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            <!-- Ações do Organizador -->
+            @if (tipoUsuario == "Organizador" && Model.Status == "Respondido")
+            {
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+                    <div class="card-header py-3 px-4" style="background: #fff8e1;">
+                        <h5 class="mb-0 fw-bold" style="color: #e65100;">
+                            <i class="fas fa-gavel me-2"></i>Decisão do Orçamento
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted mb-4">O fornecedor respondeu sua solicitação. Revise a proposta e tome sua decisão.</p>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <form asp-action="Aceitar" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-lg w-100" style="background: linear-gradient(135deg, #2e7d32, #43a047); color: white; border: none; border-radius: 10px; font-weight: 600;"
+                                            onclick="return confirm('Confirma aceitar esta proposta? Um pedido será criado automaticamente.');">
+                                        <i class="fas fa-check-circle me-2"></i>Aceitar Proposta
+                                    </button>
+                                    <small class="text-muted d-block text-center mt-2">
+                                        <i class="fas fa-info-circle me-1"></i>Um pedido será criado automaticamente
+                                    </small>
+                                </form>
+                            </div>
+                            <div class="col-md-6">
+                                <form asp-action="Recusar" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-lg w-100" style="background: linear-gradient(135deg, #c62828, #d32f2f); color: white; border: none; border-radius: 10px; font-weight: 600;"
+                                            onclick="return confirm('Confirma recusar esta proposta?');">
+                                        <i class="fas fa-times-circle me-2"></i>Recusar Proposta
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Cancelar (Organizador, se ainda pendente) -->
+            @if (tipoUsuario == "Organizador" && (Model.Status == "Pendente" || Model.Status == "Respondido"))
+            {
+                <div class="text-center">
+                    <form asp-action="Cancelar" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-outline-secondary" style="border-radius: 8px;"
+                                onclick="return confirm('Confirma cancelar esta solicitação de orçamento?');">
+                            <i class="fas fa-ban me-1"></i>Cancelar Orçamento
+                        </button>
+                    </form>
+                </div>
+            }
+
+            <!-- Pedido Gerado -->
+            @if (Model.PedidoGerado != null)
+            {
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px; border-left: 4px solid #2e7d32 !important;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                     style="width: 50px; height: 50px; background: #e8f5e9; color: #2e7d32;">
+                                    <i class="fas fa-shopping-cart fa-lg"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-1" style="color: #2e7d32;">Pedido Gerado Automaticamente</h6>
+                                <p class="mb-0 text-muted">
+                                    Pedido <strong>#@Model.PedidoGerado.Id.ToString().Substring(0, 8)...</strong> •
+                                    R$ @Model.PedidoGerado.PrecoTotal.ToString("N2") •
+                                    Status: @Model.PedidoGerado.StatusPedido
+                                </p>
+                            </div>
+                            <a asp-controller="Pedido" asp-action="Index" class="btn btn-sm btn-outline-success" style="border-radius: 8px;">
+                                <i class="fas fa-eye me-1"></i>Ver Pedidos
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Coluna Lateral -->
+        <div class="col-lg-4">
+            <!-- Card do Fornecedor -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+                <div class="card-header py-3 px-4" style="background: #f5f5f5;">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-store me-2"></i>Fornecedor</h6>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                         style="width: 70px; height: 70px; background: linear-gradient(135deg, #8B0000, #a52a2a); color: white; font-size: 28px; font-weight: 700;">
+                        @(Model.Supplier?.Pessoa?.Nome?.Substring(0, 1).ToUpper() ?? "F")
+                    </div>
+                    <h5 class="fw-bold mb-1">@(Model.Supplier?.Pessoa?.Nome ?? "Fornecedor")</h5>
+                    <span class="badge bg-light text-dark mb-2">@(Model.Supplier?.TipoServico ?? "")</span>
+                    @if (Model.Supplier != null)
+                    {
+                        <p class="text-muted small mb-2">
+                            <i class="fas fa-map-marker-alt me-1"></i>@(Model.Supplier.Cidade), @(Model.Supplier.UF)
+                        </p>
+                        @if (Model.Supplier.AvaliacaoMedia > 0)
+                        {
+                            <div>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= (int)Model.Supplier.AvaliacaoMedia)
+                                    {
+                                        <i class="fas fa-star" style="color: #ffc107;"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="far fa-star" style="color: #ffc107;"></i>
+                                    }
+                                }
+                                <small class="text-muted ms-1">(@Model.Supplier.AvaliacaoMedia.ToString("N1"))</small>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Card do Evento -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+                <div class="card-header py-3 px-4" style="background: #f5f5f5;">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-calendar-alt me-2"></i>Evento</h6>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.Event != null)
+                    {
+                        <h6 class="fw-bold mb-2">@Model.Event.NomeEvento</h6>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-calendar me-2 text-muted"></i>
+                            <span>@Model.Event.DataEvento.ToString("dd/MM/yyyy")</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Event.TipoEvento))
+                        {
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-tag me-2 text-muted"></i>
+                                <span>@Model.Event.TipoEvento</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Event.StatusEvento))
+                        {
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle me-2 text-muted"></i>
+                                <span>@Model.Event.StatusEvento</span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Evento não especificado</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Timeline de Status -->
+            <div class="card border-0 shadow-sm" style="border-radius: 14px;">
+                <div class="card-header py-3 px-4" style="background: #f5f5f5;">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-history me-2"></i>Histórico</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="timeline-item d-flex mb-3">
+                        <div class="me-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                 style="width: 32px; height: 32px; background: #e8f5e9; color: #2e7d32;">
+                                <i class="fas fa-paper-plane" style="font-size: 12px;"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <small class="fw-semibold d-block">Solicitação Enviada</small>
+                            <small class="text-muted">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                        </div>
+                    </div>
+
+                    @if (Model.ResponseDate.HasValue)
+                    {
+                        <div class="timeline-item d-flex mb-3">
+                            <div class="me-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                     style="width: 32px; height: 32px; background: #e3f2fd; color: #1565c0;">
+                                    <i class="fas fa-reply" style="font-size: 12px;"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <small class="fw-semibold d-block">Fornecedor Respondeu</small>
+                                <small class="text-muted">@Model.ResponseDate.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Status == "Aceito" || Model.Status == "Recusado" || Model.Status == "Cancelado")
+                    {
+                        var statusColor = Model.Status switch
+                        {
+                            "Aceito" => "background: #e8f5e9; color: #2e7d32;",
+                            "Recusado" => "background: #fce4ec; color: #c62828;",
+                            "Cancelado" => "background: #f5f5f5; color: #616161;",
+                            _ => "background: #f5f5f5; color: #616161;"
+                        };
+                        var statusIcon = Model.Status switch
+                        {
+                            "Aceito" => "fas fa-check",
+                            "Recusado" => "fas fa-times",
+                            "Cancelado" => "fas fa-ban",
+                            _ => "fas fa-question"
+                        };
+                        <div class="timeline-item d-flex">
+                            <div class="me-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                     style="width: 32px; height: 32px; @statusColor">
+                                    <i class="@statusIcon" style="font-size: 12px;"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <small class="fw-semibold d-block">@Model.Status</small>
+                                <small class="text-muted">Decisão tomada</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Abrir Conversa (fixo) -->
+    <div class="text-center my-4">
+        <button type="button" class="btn btn-lg px-5 py-3 position-relative" id="btnAbrirChat"
+                style="background: linear-gradient(135deg, #1565c0, #1976d2); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 1.1em; box-shadow: 0 4px 15px rgba(21,101,192,0.3); transition: all 0.3s ease;"
+                onclick="toggleChat()">
+            <i class="fas fa-comments me-2"></i>Abrir Conversa
+            @if (unreadMessages > 0)
+            {
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="unreadBadgeBtn">
+                    @unreadMessages
+                </span>
+            }
+        </button>
+    </div>
+
+    <!-- Área de Chat -->
+    <div id="chatSection" class="card border-0 shadow-sm mb-4" style="border-radius: 14px; overflow: hidden; display: none;">
+        <div class="card-header py-3 px-4 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1565c0, #1976d2); color: white;">
+            <div>
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-comments me-2"></i>Conversa — Orçamento #@Model.Id
+                </h5>
+                <small class="opacity-75">
+                    @if (tipoUsuario == "Organizador")
+                    {
+                        <text>Conversa com @(Model.Supplier?.Pessoa?.Nome ?? "Fornecedor")</text>
+                    }
+                    else
+                    {
+                        <text>Conversa com @(Model.Organizador?.Pessoa?.Nome ?? "Organizador")</text>
+                    }
+                </small>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-light" onclick="toggleChat()" style="border-radius: 8px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Mensagens -->
+        <div id="chatMessages" class="p-3" style="height: 450px; overflow-y: auto; background: #f0f2f5;">
+            <div class="text-center py-5" id="chatLoading">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="text-muted mt-2">Carregando mensagens...</p>
+            </div>
+            <div id="chatEmpty" class="text-center py-5" style="display: none;">
+                <i class="fas fa-comment-slash fa-3x text-muted mb-3" style="opacity: 0.3;"></i>
+                <p class="text-muted">Nenhuma mensagem ainda.<br>Inicie a conversa!</p>
+            </div>
+            <div id="chatContent"></div>
+        </div>
+
+        <!-- Campo de envio -->
+        <div class="card-footer p-3" style="background: white; border-top: 1px solid #e8e8e8;">
+            <div class="d-flex gap-2">
+                <input type="text" id="chatInput" class="form-control" placeholder="Digite sua mensagem..."
+                       style="border-radius: 24px; padding: 12px 20px; border: 2px solid #e0e0e0; font-size: 0.95em;"
+                       maxlength="4000"
+                       onkeydown="if(event.key==='Enter') sendChatMessage();" />
+                <button type="button" class="btn d-flex align-items-center justify-content-center" onclick="sendChatMessage()"
+                        style="background: linear-gradient(135deg, #1565c0, #1976d2); color: white; border: none; border-radius: 50%; width: 48px; height: 48px; min-width: 48px;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .chat-bubble {
+            max-width: 75%;
+            padding: 10px 16px;
+            border-radius: 18px;
+            margin-bottom: 8px;
+            position: relative;
+            word-wrap: break-word;
+            line-height: 1.4;
+            font-size: 0.92em;
+        }
+        .chat-bubble-mine {
+            background: linear-gradient(135deg, #1565c0, #1976d2);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-bubble-other {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        }
+        .chat-meta {
+            font-size: 0.72em;
+            margin-top: 2px;
+            opacity: 0.7;
+        }
+        .chat-sender-label {
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .chat-date-separator {
+            text-align: center;
+            margin: 16px 0;
+        }
+        .chat-date-separator span {
+            background: #e0e0e0;
+            color: #666;
+            padding: 4px 14px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+        #chatMessages::-webkit-scrollbar { width: 6px; }
+        #chatMessages::-webkit-scrollbar-track { background: transparent; }
+        #chatMessages::-webkit-scrollbar-thumb { background: #c0c0c0; border-radius: 3px; }
+        #chatInput:focus { border-color: #1565c0; box-shadow: 0 0 0 0.2rem rgba(21,101,192,0.15); }
+        #btnAbrirChat:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(21,101,192,0.4); }
+        .read-indicator { font-size: 0.7em; }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        const quoteId = @Model.Id;
+        const currentUserId = @currentUserId;
+        let chatVisible = false;
+        let chatLoaded = false;
+        let refreshInterval = null;
+
+        function toggleChat() {
+            chatVisible = !chatVisible;
+            const section = document.getElementById('chatSection');
+            const btn = document.getElementById('btnAbrirChat');
+
+            if (chatVisible) {
+                section.style.display = '';
+                btn.innerHTML = '<i class="fas fa-times me-2"></i>Fechar Conversa';
+                if (!chatLoaded) {
+                    loadMessages();
+                    chatLoaded = true;
+                }
+                // Auto-refresh a cada 5 segundos
+                refreshInterval = setInterval(loadMessages, 5000);
+                // Rolar para o chat
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                section.style.display = 'none';
+                btn.innerHTML = '<i class="fas fa-comments me-2"></i>Abrir Conversa';
+                if (refreshInterval) {
+                    clearInterval(refreshInterval);
+                    refreshInterval = null;
+                }
+            }
+        }
+
+        async function loadMessages() {
+            try {
+                const resp = await fetch(`@Url.Action("GetMessages", "Orcamento")?quoteId=${quoteId}`);
+                const data = await resp.json();
+
+                if (!data.success) return;
+
+                const container = document.getElementById('chatContent');
+                const loading  = document.getElementById('chatLoading');
+                const empty    = document.getElementById('chatEmpty');
+
+                loading.style.display = 'none';
+
+                if (!data.messages || data.messages.length === 0) {
+                    empty.style.display = '';
+                    container.innerHTML = '';
+                    return;
+                }
+
+                empty.style.display = 'none';
+                container.innerHTML = '';
+
+                let lastDate = '';
+                data.messages.forEach(msg => {
+                    const dateStr = msg.sentAt.split(' ')[0];
+                    if (dateStr !== lastDate) {
+                        lastDate = dateStr;
+                        container.innerHTML += `<div class="chat-date-separator"><span>${dateStr}</span></div>`;
+                    }
+
+                    const isMine = msg.senderUserId === currentUserId;
+                    const senderLabel = msg.senderType === 'Organizador' ? 'Organizador' : 'Fornecedor';
+                    const senderIcon = msg.senderType === 'Organizador' ? 'fa-user-tie' : 'fa-store';
+                    const timeStr = msg.sentAt.split(' ')[1] || '';
+                    const readCheck = isMine
+                        ? `<span class="read-indicator ms-1">${msg.isRead ? '<i class="fas fa-check-double" style="color:#4fc3f7;"></i>' : '<i class="fas fa-check"></i>'}</span>`
+                        : '';
+
+                    if (isMine) {
+                        container.innerHTML += `
+                            <div class="d-flex flex-column align-items-end mb-2">
+                                <div class="chat-bubble chat-bubble-mine">
+                                    ${escapeHtml(msg.message)}
+                                </div>
+                                <div class="chat-meta text-end" style="color: #999;">
+                                    ${timeStr} ${readCheck}
+                                </div>
+                            </div>`;
+                    } else {
+                        container.innerHTML += `
+                            <div class="d-flex flex-column align-items-start mb-2">
+                                <div class="chat-sender-label" style="color: ${msg.senderType === 'Organizador' ? '#8B0000' : '#1565c0'};">
+                                    <i class="fas ${senderIcon} me-1"></i>${senderLabel}
+                                </div>
+                                <div class="chat-bubble chat-bubble-other">
+                                    ${escapeHtml(msg.message)}
+                                </div>
+                                <div class="chat-meta" style="color: #999;">
+                                    ${timeStr}
+                                </div>
+                            </div>`;
+                    }
+                });
+
+                // Rolar para baixo
+                const chatArea = document.getElementById('chatMessages');
+                chatArea.scrollTop = chatArea.scrollHeight;
+
+                // Atualizar badge
+                const badge = document.getElementById('unreadBadgeBtn');
+                if (badge) badge.remove();
+
+            } catch (e) {
+                console.error('Erro ao carregar mensagens:', e);
+            }
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            input.disabled = true;
+
+            try {
+                const resp = await fetch('@Url.Action("SendMessage", "Orcamento")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quoteId: quoteId, message: text })
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    await loadMessages();
+                } else {
+                    alert(data.message || 'Erro ao enviar mensagem.');
+                }
+            } catch (e) {
+                console.error('Erro ao enviar:', e);
+                alert('Erro de conexão ao enviar mensagem.');
+            } finally {
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/\n/g, '<br>');
+        }
+    </script>
+}

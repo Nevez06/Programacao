@@ -90,6 +90,7 @@ namespace ProjetoEventX.Controllers
                 .Include(f => f.Pessoa)
                 .Include(f => f.Produtos)
                 .Include(f => f.Feedbacks)
+                .Include(f => f.Avaliacoes)
                 .FirstOrDefaultAsync(f => f.Email == user.Email);
 
             if (fornecedor == null)
@@ -111,7 +112,18 @@ namespace ProjetoEventX.Controllers
             ViewBag.ReceitaTotal = pedidosFornecedor.Where(p => p.StatusPedido == "Pago" || p.StatusPedido == "Entregue").Sum(p => p.PrecoTotal);
             ViewBag.TotalFeedbacks = fornecedor.Feedbacks.Count;
             ViewBag.AvaliacaoMedia = fornecedor.AvaliacaoMedia;
+            ViewBag.TotalAvaliacoes = fornecedor.Avaliacoes.Count;
             ViewBag.PedidosRecentes = pedidosFornecedor.Take(5).ToList();
+
+            // Buscar avaliações recentes com dados do organizador
+            ViewBag.AvaliacoesRecentes = await _context.AvaliacoesFornecedores
+                .Include(a => a.Organizador)
+                    .ThenInclude(o => o!.Pessoa)
+                .Include(a => a.Evento)
+                .Where(a => a.FornecedorId == fornecedor.Id)
+                .OrderByDescending(a => a.DataAvaliacao)
+                .Take(5)
+                .ToListAsync();
 
             return View(fornecedor);
         }

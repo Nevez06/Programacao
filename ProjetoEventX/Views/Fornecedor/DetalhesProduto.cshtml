@@ -365,6 +365,28 @@
                             <span class="info-value">@(Model.Fornecedor?.TipoServico ?? "Não informado")</span>
                         </div>
                     </div>
+                    <div class="info-item">
+                        <i class="fas fa-star" style="color: #f59e0b;"></i>
+                        <div>
+                            <span class="info-label">Avaliação</span>
+                            <span class="info-value">
+                                @if (Model.Fornecedor != null && Model.Fornecedor.AvaliacaoMedia > 0)
+                                {
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="fa@(i <= Math.Round(Model.Fornecedor.AvaliacaoMedia) ? "s" : "r") fa-star" style="color:@(i <= Math.Round(Model.Fornecedor.AvaliacaoMedia) ? "#f59e0b" : "#ddd"); font-size:0.9rem;"></i>
+                                    }
+                                    <span class="ms-1">@Model.Fornecedor.AvaliacaoMedia.ToString("N1")</span>
+                                    <a asp-controller="AvaliacaoFornecedor" asp-action="Avaliacoes" asp-route-fornecedorId="@Model.Fornecedor.Id"
+                                       class="ms-2" style="color:#8B0000; font-size:0.85rem;">Ver avaliações</a>
+                                }
+                                else
+                                {
+                                    <span>Sem avaliações</span>
+                                }
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
                 @if (ViewBag.IsOrganizador == true)

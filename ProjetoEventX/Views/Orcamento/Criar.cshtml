@@ -1,0 +1,115 @@
+@{
+    ViewData["Title"] = "Solicitar Orçamento";
+    var eventos = ViewBag.Eventos as List<ProjetoEventX.Models.Evento> ?? new List<ProjetoEventX.Models.Evento>();
+    var fornecedores = ViewBag.Fornecedores as List<ProjetoEventX.Models.Fornecedor> ?? new List<ProjetoEventX.Models.Fornecedor>();
+    int? fornecedorIdSelecionado = ViewBag.FornecedorIdSelecionado as int?;
+    int? eventoIdSelecionado = ViewBag.EventoIdSelecionado as int?;
+}
+
+<div class="container py-4" style="max-width: 800px;">
+    <div class="mb-4">
+        <a asp-action="Index" class="btn btn-outline-dark" style="border-radius: 8px;">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
+        <div class="card-header py-4 px-4" style="background: linear-gradient(135deg, #8B0000, #a52a2a); color: white;">
+            <h3 class="mb-1 fw-bold">
+                <i class="fas fa-file-invoice-dollar me-2"></i>Solicitar Orçamento
+            </h3>
+            <p class="mb-0 opacity-75">Preencha os detalhes para solicitar um orçamento a um fornecedor</p>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Criar" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-calendar-alt me-1" style="color: #8B0000;"></i>Evento *
+                    </label>
+                    <select name="eventoId" class="form-select form-select-lg" style="border-radius: 10px;" required>
+                        <option value="">Selecione o evento</option>
+                        @foreach (var ev in eventos)
+                        {
+                            if (eventoIdSelecionado.HasValue && eventoIdSelecionado.Value == ev.Id)
+                            {
+                                <option value="@ev.Id" selected>@ev.NomeEvento — @ev.DataEvento.ToString("dd/MM/yyyy")</option>
+                            }
+                            else
+                            {
+                                <option value="@ev.Id">@ev.NomeEvento — @ev.DataEvento.ToString("dd/MM/yyyy")</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-store me-1" style="color: #8B0000;"></i>Fornecedor *
+                    </label>
+                    <select name="supplierId" class="form-select form-select-lg" style="border-radius: 10px;" required>
+                        <option value="">Selecione o fornecedor</option>
+                        @foreach (var f in fornecedores)
+                        {
+                            var nome = f.Pessoa?.Nome ?? "Fornecedor";
+                            var tipo = f.TipoServico ?? "";
+                            if (fornecedorIdSelecionado.HasValue && fornecedorIdSelecionado.Value == f.Id)
+                            {
+                                <option value="@f.Id" selected>@nome — @tipo (@f.Cidade/@f.UF)</option>
+                            }
+                            else
+                            {
+                                <option value="@f.Id">@nome — @tipo (@f.Cidade/@f.UF)</option>
+                            }
+                        }
+                    </select>
+                    <small class="text-muted">
+                        Não encontrou? Busque no <a asp-controller="Marketplace" asp-action="Index">Marketplace</a>
+                    </small>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-concierge-bell me-1" style="color: #8B0000;"></i>Serviço Solicitado *
+                    </label>
+                    <input type="text" name="serviceName" class="form-control form-control-lg" style="border-radius: 10px;"
+                           placeholder="Ex: Decoração, Buffet, DJ, Fotografia..." required maxlength="200" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-align-left me-1" style="color: #8B0000;"></i>Descrição Detalhada *
+                    </label>
+                    <textarea name="description" class="form-control" rows="5" style="border-radius: 10px;"
+                              placeholder="Descreva em detalhes o serviço que você precisa, incluindo especificações, quantidade de convidados, preferências..." required maxlength="2000"></textarea>
+                    <small class="text-muted">Seja o mais detalhado possível para receber uma proposta precisa</small>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-money-bill-wave me-1" style="color: #8B0000;"></i>Valor Estimado (R$) *
+                    </label>
+                    <input type="number" name="estimatedValue" step="0.01" min="0" max="10000000" class="form-control form-control-lg"
+                           style="border-radius: 10px;" placeholder="0,00" required />
+                    <small class="text-muted">Informe o orçamento que você tem disponível para este serviço</small>
+                </div>
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-lg" style="background: linear-gradient(135deg, #8B0000, #a52a2a); color: white; border: none; border-radius: 10px; font-weight: 600; padding: 14px;">
+                        <i class="fas fa-paper-plane me-2"></i>Enviar Solicitação de Orçamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .form-control:focus, .form-select:focus {
+            border-color: #8B0000;
+            box-shadow: 0 0 0 0.2rem rgba(139, 0, 0, 0.15);
+        }
+    </style>
+}

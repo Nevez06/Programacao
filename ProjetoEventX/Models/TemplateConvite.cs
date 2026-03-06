@@ -71,7 +71,7 @@ namespace ProjetoEventX.Models
         [StringLength(100)]
         public string EstiloLayout { get; set; } = "Moderno";
 
-        [StringLength(1000)]
+        [Column(TypeName = "text")]
         public string? CSSPersonalizado { get; set; }
 
         public bool Ativo { get; set; } = true;

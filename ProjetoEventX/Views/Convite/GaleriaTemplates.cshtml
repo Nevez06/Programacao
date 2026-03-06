@@ -1,0 +1,208 @@
+@{
+    ViewData["Title"] = "Galeria de Templates";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .galeria-hero {
+        background: linear-gradient(135deg, #8B0000 0%, #b22222 100%);
+        padding: 2.5rem 0;
+        color: #fff;
+        margin-bottom: 2rem;
+    }
+    .galeria-hero h1 { font-weight: 800; }
+    .cat-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 2rem; justify-content: center; }
+    .cat-btn {
+        padding: 8px 20px;
+        border-radius: 25px;
+        border: 2px solid rgba(139,0,0,0.2);
+        background: #fff;
+        color: #333;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .cat-btn:hover, .cat-btn.active { background: #8B0000; color: #fff; border-color: #8B0000; }
+    .tmpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+    .tmpl-card {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        cursor: pointer;
+        position: relative;
+        background: #fff;
+    }
+    .tmpl-card:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.15); }
+    .tmpl-preview {
+        aspect-ratio: 3/4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .tmpl-preview .title { font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; }
+    .tmpl-preview .subtitle { font-size: 0.75rem; opacity: 0.8; }
+    .tmpl-tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        background: rgba(0,0,0,0.4);
+        color: #fff;
+    }
+    .tmpl-info { padding: 1rem; }
+    .tmpl-info h6 { font-weight: 700; margin-bottom: 0.3rem; }
+    .tmpl-info p { font-size: 0.8rem; color: #666; margin: 0; }
+    .tmpl-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .tmpl-card:hover .tmpl-overlay { opacity: 1; }
+    .tmpl-overlay .btn { border-radius: 25px; padding: 8px 24px; font-weight: 600; }
+    .saved-section { margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #f0f0f0; }
+</style>
+
+<div class="galeria-hero">
+    <div class="container text-center">
+        <h1><i class="fas fa-palette me-2"></i>Galeria de Templates</h1>
+        <p class="mb-0 opacity-75">Escolha um template profissional para seu convite de <strong>@ViewBag.NomeEvento</strong></p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Filtros -->
+    <div class="cat-filter">
+        <span class="cat-btn active" onclick="filterCat('todos', this)">Todos</span>
+        <span class="cat-btn" onclick="filterCat('aniversario', this)">🎂 Aniversário</span>
+        <span class="cat-btn" onclick="filterCat('casamento', this)">💒 Casamento</span>
+        <span class="cat-btn" onclick="filterCat('formatura', this)">🎓 Formatura</span>
+        <span class="cat-btn" onclick="filterCat('corporativo', this)">💼 Corporativo</span>
+        <span class="cat-btn" onclick="filterCat('festa', this)">🎉 Festa</span>
+        <span class="cat-btn" onclick="filterCat('show', this)">🎵 Show</span>
+        <span class="cat-btn" onclick="filterCat('chadebebe', this)">👶 Chá de Bebê</span>
+        <span class="cat-btn" onclick="filterCat('infantil', this)">🧸 Infantil</span>
+        <span class="cat-btn" onclick="filterCat('elegante', this)">✨ Elegante</span>
+        <span class="cat-btn" onclick="filterCat('minimalista', this)">◻️ Minimalista</span>
+    </div>
+
+    <!-- Grid de templates -->
+    <div class="tmpl-grid" id="templateGrid"></div>
+
+    <!-- Templates salvos -->
+    @if (ViewBag.TemplatesSalvos != null)
+    {
+        var templatesSalvos = ViewBag.TemplatesSalvos as List<ProjetoEventX.Models.TemplateConvite>;
+        if (templatesSalvos?.Count > 0)
+        {
+            <div class="saved-section">
+                <h4><i class="fas fa-bookmark me-2 text-danger"></i>Seus Templates Salvos</h4>
+                <p class="text-muted mb-3">Templates que você criou ou personalizou anteriormente.</p>
+                <div class="tmpl-grid">
+                    @foreach (var t in templatesSalvos)
+                    {
+                        <div class="tmpl-card">
+                            <div class="tmpl-preview" style="background: @(t.CorFundo ?? "#fff");">
+                                <div class="title" style="color: @(t.CorTexto ?? "#333"); font-family: @(t.FonteTitulo ?? "Inter");">@t.NomeTemplate</div>
+                                <div class="subtitle" style="color: @(t.CorTexto ?? "#666");">@(t.TituloConvite ?? "Sem título")</div>
+                                <span class="tmpl-tag">Salvo</span>
+                                <div class="tmpl-overlay">
+                                    <a href="@Url.Action("Editor", "Convite", new { eventoId = ViewBag.EventoId })" class="btn btn-light">
+                                        <i class="fas fa-edit me-1"></i> Editar
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="tmpl-info">
+                                <h6>@t.NomeTemplate</h6>
+                                <p>Estilo: @t.EstiloLayout</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+
+    <div class="text-center mt-4 mb-5">
+        <a href="@Url.Action("Editor", "Convite", new { eventoId = ViewBag.EventoId })" class="btn btn-lg px-5 py-3" style="background:#8B0000; color:#fff; border-radius:30px; font-weight:700;">
+            <i class="fas fa-palette me-2"></i>Abrir Editor Visual
+        </a>
+        <a href="@Url.Action("Criar", "Convite", new { eventoId = ViewBag.EventoId })" class="btn btn-outline-dark btn-lg px-5 py-3 ms-2" style="border-radius:30px; font-weight:600;">
+            <i class="fas fa-paper-plane me-2"></i>Criar & Enviar Convite
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const templates = [
+        { id:'aniv1', cat:'aniversario', name:'Festa Neon', bg:'linear-gradient(135deg,#667eea,#764ba2)', accent:'#ffd700', font:'Poppins', desc:'Vibrante e moderno para festas animadas' },
+        { id:'aniv2', cat:'aniversario', name:'Balões Coloridos', bg:'linear-gradient(135deg,#f093fb,#f5576c)', accent:'#fff', font:'Dancing Script', desc:'Divertido e festivo para aniversários' },
+        { id:'cas1', cat:'casamento', name:'Elegância Dourada', bg:'linear-gradient(135deg,#1a1a2e,#16213e)', accent:'#c9a96e', font:'Playfair Display', desc:'Sofisticado com detalhes dourados' },
+        { id:'cas2', cat:'casamento', name:'Floral Romântico', bg:'linear-gradient(135deg,#ffecd2,#fcb69f)', accent:'#8B0000', font:'Great Vibes', desc:'Delicado com tons pastéis românticos' },
+        { id:'form1', cat:'formatura', name:'Acadêmico', bg:'linear-gradient(135deg,#0c3547,#234e6b)', accent:'#ffd700', font:'Montserrat', desc:'Formal e elegante para formaturas' },
+        { id:'form2', cat:'formatura', name:'Celebração Grad', bg:'linear-gradient(135deg,#141E30,#243B55)', accent:'#e0c3fc', font:'Raleway', desc:'Moderno para celebrar a conquista' },
+        { id:'corp1', cat:'corporativo', name:'Profissional', bg:'linear-gradient(135deg,#2c3e50,#34495e)', accent:'#3498db', font:'Inter', desc:'Clean e profissional para empresas' },
+        { id:'corp2', cat:'corporativo', name:'Tech Summit', bg:'linear-gradient(135deg,#0f0c29,#302b63)', accent:'#00d2ff', font:'Montserrat', desc:'Futurista para eventos de tecnologia' },
+        { id:'fest1', cat:'festa', name:'Neon Party', bg:'linear-gradient(135deg,#0f0f0f,#1a1a2e)', accent:'#39ff14', font:'Poppins', desc:'Estilo balada com cores neon' },
+        { id:'fest2', cat:'festa', name:'Tropical Vibes', bg:'linear-gradient(135deg,#11998e,#38ef7d)', accent:'#fff', font:'Pacifico', desc:'Tropical e refrescante para festas de verão' },
+        { id:'show1', cat:'show', name:'Rock Concert', bg:'linear-gradient(135deg,#1a1a1a,#8B0000)', accent:'#ff4444', font:'Lobster', desc:'Intenso e marcante para shows de rock' },
+        { id:'show2', cat:'show', name:'Festival Music', bg:'linear-gradient(135deg,#fc466b,#3f5efb)', accent:'#ffd700', font:'Poppins', desc:'Colorido e energético para festivais' },
+        { id:'cha1', cat:'chadebebe', name:'Doce Espera', bg:'linear-gradient(135deg,#ffecd2,#ffd1ff)', accent:'#ff69b4', font:'Dancing Script', desc:'Delicado e doce para chá de bebê' },
+        { id:'cha2', cat:'chadebebe', name:'Nuvens Azuis', bg:'linear-gradient(135deg,#e0f7fa,#b3e5fc)', accent:'#1976d2', font:'Lora', desc:'Suave em tons de azul para meninos' },
+        { id:'inf1', cat:'infantil', name:'Diversão Kids', bg:'linear-gradient(135deg,#ffeaa7,#fdcb6e)', accent:'#e17055', font:'Poppins', desc:'Alegre e colorido para crianças' },
+        { id:'inf2', cat:'infantil', name:'Arco-íris', bg:'linear-gradient(135deg,#a8e6cf,#dcedc1,#ffd3b6,#ffaaa5)', accent:'#6c5ce7', font:'Pacifico', desc:'Multicolorido e encantador' },
+        { id:'ele1', cat:'elegante', name:'Noir Luxo', bg:'linear-gradient(135deg,#0c0c0c,#1a1a1a)', accent:'#c9a96e', font:'Playfair Display', desc:'Preto e dourado, máximo luxo' },
+        { id:'ele2', cat:'elegante', name:'Mármore Premium', bg:'linear-gradient(135deg,#f5f5f5,#e0e0e0)', accent:'#333', font:'Lora', desc:'Elegante minimalista com textura' },
+        { id:'min1', cat:'minimalista', name:'Clean White', bg:'#ffffff', accent:'#333', font:'Inter', desc:'Limpo e moderno, menos é mais' },
+        { id:'min2', cat:'minimalista', name:'Mono Space', bg:'#f8f8f8', accent:'#000', font:'Montserrat', desc:'Typography-first design' },
+    ];
+
+    const catLabels = { aniversario:'🎂 Aniversário', casamento:'💒 Casamento', formatura:'🎓 Formatura', corporativo:'💼 Corporativo', festa:'🎉 Festa', show:'🎵 Show', chadebebe:'👶 Chá de Bebê', infantil:'🧸 Infantil', elegante:'✨ Elegante', minimalista:'◻️ Minimalista' };
+
+    function renderGrid(filter) {
+        const grid = document.getElementById('templateGrid');
+        const list = filter === 'todos' ? templates : templates.filter(t => t.cat === filter);
+        grid.innerHTML = list.map(t => `
+            <div class="tmpl-card" data-cat="${t.cat}">
+                <div class="tmpl-preview" style="background:${t.bg};">
+                    <div class="title" style="color:${t.accent}; font-family:'${t.font}';">Você é convidado</div>
+                    <div class="subtitle" style="color:${t.accent};">Evento Especial</div>
+                    <span class="tmpl-tag">${catLabels[t.cat] || t.cat}</span>
+                    <div class="tmpl-overlay">
+                        <a href="@Url.Action("Editor", "Convite", new { eventoId = ViewBag.EventoId })?template=${t.id}" class="btn btn-light">
+                            <i class="fas fa-magic me-1"></i> Usar Template
+                        </a>
+                    </div>
+                </div>
+                <div class="tmpl-info">
+                    <h6>${t.name}</h6>
+                    <p>${t.desc}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function filterCat(cat, el) {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        renderGrid(cat);
+    }
+
+    renderGrid('todos');
+</script>
+}

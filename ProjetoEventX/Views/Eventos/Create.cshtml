@@ -130,6 +130,15 @@
                             <small class="form-text text-muted">Orçamento previsto para o evento</small>
                         </div>
                     </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ImagemCapa" class="form-label">
+                            <i class="fas fa-image"></i> URL da Imagem de Capa
+                        </label>
+                        <input asp-for="ImagemCapa" class="form-control" placeholder="https://exemplo.com/imagem.jpg" />
+                        <span asp-validation-for="ImagemCapa" class="text-danger"></span>
+                        <small class="form-text text-muted">URL de uma imagem para a página pública do evento (opcional)</small>
+                    </div>
                     
                     <div class="d-flex justify-content-between align-items-center mt-4">
                         <a asp-action="Index" class="btn btn-eventx-secondary">

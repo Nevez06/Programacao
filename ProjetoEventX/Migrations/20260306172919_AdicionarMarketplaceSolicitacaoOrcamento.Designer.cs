@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjetoEventX.Data;
@@ -11,9 +12,11 @@ using ProjetoEventX.Data;
 namespace ProjetoEventX.Migrations
 {
     [DbContext(typeof(EventXContext))]
-    partial class EventXContextModelSnapshot : ModelSnapshot
+    [Migration("20260306172919_AdicionarMarketplaceSolicitacaoOrcamento")]
+    partial class AdicionarMarketplaceSolicitacaoOrcamento
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1325,111 +1328,6 @@ namespace ProjetoEventX.Migrations
                     b.ToTable("Produtos");
                 });
 
-            modelBuilder.Entity("ProjetoEventX.Models.Quote", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<decimal>("EstimatedValue")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("EventId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("OrganizadorId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid?>("PedidoGeradoId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("ResponseDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ResponseMessage")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<decimal?>("ResponseValue")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("ServiceName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasDefaultValue("Pendente");
-
-                    b.Property<int>("SupplierId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EventId");
-
-                    b.HasIndex("OrganizadorId");
-
-                    b.HasIndex("PedidoGeradoId");
-
-                    b.HasIndex("SupplierId");
-
-                    b.ToTable("Quotes");
-                });
-
-            modelBuilder.Entity("ProjetoEventX.Models.QuoteMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsRead")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<int>("QuoteId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SenderType")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
-
-                    b.Property<int>("SenderUserId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuoteId");
-
-                    b.ToTable("QuoteMessages");
-                });
-
             modelBuilder.Entity("ProjetoEventX.Models.SolicitacaoOrcamento", b =>
                 {
                     b.Property<int>("Id")
@@ -1573,7 +1471,8 @@ namespace ProjetoEventX.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("CSSPersonalizado")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("CorFundo")
                         .IsRequired()
@@ -2076,51 +1975,6 @@ namespace ProjetoEventX.Migrations
                         .IsRequired();
 
                     b.Navigation("Fornecedor");
-                });
-
-            modelBuilder.Entity("ProjetoEventX.Models.Quote", b =>
-                {
-                    b.HasOne("ProjetoEventX.Models.Evento", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ProjetoEventX.Models.Organizador", "Organizador")
-                        .WithMany()
-                        .HasForeignKey("OrganizadorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ProjetoEventX.Models.Pedido", "PedidoGerado")
-                        .WithMany()
-                        .HasForeignKey("PedidoGeradoId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("ProjetoEventX.Models.Fornecedor", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Event");
-
-                    b.Navigation("Organizador");
-
-                    b.Navigation("PedidoGerado");
-
-                    b.Navigation("Supplier");
-                });
-
-            modelBuilder.Entity("ProjetoEventX.Models.QuoteMessage", b =>
-                {
-                    b.HasOne("ProjetoEventX.Models.Quote", "Quote")
-                        .WithMany()
-                        .HasForeignKey("QuoteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Quote");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.SolicitacaoOrcamento", b =>

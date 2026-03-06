@@ -1,0 +1,366 @@
+@{
+    ViewData["Title"] = "Convite - " + ViewBag.NomeEvento;
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.NomeEvento - Convite</title>
+    <meta property="og:title" content="Convite: @ViewBag.NomeEvento">
+    <meta property="og:description" content="Você foi convidado(a) para @ViewBag.NomeEvento!">
+    <meta property="og:type" content="website">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;600;700&family=Dancing+Script:wght@400;700&family=Poppins:wght@300;400;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { min-height: 100vh; font-family: 'Inter', sans-serif; }
+
+        .invite-bg {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, @(ViewBag.Template?.CorFundo ?? "#1a1a2e"), @(ViewBag.Template?.CorPrimaria ?? "#16213e"));
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated particles */
+        .particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+        .particle {
+            position: absolute;
+            width: 6px; height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite;
+        }
+        @@keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+        }
+
+        .invite-card {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 1s ease;
+        }
+        @@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .invite-badge {
+            display: inline-block;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.1);
+            color: @(ViewBag.Template?.CorTexto ?? "#c9a96e");
+            border: 1px solid rgba(255,255,255,0.15);
+            margin-bottom: 1.5rem;
+            animation: fadeIn 1.2s ease 0.3s both;
+        }
+
+        .invite-title {
+            font-family: '@(ViewBag.Template?.FonteTitulo ?? "Playfair Display")', serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            color: @(ViewBag.Template?.CorTexto ?? "#c9a96e");
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            animation: fadeIn 1.2s ease 0.5s both;
+        }
+
+        .invite-guest {
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.5rem;
+            color: @(ViewBag.Template?.CorTexto ?? "#e0e0e0");
+            margin-bottom: 1.5rem;
+            animation: fadeIn 1.2s ease 0.7s both;
+        }
+
+        .divider-line {
+            width: 60px;
+            height: 2px;
+            background: @(ViewBag.Template?.CorTexto ?? "#c9a96e");
+            margin: 1.5rem auto;
+            opacity: 0.5;
+            animation: fadeIn 1.2s ease 0.9s both;
+        }
+
+        .event-details {
+            margin: 1.5rem 0;
+            animation: fadeIn 1.2s ease 1s both;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            padding: 0.6rem 0;
+            color: @(ViewBag.Template?.CorTexto ?? "#e0e0e0");
+            font-size: 0.95rem;
+        }
+        .detail-item i {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: @(ViewBag.Template?.CorTexto ?? "#c9a96e");
+        }
+
+        .invite-message {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 1.5rem 0;
+            font-style: italic;
+            animation: fadeIn 1.2s ease 1.2s both;
+        }
+
+        .rsvp-section {
+            margin-top: 2rem;
+            animation: fadeIn 1.2s ease 1.4s both;
+        }
+        .rsvp-section h5 {
+            color: @(ViewBag.Template?.CorTexto ?? "#c9a96e");
+            font-weight: 700;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .rsvp-buttons { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+        .btn-rsvp {
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-rsvp-yes {
+            background: @(ViewBag.Template?.CorTexto ?? "#c9a96e");
+            color: @(ViewBag.Template?.CorFundo ?? "#1a1a2e");
+        }
+        .btn-rsvp-yes:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+        .btn-rsvp-no {
+            background: transparent;
+            border-color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.7);
+        }
+        .btn-rsvp-no:hover { border-color: #fff; color: #fff; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .status-confirmed { background: rgba(40,167,69,0.2); color: #28a745; border: 2px solid rgba(40,167,69,0.3); }
+        .status-declined { background: rgba(220,53,69,0.2); color: #dc3545; border: 2px solid rgba(220,53,69,0.3); }
+
+        .footer-text {
+            margin-top: 2rem;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.3);
+            animation: fadeIn 1.2s ease 1.6s both;
+        }
+
+        .add-calendar {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .cal-btn {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .cal-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+        @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="invite-bg">
+        <!-- Particles -->
+        <div class="particles" id="particles"></div>
+
+        <div class="invite-card">
+            <div class="invite-badge">
+                <i class="fas fa-envelope-open me-1"></i> Convite Especial
+            </div>
+
+            <h1 class="invite-title">@ViewBag.NomeEvento</h1>
+
+            <p class="invite-guest">
+                @if (!string.IsNullOrEmpty(ViewBag.NomeConvidado?.ToString()))
+                {
+                    <text>Olá, @ViewBag.NomeConvidado!</text>
+                }
+                else
+                {
+                    <text>Você foi convidado(a)!</text>
+                }
+            </p>
+
+            <div class="divider-line"></div>
+
+            <div class="event-details">
+                @if (!string.IsNullOrEmpty(ViewBag.DataEvento?.ToString()))
+                {
+                    <div class="detail-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>@ViewBag.DataEvento</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(ViewBag.HoraInicio?.ToString()))
+                {
+                    <div class="detail-item">
+                        <i class="fas fa-clock"></i>
+                        <span>@ViewBag.HoraInicio - @ViewBag.HoraFim</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(ViewBag.NomeLocal?.ToString()))
+                {
+                    <div class="detail-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>@ViewBag.NomeLocal</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(ViewBag.EnderecoLocal?.ToString()))
+                {
+                    <div class="detail-item">
+                        <i class="fas fa-location-dot"></i>
+                        <span>@ViewBag.EnderecoLocal</span>
+                    </div>
+                }
+            </div>
+
+            @if (ViewBag.Template?.MensagemPrincipal != null)
+            {
+                <p class="invite-message">@ViewBag.Template.MensagemPrincipal</p>
+            }
+
+            <div class="divider-line"></div>
+
+            <!-- RSVP Section -->
+            <div class="rsvp-section">
+                @if (ViewBag.StatusRSVP == "Confirmado")
+                {
+                    <span class="status-badge status-confirmed">
+                        <i class="fas fa-check-circle me-1"></i> Presença Confirmada!
+                    </span>
+                }
+                else if (ViewBag.StatusRSVP == "Recusado" || ViewBag.StatusRSVP == "Não irá")
+                {
+                    <span class="status-badge status-declined">
+                        <i class="fas fa-times-circle me-1"></i> Presença Recusada
+                    </span>
+                }
+                else
+                {
+                    <h5>Confirme sua presença</h5>
+                    <div class="rsvp-buttons">
+                        <a href="@Url.Action("ResponderRSVP", "Convite", new { eventoId = ViewBag.EventoId, convidadoId = ViewBag.ConvidadoId, resposta = "Confirmado" })"
+                           class="btn-rsvp btn-rsvp-yes">
+                            <i class="fas fa-check me-1"></i> Vou sim!
+                        </a>
+                        <a href="@Url.Action("ResponderRSVP", "Convite", new { eventoId = ViewBag.EventoId, convidadoId = ViewBag.ConvidadoId, resposta = "NaoIra" })"
+                           class="btn-rsvp btn-rsvp-no">
+                            <i class="fas fa-times me-1"></i> Não poderei ir
+                        </a>
+                    </div>
+                }
+            </div>
+
+            <!-- Add to Calendar -->
+            <div class="add-calendar">
+                <a href="#" class="cal-btn" onclick="addToGoogleCalendar(); return false;">
+                    <i class="fab fa-google me-1"></i> Google
+                </a>
+                <a href="#" class="cal-btn" onclick="downloadICS(); return false;">
+                    <i class="fas fa-calendar-plus me-1"></i> Calendário
+                </a>
+            </div>
+
+            <div class="footer-text">
+                <i class="fas fa-heart"></i> Convite enviado via <strong>EventX</strong>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Particles animation
+        const particlesEl = document.getElementById('particles');
+        for (let i = 0; i < 30; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = (100 + Math.random() * 20) + '%';
+            p.style.animationDelay = Math.random() * 8 + 's';
+            p.style.animationDuration = (6 + Math.random() * 6) + 's';
+            p.style.width = p.style.height = (3 + Math.random() * 4) + 'px';
+            particlesEl.appendChild(p);
+        }
+
+        function addToGoogleCalendar() {
+            const title = encodeURIComponent('@Html.Raw(ViewBag.NomeEvento?.ToString()?.Replace("'", ""))');
+            const location = encodeURIComponent('@Html.Raw(ViewBag.EnderecoLocal?.ToString()?.Replace("'", "") ?? "")');
+            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&location=${location}&sf=true&output=xml`;
+            window.open(url, '_blank');
+        }
+
+        function downloadICS() {
+            const evt = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'BEGIN:VEVENT',
+                'SUMMARY:@Html.Raw(ViewBag.NomeEvento?.ToString()?.Replace("'", ""))',
+                'LOCATION:@Html.Raw(ViewBag.EnderecoLocal?.ToString()?.Replace("'", "") ?? "")',
+                'DESCRIPTION:Convite via EventX',
+                'END:VEVENT',
+                'END:VCALENDAR'
+            ].join('\n');
+            const blob = new Blob([evt], { type: 'text/calendar' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'evento.ics';
+            a.click();
+        }
+    </script>
+</body>
+</html>

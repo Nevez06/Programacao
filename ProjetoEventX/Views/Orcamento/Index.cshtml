@@ -1,0 +1,338 @@
+@model IEnumerable<ProjetoEventX.Models.Quote>
+@{
+    ViewData["Title"] = "Orçamentos";
+    var tipoUsuario = ViewBag.TipoUsuario as string ?? "";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 style="color: #8B0000; font-weight: 700;">
+                <i class="fas fa-file-invoice-dollar me-2"></i>Orçamentos
+            </h2>
+            <p class="text-muted mb-0">Gerencie todas as solicitações de orçamento</p>
+        </div>
+        @if (tipoUsuario == "Organizador")
+        {
+            <a asp-action="Criar" class="btn btn-lg" style="background: linear-gradient(135deg, #8B0000, #a52a2a); color: white; border: none; border-radius: 10px; font-weight: 600;">
+                <i class="fas fa-plus me-2"></i>Novo Orçamento
+            </a>
+        }
+    </div>
+
+    <!-- Cards de Estatísticas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
+                <div class="card-body text-center">
+                    <div class="mb-2"><i class="fas fa-file-alt fa-2x" style="color: #6c757d;"></i></div>
+                    <h3 class="mb-0 fw-bold">@ViewBag.TotalOrcamentos</h3>
+                    <small class="text-muted">Total</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
+                <div class="card-body text-center">
+                    <div class="mb-2"><i class="fas fa-clock fa-2x" style="color: #ffc107;"></i></div>
+                    <h3 class="mb-0 fw-bold" style="color: #ffc107;">@ViewBag.Pendentes</h3>
+                    <small class="text-muted">Pendentes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
+                <div class="card-body text-center">
+                    <div class="mb-2"><i class="fas fa-reply fa-2x" style="color: #17a2b8;"></i></div>
+                    <h3 class="mb-0 fw-bold" style="color: #17a2b8;">@ViewBag.Respondidos</h3>
+                    <small class="text-muted">Respondidos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
+                <div class="card-body text-center">
+                    <div class="mb-2"><i class="fas fa-check-circle fa-2x" style="color: #28a745;"></i></div>
+                    <h3 class="mb-0 fw-bold" style="color: #28a745;">@ViewBag.Aceitos</h3>
+                    <small class="text-muted">Aceitos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
+                <div class="card-body text-center">
+                    <div class="mb-2"><i class="fas fa-times-circle fa-2x" style="color: #dc3545;"></i></div>
+                    <h3 class="mb-0 fw-bold" style="color: #dc3545;">@ViewBag.Recusados</h3>
+                    <small class="text-muted">Recusados</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; background: linear-gradient(135deg, #e8f5e9, #c8e6c9);">
+                <div class="card-body text-center">
+                    <div class="mb-2"><i class="fas fa-money-bill-wave fa-2x" style="color: #2e7d32;"></i></div>
+                    <h3 class="mb-0 fw-bold" style="color: #2e7d32;">R$ @(((decimal)ViewBag.ValorTotal).ToString("N2"))</h3>
+                    <small class="text-muted">Total Aceito</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold"><i class="fas fa-filter me-1"></i>Status</label>
+                    <select name="status" class="form-select" style="border-radius: 8px;">
+                        <option value="">Todos os status</option>
+                        <option value="Pendente" selected="@(ViewBag.FiltroStatus == "Pendente")">🟡 Pendente</option>
+                        <option value="Respondido" selected="@(ViewBag.FiltroStatus == "Respondido")">🔵 Respondido</option>
+                        <option value="Aceito" selected="@(ViewBag.FiltroStatus == "Aceito")">🟢 Aceito</option>
+                        <option value="Recusado" selected="@(ViewBag.FiltroStatus == "Recusado")">🔴 Recusado</option>
+                        <option value="Cancelado" selected="@(ViewBag.FiltroStatus == "Cancelado")">⚫ Cancelado</option>
+                    </select>
+                </div>
+                @if (tipoUsuario == "Organizador" && ViewBag.Eventos != null)
+                {
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold"><i class="fas fa-calendar me-1"></i>Evento</label>
+                        <select name="eventoId" class="form-select" style="border-radius: 8px;">
+                            <option value="">Todos os eventos</option>
+                            @foreach (var ev in (List<ProjetoEventX.Models.Evento>)ViewBag.Eventos)
+                            {
+                                var isSelected = ViewBag.FiltroEventoId != null && (int)ViewBag.FiltroEventoId == ev.Id;
+                                if (isSelected)
+                                {
+                                    <option value="@ev.Id" selected>@ev.NomeEvento</option>
+                                }
+                                else
+                                {
+                                    <option value="@ev.Id">@ev.NomeEvento</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                }
+                <div class="col-md-4">
+                    <button type="submit" class="btn w-100" style="background: #8B0000; color: white; border-radius: 8px; font-weight: 600;">
+                        <i class="fas fa-search me-1"></i>Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Orçamentos -->
+    <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-4x text-muted mb-3" style="opacity: 0.3;"></i>
+                    <h5 class="text-muted">Nenhum orçamento encontrado</h5>
+                    <p class="text-muted">
+                        @if (tipoUsuario == "Organizador")
+                        {
+                            <text>Solicite orçamentos a fornecedores pelo <a asp-controller="Marketplace" asp-action="Index">Marketplace</a> ou crie um novo.</text>
+                        }
+                        else
+                        {
+                            <text>Você ainda não recebeu solicitações de orçamento.</text>
+                        }
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                            <tr>
+                                @if (tipoUsuario == "Organizador")
+                                {
+                                    <th class="ps-4 py-3" style="width: 40px;">
+                                        <input type="checkbox" class="form-check-input" id="selectAll" onclick="toggleSelectAll()" title="Selecionar todos" />
+                                    </th>
+                                }
+                                <th class="px-4 py-3" style="font-weight: 700; color: #495057;">Fornecedor</th>
+                                <th class="py-3" style="font-weight: 700; color: #495057;">Evento</th>
+                                <th class="py-3" style="font-weight: 700; color: #495057;">Serviço</th>
+                                <th class="py-3" style="font-weight: 700; color: #495057;">Valor Estimado</th>
+                                <th class="py-3" style="font-weight: 700; color: #495057;">Valor Proposto</th>
+                                <th class="py-3" style="font-weight: 700; color: #495057;">Status</th>
+                                <th class="py-3" style="font-weight: 700; color: #495057;">Data</th>
+                                <th class="py-3 text-center" style="font-weight: 700; color: #495057;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var q in Model)
+                            {
+                                <tr style="border-bottom: 1px solid #f0f0f0;">
+                                    @if (tipoUsuario == "Organizador")
+                                    {
+                                        <td class="ps-4 py-3">
+                                            <input type="checkbox" class="form-check-input quote-checkbox" value="@q.Id" onclick="updateCompareBtn()" />
+                                        </td>
+                                    }
+                                    <td class="px-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center me-2"
+                                                 style="width: 40px; height: 40px; background: linear-gradient(135deg, #8B0000, #a52a2a); color: white; font-weight: 700; font-size: 14px;">
+                                                @(q.Supplier?.Pessoa?.Nome?.Substring(0, 1).ToUpper() ?? "F")
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">@(q.Supplier?.Pessoa?.Nome ?? "Fornecedor")</div>
+                                                <small class="text-muted">@(q.Supplier?.TipoServico ?? "")</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="fw-medium">@(q.Event?.NomeEvento ?? "—")</span>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge bg-light text-dark" style="font-size: 0.85em;">@q.ServiceName</span>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="fw-semibold">R$ @q.EstimatedValue.ToString("N2")</span>
+                                    </td>
+                                    <td class="py-3">
+                                        @if (q.ResponseValue.HasValue)
+                                        {
+                                            <span class="fw-semibold" style="color: #2e7d32;">R$ @q.ResponseValue.Value.ToString("N2")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                    <td class="py-3">
+                                        @{
+                                            var badgeClass = q.Status switch
+                                            {
+                                                "Pendente" => "background: #fff3cd; color: #856404;",
+                                                "Respondido" => "background: #cce5ff; color: #004085;",
+                                                "Aceito" => "background: #d4edda; color: #155724;",
+                                                "Recusado" => "background: #f8d7da; color: #721c24;",
+                                                "Cancelado" => "background: #e2e3e5; color: #383d41;",
+                                                _ => "background: #e2e3e5; color: #383d41;"
+                                            };
+                                            var badgeIcon = q.Status switch
+                                            {
+                                                "Pendente" => "fas fa-clock",
+                                                "Respondido" => "fas fa-reply",
+                                                "Aceito" => "fas fa-check-circle",
+                                                "Recusado" => "fas fa-times-circle",
+                                                "Cancelado" => "fas fa-ban",
+                                                _ => "fas fa-question-circle"
+                                            };
+                                        }
+                                        <span class="badge px-3 py-2" style="@badgeClass border-radius: 20px; font-size: 0.8em;">
+                                            <i class="@badgeIcon me-1"></i>@q.Status
+                                        </span>
+                                    </td>
+                                    <td class="py-3">
+                                        <small>@q.CreatedAt.ToString("dd/MM/yyyy")</small>
+                                    </td>
+                                    <td class="py-3 text-center">
+                                        <a asp-action="Detalhes" asp-route-id="@q.Id" class="btn btn-sm btn-outline-dark me-1" style="border-radius: 8px;" title="Ver detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a asp-action="Detalhes" asp-route-id="@q.Id" class="btn btn-sm btn-outline-primary" style="border-radius: 8px;" title="Abrir conversa">
+                                            <i class="fas fa-comments"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Botão flutuante Comparar Orçamentos -->
+    @if (tipoUsuario == "Organizador" && Model.Count() >= 2)
+    {
+        <div id="compareBar" class="position-fixed bottom-0 start-50 translate-middle-x mb-4 px-4 py-3 d-flex align-items-center gap-3"
+             style="background: linear-gradient(135deg, #1a237e, #283593); color: white; border-radius: 16px; box-shadow: 0 8px 30px rgba(26,35,126,0.4); z-index: 1050; display: none !important; transition: all 0.3s ease;">
+            <i class="fas fa-balance-scale fa-lg"></i>
+            <span id="compareCount" class="fw-bold">0 selecionados</span>
+            <button type="button" class="btn btn-light fw-bold px-4" style="border-radius: 10px;" onclick="compararSelecionados()">
+                <i class="fas fa-columns me-1"></i>Comparar Orçamentos
+            </button>
+            <button type="button" class="btn btn-outline-light btn-sm" style="border-radius: 8px;" onclick="limparSelecao()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .table-hover tbody tr:hover {
+            background-color: #fdf6f6 !important;
+        }
+        .card {
+            transition: transform 0.2s ease;
+        }
+        .form-select:focus, .btn:focus {
+            box-shadow: 0 0 0 0.2rem rgba(139, 0, 0, 0.15);
+        }
+        .quote-checkbox:checked {
+            background-color: #1a237e;
+            border-color: #1a237e;
+        }
+        tr.selected-row {
+            background-color: #e8eaf6 !important;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        function toggleSelectAll() {
+            const checked = document.getElementById('selectAll').checked;
+            document.querySelectorAll('.quote-checkbox').forEach(cb => {
+                cb.checked = checked;
+                cb.closest('tr').classList.toggle('selected-row', checked);
+            });
+            updateCompareBtn();
+        }
+
+        function updateCompareBtn() {
+            const checked = document.querySelectorAll('.quote-checkbox:checked');
+            const bar = document.getElementById('compareBar');
+            if (!bar) return;
+            const count = checked.length;
+            document.getElementById('compareCount').textContent = count + ' selecionado' + (count !== 1 ? 's' : '');
+            bar.style.display = count >= 2 ? 'flex' : 'none';
+            bar.style.setProperty('display', count >= 2 ? 'flex' : 'none', 'important');
+
+            // Highlight rows
+            document.querySelectorAll('.quote-checkbox').forEach(cb => {
+                cb.closest('tr').classList.toggle('selected-row', cb.checked);
+            });
+        }
+
+        function compararSelecionados() {
+            const ids = Array.from(document.querySelectorAll('.quote-checkbox:checked')).map(cb => cb.value);
+            if (ids.length < 2) {
+                alert('Selecione pelo menos 2 or\u00e7amentos para comparar.');
+                return;
+            }
+            window.location.href = '@Url.Action("Comparar", "Orcamento")' + '?ids=' + ids.join(',');
+        }
+
+        function limparSelecao() {
+            document.querySelectorAll('.quote-checkbox').forEach(cb => {
+                cb.checked = false;
+                cb.closest('tr').classList.remove('selected-row');
+            });
+            const selectAll = document.getElementById('selectAll');
+            if (selectAll) selectAll.checked = false;
+            updateCompareBtn();
+        }
+    </script>
+}

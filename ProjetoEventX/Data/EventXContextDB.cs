@@ -37,6 +37,10 @@ namespace ProjetoEventX.Data
         public DbSet<ChecklistEvento> ChecklistEventos { get; set; }
         public DbSet<TimelineEvento> TimelineEventos { get; set; }
         public DbSet<OrcamentoSimulado> OrcamentosSimulados { get; set; }
+        public DbSet<AvaliacaoFornecedor> AvaliacoesFornecedores { get; set; }
+        public DbSet<SolicitacaoOrcamento> SolicitacoesOrcamento { get; set; }
+        public DbSet<Quote> Quotes { get; set; }
+        public DbSet<QuoteMessage> QuoteMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -130,6 +134,101 @@ namespace ProjetoEventX.Data
 
             builder.Entity<Pedido>().Property(p => p.DespesaGerada).HasDefaultValue(false);
 
+            // AvaliacaoFornecedor
+            builder.Entity<AvaliacaoFornecedor>()
+                .HasOne(a => a.Fornecedor)
+                .WithMany(f => f.Avaliacoes)
+                .HasForeignKey(a => a.FornecedorId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<AvaliacaoFornecedor>()
+                .HasOne(a => a.Organizador)
+                .WithMany()
+                .HasForeignKey(a => a.OrganizadorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<AvaliacaoFornecedor>()
+                .HasOne(a => a.Evento)
+                .WithMany()
+                .HasForeignKey(a => a.EventoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<AvaliacaoFornecedor>()
+                .HasIndex(a => new { a.FornecedorId, a.OrganizadorId, a.EventoId })
+                .IsUnique();
+
+            // SolicitacaoOrcamento
+            builder.Entity<SolicitacaoOrcamento>()
+                .HasOne(s => s.Fornecedor)
+                .WithMany(f => f.SolicitacoesRecebidas)
+                .HasForeignKey(s => s.FornecedorId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<SolicitacaoOrcamento>()
+                .HasOne(s => s.Organizador)
+                .WithMany()
+                .HasForeignKey(s => s.OrganizadorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<SolicitacaoOrcamento>()
+                .HasOne(s => s.Evento)
+                .WithMany()
+                .HasForeignKey(s => s.EventoId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<SolicitacaoOrcamento>()
+                .Property(s => s.Status)
+                .HasDefaultValue("Pendente");
+
+            // Quote (Orçamentos)
+            builder.Entity<Quote>()
+                .HasOne(q => q.Event)
+                .WithMany()
+                .HasForeignKey(q => q.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Quote>()
+                .HasOne(q => q.Supplier)
+                .WithMany()
+                .HasForeignKey(q => q.SupplierId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Quote>()
+                .HasOne(q => q.Organizador)
+                .WithMany()
+                .HasForeignKey(q => q.OrganizadorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Quote>()
+                .HasOne(q => q.PedidoGerado)
+                .WithMany()
+                .HasForeignKey(q => q.PedidoGeradoId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<Quote>()
+                .Property(q => q.Status)
+                .HasDefaultValue("Pendente");
+
+            builder.Entity<Quote>()
+                .HasIndex(q => q.EventId);
+
+            builder.Entity<Quote>()
+                .HasIndex(q => q.SupplierId);
+
+            // QuoteMessage (Chat de Orçamentos)
+            builder.Entity<QuoteMessage>()
+                .HasOne(m => m.Quote)
+                .WithMany()
+                .HasForeignKey(m => m.QuoteId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<QuoteMessage>()
+                .HasIndex(m => m.QuoteId);
+
+            builder.Entity<QuoteMessage>()
+                .Property(m => m.IsRead)
+                .HasDefaultValue(false);
+
             // Restrições para status
             builder.Entity<Evento>().Property(e => e.StatusEvento).HasDefaultValue("Planejado");
             builder.Entity<Pedido>().Property(p => p.StatusPedido).HasDefaultValue("Pendente");
@@ -138,10 +237,7 @@ namespace ProjetoEventX.Data
 
             // Índices
             builder.Entity<Evento>().HasIndex(e => e.OrganizadorId);
-            builder.Entity<Pedido>().HasIndex(p => p.EventoId);
-
-            // Índices
-            builder.Entity<Evento>().HasIndex(e => e.OrganizadorId);
+            builder.Entity<Evento>().HasIndex(e => e.Slug).IsUnique().HasFilter("\"Slug\" IS NOT NULL");
             builder.Entity<Pedido>().HasIndex(p => p.EventoId);
 
             // Conversão automática de DateTime para UTC

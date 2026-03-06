@@ -7,7 +7,10 @@ using ProjetoEventX.Models;
 using ProjetoEventX.Security;
 using ProjetoEventX.Services;
 using System;
+using System.Globalization;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace ProjetoEventX.Controllers
@@ -100,7 +103,7 @@ namespace ProjetoEventX.Controllers
         // POST: Eventos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("NomeEvento,DescricaoEvento,DataEvento,TipoEvento,StatusEvento,HoraInicio,HoraFim,PublicoEstimado,CustoEstimado,LocalId")] Evento evento)
+        public async Task<IActionResult> Create([Bind("NomeEvento,DescricaoEvento,DataEvento,TipoEvento,StatusEvento,HoraInicio,HoraFim,PublicoEstimado,CustoEstimado,LocalId,ImagemCapa")] Evento evento)
         {
             try
             {
@@ -162,6 +165,9 @@ namespace ProjetoEventX.Controllers
                 evento.DescricaoEvento = SecurityValidator.SanitizeHtml(evento.DescricaoEvento);
                 evento.TipoEvento = SecurityValidator.SanitizeInput(evento.TipoEvento);
 
+                // Gerar slug único
+                evento.Slug = await GerarSlugUnico(evento.NomeEvento);
+
                 _context.Eventos.Add(evento);
                 await _context.SaveChangesAsync();
 
@@ -215,7 +221,7 @@ namespace ProjetoEventX.Controllers
         // POST: Eventos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,NomeEvento,DescricaoEvento,DataEvento,TipoEvento,StatusEvento,HoraInicio,HoraFim,PublicoEstimado,CustoEstimado,LocalId,OrganizadorId,CreatedAt,UpdatedAt")] Evento evento)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,NomeEvento,DescricaoEvento,DataEvento,TipoEvento,StatusEvento,HoraInicio,HoraFim,PublicoEstimado,CustoEstimado,LocalId,OrganizadorId,CreatedAt,UpdatedAt,ImagemCapa")] Evento evento)
         {
             if (id != evento.Id)
             {
@@ -262,7 +268,14 @@ namespace ProjetoEventX.Controllers
                     eventoExistente.HoraFim = evento.HoraFim;
                     eventoExistente.PublicoEstimado = evento.PublicoEstimado;
                     eventoExistente.CustoEstimado = evento.CustoEstimado;
+                    eventoExistente.ImagemCapa = evento.ImagemCapa;
                     eventoExistente.UpdatedAt = DateTime.UtcNow;
+
+                    // Gerar slug se não existir
+                    if (string.IsNullOrWhiteSpace(eventoExistente.Slug))
+                    {
+                        eventoExistente.Slug = await GerarSlugUnico(eventoExistente.NomeEvento, eventoExistente.Id);
+                    }
 
                     await _context.SaveChangesAsync();
 
@@ -364,6 +377,36 @@ namespace ProjetoEventX.Controllers
         private bool EventoExists(int id)
         {
             return _context.Eventos.Any(e => e.Id == id);
+        }
+
+        private async Task<string> GerarSlugUnico(string nome, int? eventoIdExcluir = null)
+        {
+            var slug = GerarSlug(nome);
+            var slugBase = slug;
+            var contador = 1;
+
+            while (await _context.Eventos.AnyAsync(e => e.Slug == slug && (eventoIdExcluir == null || e.Id != eventoIdExcluir)))
+            {
+                slug = $"{slugBase}-{contador}";
+                contador++;
+            }
+
+            return slug;
+        }
+
+        private static string GerarSlug(string texto)
+        {
+            var normalizado = texto.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder();
+            foreach (var c in normalizado)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                    sb.Append(c);
+            }
+            var semAcentos = sb.ToString().Normalize(NormalizationForm.FormC).ToLowerInvariant();
+            var slug = Regex.Replace(semAcentos, @"[^a-z0-9\s-]", "");
+            slug = Regex.Replace(slug, @"[\s-]+", "-").Trim('-');
+            return slug.Length > 280 ? slug.Substring(0, 280) : slug;
         }
     }
 }

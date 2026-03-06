@@ -1,0 +1,315 @@
+@model List<ProjetoEventX.Models.Quote>
+@{
+    ViewData["Title"] = "Comparar Orçamentos";
+
+    var bestPrice = Model.Where(q => q.ResponseValue.HasValue || q.EstimatedValue > 0)
+        .OrderBy(q => q.ResponseValue ?? q.EstimatedValue).FirstOrDefault();
+    var bestRating = Model.Where(q => q.Supplier?.AvaliacaoMedia > 0)
+        .OrderByDescending(q => q.Supplier!.AvaliacaoMedia).FirstOrDefault();
+    var fastestResponse = Model.Where(q => q.ResponseDate.HasValue)
+        .OrderBy(q => (q.ResponseDate!.Value - q.CreatedAt).TotalDays).FirstOrDefault();
+
+    // Custo-benefício: menor preço relativo à avaliação (preço / avaliação)
+    var bestValue = Model.Where(q => (q.ResponseValue ?? q.EstimatedValue) > 0 && q.Supplier?.AvaliacaoMedia > 0)
+        .OrderBy(q => (double)(q.ResponseValue ?? q.EstimatedValue) / (double)q.Supplier!.AvaliacaoMedia)
+        .FirstOrDefault();
+
+    string BadgeFor(Quote q, string icon, string label)
+    {
+        var badges = new List<string>();
+        if (q.Id == bestPrice?.Id) badges.Add($"<span class='badge bg-success me-1'><i class='fas {icon} me-1'></i>🏆 Menor Preço</span>");
+        if (q.Id == bestRating?.Id) badges.Add($"<span class='badge bg-warning text-dark me-1'><i class='fas {icon} me-1'></i>⭐ Melhor Avaliação</span>");
+        if (q.Id == fastestResponse?.Id) badges.Add($"<span class='badge bg-info text-dark me-1'><i class='fas {icon} me-1'></i>⏱️ Resposta Mais Rápida</span>");
+        if (q.Id == bestValue?.Id) badges.Add($"<span class='badge bg-primary me-1'><i class='fas {icon} me-1'></i>💎 Melhor Custo-Benefício</span>");
+        return string.Join(" ", badges);
+    }
+
+    decimal GetValue(Quote q) => q.ResponseValue ?? q.EstimatedValue;
+}
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #1a1a2e;">
+                <i class="fas fa-balance-scale me-2" style="color: #1a237e;"></i>Comparar Orçamentos
+            </h2>
+            <p class="text-muted mb-0">Comparando <strong>@Model.Count</strong> orçamentos lado a lado</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary px-4" style="border-radius: 10px;">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
+        </a>
+    </div>
+
+    <!-- Legenda de Destaques -->
+    <div class="card border-0 mb-4" style="background: linear-gradient(135deg, #e8eaf6, #c5cae9); border-radius: 14px;">
+        <div class="card-body py-3 d-flex flex-wrap align-items-center gap-3">
+            <span class="fw-bold text-dark"><i class="fas fa-trophy me-1"></i> Destaques:</span>
+            <span class="badge bg-success">🏆 Menor Preço</span>
+            <span class="badge bg-warning text-dark">⭐ Melhor Avaliação</span>
+            <span class="badge bg-info text-dark">⏱️ Resposta Mais Rápida</span>
+            <span class="badge bg-primary">💎 Melhor Custo-Benefício</span>
+        </div>
+    </div>
+
+    <!-- Cards de comparação -->
+    <div class="row g-4">
+        @foreach (var q in Model)
+        {
+            var val = GetValue(q);
+            var isBestPrice = q.Id == bestPrice?.Id;
+            var isBestRating = q.Id == bestRating?.Id;
+            var isBestResponse = q.Id == fastestResponse?.Id;
+            var isBestValue = q.Id == bestValue?.Id;
+            var hasBadge = isBestPrice || isBestRating || isBestResponse || isBestValue;
+            var borderColor = isBestValue ? "#1a237e" : isBestPrice ? "#198754" : isBestRating ? "#ffc107" : isBestResponse ? "#0dcaf0" : "#dee2e6";
+            var colSize = Model.Count <= 3 ? (12 / Model.Count) : 6;
+
+            <div class="col-xl-@colSize col-lg-6 col-md-12">
+                <div class="card border-0 h-100 position-relative" style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-top: 4px solid @borderColor;">
+                    @if (hasBadge)
+                    {
+                        <div class="position-absolute top-0 end-0 m-3 d-flex flex-column gap-1 align-items-end">
+                            @if (isBestPrice) { <span class="badge bg-success">🏆 Menor Preço</span> }
+                            @if (isBestRating) { <span class="badge bg-warning text-dark">⭐ Melhor Avaliação</span> }
+                            @if (isBestResponse) { <span class="badge bg-info text-dark">⏱️ Mais Rápido</span> }
+                            @if (isBestValue) { <span class="badge bg-primary">💎 Custo-Benefício</span> }
+                        </div>
+                    }
+
+                    <div class="card-body p-4">
+                        <!-- Fornecedor -->
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                                 style="width: 50px; height: 50px; background: linear-gradient(135deg, #1a237e, #283593); color: white; font-size: 1.2rem; flex-shrink: 0;">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-0" style="color: #1a1a2e;">@(q.Supplier?.Pessoa?.Nome ?? "Fornecedor")</h5>
+                                <small class="text-muted">@(q.Supplier?.TipoServico ?? "—")</small>
+                            </div>
+                        </div>
+
+                        <!-- Avaliação -->
+                        <div class="mb-3 p-2 rounded" style="background: @(isBestRating ? "#fff8e1" : "#f8f9fa"); border-radius: 10px !important;">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="text-muted small">Avaliação</span>
+                                <div>
+                                    @{
+                                        var rating = q.Supplier?.AvaliacaoMedia ?? 0;
+                                        var totalAval = q.Supplier?.Avaliacoes?.Count ?? 0;
+                                        for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= (int)rating)
+                                            {
+                                                <i class="fas fa-star" style="color: #ffc107; font-size: 0.85rem;"></i>
+                                            }
+                                            else if (i - 0.5m <= rating)
+                                            {
+                                                <i class="fas fa-star-half-alt" style="color: #ffc107; font-size: 0.85rem;"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="far fa-star" style="color: #ddd; font-size: 0.85rem;"></i>
+                                            }
+                                        }
+                                    }
+                                    <span class="ms-1 fw-bold" style="font-size: 0.85rem;">@rating.ToString("0.0")</span>
+                                    <span class="text-muted small">(@totalAval)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-3" style="opacity: 0.1;">
+
+                        <!-- Detalhes -->
+                        <div class="mb-2 d-flex justify-content-between">
+                            <span class="text-muted small">Serviço</span>
+                            <span class="fw-semibold small text-end" style="max-width: 60%;">@q.ServiceName</span>
+                        </div>
+                        <div class="mb-2 d-flex justify-content-between">
+                            <span class="text-muted small">Evento</span>
+                            <span class="fw-semibold small text-end" style="max-width: 60%;">@(q.Event?.NomeEvento ?? "—")</span>
+                        </div>
+                        <div class="mb-2 d-flex justify-content-between">
+                            <span class="text-muted small">Status</span>
+                            @{
+                                var statusColor = q.Status switch
+                                {
+                                    "Pendente" => "warning",
+                                    "Respondido" => "info",
+                                    "Aceito" => "success",
+                                    "Recusado" => "danger",
+                                    "Cancelado" => "secondary",
+                                    _ => "secondary"
+                                };
+                            }
+                            <span class="badge bg-@statusColor">@q.Status</span>
+                        </div>
+                        <div class="mb-2 d-flex justify-content-between">
+                            <span class="text-muted small">Data de Criação</span>
+                            <span class="small">@q.CreatedAt.ToString("dd/MM/yyyy")</span>
+                        </div>
+
+                        @if (q.ResponseDate.HasValue)
+                        {
+                            var dias = (q.ResponseDate.Value - q.CreatedAt).TotalDays;
+                            <div class="mb-2 d-flex justify-content-between">
+                                <span class="text-muted small">Tempo de Resposta</span>
+                                <span class="small fw-semibold" style="color: @(isBestResponse ? "#0dcaf0" : "inherit");">
+                                    @(dias < 1 ? "Menos de 1 dia" : $"{dias:0} dia(s)")
+                                </span>
+                            </div>
+                        }
+
+                        <hr class="my-3" style="opacity: 0.1;">
+
+                        <!-- Valores -->
+                        <div class="mb-2 d-flex justify-content-between">
+                            <span class="text-muted small">Valor Estimado</span>
+                            <span class="small">R$ @q.EstimatedValue.ToString("N2")</span>
+                        </div>
+
+                        <div class="p-3 rounded mb-3" style="background: @(isBestPrice ? "#e8f5e9" : "#f8f9fa"); border-radius: 12px !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted small">Valor Proposto</span>
+                                <span class="fw-bold" style="font-size: 1.25rem; color: @(isBestPrice ? "#198754" : "#1a1a2e");">
+                                    @if (q.ResponseValue.HasValue)
+                                    {
+                                        @:R$ @q.ResponseValue.Value.ToString("N2")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted" style="font-size: 0.9rem;">Aguardando</span>
+                                    }
+                                </span>
+                            </div>
+                            @if (q.ResponseValue.HasValue && q.EstimatedValue > 0)
+                            {
+                                var diff = ((q.ResponseValue.Value - q.EstimatedValue) / q.EstimatedValue) * 100;
+                                <div class="text-end">
+                                    <small class="@(diff <= 0 ? "text-success" : "text-danger")">
+                                        <i class="fas fa-arrow-@(diff <= 0 ? "down" : "up") me-1"></i>@Math.Abs(diff).ToString("0.0")% vs estimado
+                                    </small>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Mensagem da proposta -->
+                        @if (!string.IsNullOrEmpty(q.ResponseMessage))
+                        {
+                            <div class="p-3 rounded" style="background: #f0f4ff; border-radius: 12px !important; border-left: 3px solid #1a237e;">
+                                <small class="text-muted d-block mb-1"><i class="fas fa-comment-dots me-1"></i>Mensagem do Fornecedor</small>
+                                <p class="mb-0 small" style="color: #333;">@q.ResponseMessage</p>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                        <a asp-action="Detalhes" asp-route-id="@q.Id" class="btn btn-outline-dark w-100" style="border-radius: 10px;">
+                            <i class="fas fa-eye me-1"></i>Ver Detalhes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Tabela Resumo Comparativo -->
+    <div class="card border-0 mt-5" style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+        <div class="card-header bg-white border-0 p-4 pb-2">
+            <h5 class="fw-bold mb-0" style="color: #1a1a2e;">
+                <i class="fas fa-table me-2" style="color: #1a237e;"></i>Resumo Comparativo
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th class="px-4 py-3 fw-bold" style="color: #495057;">Critério</th>
+                            @foreach (var q in Model)
+                            {
+                                <th class="px-4 py-3 text-center fw-bold" style="color: #495057;">
+                                    @(q.Supplier?.Pessoa?.Nome ?? "Fornecedor")
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="px-4 py-3 fw-semibold">Serviço</td>
+                            @foreach (var q in Model)
+                            {
+                                <td class="px-4 py-3 text-center">@q.ServiceName</td>
+                            }
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 fw-semibold">Valor Estimado</td>
+                            @foreach (var q in Model)
+                            {
+                                <td class="px-4 py-3 text-center">R$ @q.EstimatedValue.ToString("N2")</td>
+                            }
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 fw-semibold">Valor Proposto</td>
+                            @foreach (var q in Model)
+                            {
+                                <td class="px-4 py-3 text-center @(q.Id == bestPrice?.Id ? "table-success fw-bold" : "")">
+                                    @(q.ResponseValue.HasValue ? "R$ " + q.ResponseValue.Value.ToString("N2") : "—")
+                                </td>
+                            }
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 fw-semibold">Avaliação Média</td>
+                            @foreach (var q in Model)
+                            {
+                                <td class="px-4 py-3 text-center @(q.Id == bestRating?.Id ? "table-warning fw-bold" : "")">
+                                    @((q.Supplier?.AvaliacaoMedia ?? 0).ToString("0.0")) ⭐
+                                </td>
+                            }
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 fw-semibold">Tempo de Resposta</td>
+                            @foreach (var q in Model)
+                            {
+                                var dias = q.ResponseDate.HasValue ? (q.ResponseDate.Value - q.CreatedAt).TotalDays : -1;
+                                <td class="px-4 py-3 text-center @(q.Id == fastestResponse?.Id ? "table-info fw-bold" : "")">
+                                    @(dias >= 0 ? (dias < 1 ? "< 1 dia" : $"{dias:0} dia(s)") : "—")
+                                </td>
+                            }
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 fw-semibold">Status</td>
+                            @foreach (var q in Model)
+                            {
+                                var sc = q.Status switch
+                                {
+                                    "Pendente" => "warning",
+                                    "Respondido" => "info",
+                                    "Aceito" => "success",
+                                    "Recusado" => "danger",
+                                    "Cancelado" => "secondary",
+                                    _ => "secondary"
+                                };
+                                <td class="px-4 py-3 text-center"><span class="badge bg-@sc">@q.Status</span></td>
+                            }
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .card {
+            transition: transform 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+}

@@ -3,286 +3,112 @@
     ViewData["Title"] = "Dashboard - Organizador";
     Layout = "_Layout";
     var proximoEvento = ViewBag.ProximoEvento as ProjetoEventX.Models.Evento;
+    var notificacoes = ViewBag.Notificacoes as List<ProjetoEventX.Models.Notificacao> ?? new List<ProjetoEventX.Models.Notificacao>();
 }
 
 <style>
-    .dash-wrapper {
-        background: #f5f1ed;
-        min-height: 100vh;
-        padding-bottom: 3rem;
-    }
-
-    /* Header de Boas-vindas */
+    .dash-wrapper { background: #f5f1ed; min-height: 100vh; padding-bottom: 3rem; }
     .dash-welcome {
         background: linear-gradient(135deg, #8B0000 0%, #B22222 50%, #D4A574 100%);
-        color: #fff;
-        padding: 2.5rem 0;
-        margin-bottom: 2rem;
+        color: #fff; padding: 2.5rem 0; margin-bottom: 2rem;
     }
-
-    .dash-welcome h1 {
-        font-size: 1.8rem;
-        font-weight: 700;
-        margin-bottom: 0.3rem;
+    .dash-welcome h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .dash-welcome p { opacity: 0.85; font-size: 1rem; margin: 0; }
+    .user-avatar {
+        width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-right: 1rem;
     }
-
-    .dash-welcome p {
-        opacity: 0.85;
-        font-size: 1rem;
-        margin: 0;
-    }
-
-    .dash-welcome .user-avatar {
-        width: 60px;
-        height: 60px;
-        background: rgba(255,255,255,0.2);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.8rem;
-        margin-right: 1rem;
-    }
-
-    /* Cards de Estatísticas */
     .stat-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        transition: transform 0.2s, box-shadow 0.2s;
-        height: 100%;
+        background: #fff; border-radius: 16px; padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; height: 100%;
     }
-
-    .stat-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-    }
-
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
     .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.3rem;
-        color: #fff;
-        margin-bottom: 1rem;
+        width: 48px; height: 48px; border-radius: 12px; display: flex;
+        align-items: center; justify-content: center; font-size: 1.3rem; color: #fff; margin-bottom: 1rem;
     }
-
     .stat-icon.eventos { background: linear-gradient(135deg, #8B0000, #B22222); }
     .stat-icon.convidados { background: linear-gradient(135deg, #2E7D32, #43A047); }
     .stat-icon.orcamento { background: linear-gradient(135deg, #E65100, #FF8F00); }
     .stat-icon.concluidos { background: linear-gradient(135deg, #1565C0, #42A5F5); }
-
-    .stat-number {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #333;
-        line-height: 1;
-    }
-
-    .stat-label {
-        font-size: 0.85rem;
-        color: #888;
-        margin-top: 2px;
-    }
-
-    /* Próximo Evento */
+    .stat-number { font-size: 2rem; font-weight: 700; color: #333; line-height: 1; }
+    .stat-label { font-size: 0.85rem; color: #888; margin-top: 2px; }
     .next-event-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 2rem;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        border-left: 5px solid #8B0000;
+        background: #fff; border-radius: 16px; padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-left: 5px solid #8B0000;
     }
-
-    .next-event-card h5 {
-        color: #8B0000;
-        font-weight: 700;
+    .next-event-card h5 { color: #8B0000; font-weight: 700; }
+    .event-name { font-size: 1.3rem; font-weight: 700; color: #333; margin: 0.5rem 0; }
+    .event-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .event-meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; color: #666; }
+    .event-meta-item i { color: #8B0000; }
+    .chart-card {
+        background: #fff; border-radius: 16px; padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); height: 100%;
     }
-
-    .next-event-card .event-date {
-        font-size: 0.9rem;
-        color: #666;
-    }
-
-    .next-event-card .event-name {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #333;
-        margin: 0.5rem 0;
-    }
-
-    .event-meta {
-        display: flex;
-        gap: 1.5rem;
-        flex-wrap: wrap;
-    }
-
-    .event-meta-item {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.9rem;
-        color: #666;
-    }
-
-    .event-meta-item i {
-        color: #8B0000;
-    }
-
-    /* Ações Rápidas */
+    .chart-card h6 { font-weight: 700; color: #333; margin-bottom: 1rem; font-size: 1rem; }
+    .chart-container { position: relative; width: 100%; }
     .quick-action {
-        background: #fff;
-        border-radius: 16px;
-        padding: 1.5rem;
-        text-align: center;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        transition: transform 0.2s, box-shadow 0.2s;
-        cursor: pointer;
-        text-decoration: none;
-        color: inherit;
-        display: block;
-        height: 100%;
+        background: #fff; border-radius: 16px; padding: 1.5rem; text-align: center;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer; text-decoration: none; color: inherit; display: block; height: 100%;
     }
-
-    .quick-action:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-        color: inherit;
-        text-decoration: none;
-    }
-
+    .quick-action:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); color: inherit; text-decoration: none; }
     .quick-action .qa-icon {
-        width: 56px;
-        height: 56px;
-        background: linear-gradient(135deg, #8B0000, #D4A574);
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 0.8rem;
-        color: #fff;
-        font-size: 1.4rem;
+        width: 56px; height: 56px; background: linear-gradient(135deg, #8B0000, #D4A574);
+        border-radius: 16px; display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 0.8rem; color: #fff; font-size: 1.4rem;
     }
-
-    .quick-action h6 {
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 0.2rem;
-    }
-
-    .quick-action p {
-        font-size: 0.8rem;
-        color: #999;
-        margin: 0;
-    }
-
-    /* Lista de Eventos */
+    .quick-action h6 { font-weight: 700; color: #333; margin-bottom: 0.2rem; }
+    .quick-action p { font-size: 0.8rem; color: #999; margin: 0; }
     .eventos-list-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 2rem;
+        background: #fff; border-radius: 16px; padding: 2rem;
         box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     }
-
-    .eventos-list-card h5 {
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 1.2rem;
-    }
-
+    .eventos-list-card h5 { font-weight: 700; color: #333; margin-bottom: 1.2rem; }
     .evento-item {
-        display: flex;
-        align-items: center;
-        padding: 1rem;
-        border-radius: 12px;
-        background: #f8f9fa;
-        margin-bottom: 0.8rem;
-        transition: background 0.2s;
+        display: flex; align-items: center; padding: 1rem; border-radius: 12px;
+        background: #f8f9fa; margin-bottom: 0.8rem; transition: background 0.2s;
     }
-
-    .evento-item:hover {
-        background: #f0ebe5;
-    }
-
-    .evento-item .evento-date-box {
-        min-width: 55px;
-        text-align: center;
-        margin-right: 1rem;
-    }
-
-    .evento-date-box .day {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #8B0000;
-        line-height: 1;
-    }
-
-    .evento-date-box .month {
-        font-size: 0.75rem;
-        color: #888;
-        text-transform: uppercase;
-        font-weight: 600;
-    }
-
-    .evento-item .evento-info {
-        flex: 1;
-    }
-
-    .evento-info .evento-nome {
-        font-weight: 600;
-        color: #333;
-        font-size: 0.95rem;
-    }
-
-    .evento-info .evento-tipo {
-        font-size: 0.8rem;
-        color: #888;
-    }
-
-    .status-badge {
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
+    .evento-item:hover { background: #f0ebe5; }
+    .evento-item .evento-date-box { min-width: 55px; text-align: center; margin-right: 1rem; }
+    .evento-date-box .day { font-size: 1.5rem; font-weight: 700; color: #8B0000; line-height: 1; }
+    .evento-date-box .month { font-size: 0.75rem; color: #888; text-transform: uppercase; font-weight: 600; }
+    .evento-info { flex: 1; }
+    .evento-info .evento-nome { font-weight: 600; color: #333; font-size: 0.95rem; }
+    .evento-info .evento-tipo { font-size: 0.8rem; color: #888; }
+    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
     .status-badge.planejado { background: #FFF3E0; color: #E65100; }
     .status-badge.andamento { background: #E3F2FD; color: #1565C0; }
     .status-badge.concluido { background: #E8F5E9; color: #2E7D32; }
     .status-badge.cancelado { background: #FFEBEE; color: #C62828; }
-
-    .section-title {
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 1.2rem;
-        font-size: 1.1rem;
+    .section-title { font-weight: 700; color: #333; margin-bottom: 1.2rem; font-size: 1.1rem; }
+    .empty-state { text-align: center; padding: 2rem; color: #999; }
+    .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
+    .progress-ring { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+    .progress-ring-text { position: absolute; font-size: 1.2rem; font-weight: 800; color: #333; }
+    .notif-item {
+        display: flex; align-items: flex-start; gap: 0.8rem; padding: 0.8rem;
+        border-radius: 10px; margin-bottom: 0.5rem; transition: background 0.2s;
     }
-
-    .empty-state {
-        text-align: center;
-        padding: 2rem;
-        color: #999;
-    }
-
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.3;
-    }
+    .notif-item:hover { background: #f5f1ed; }
+    .notif-item.nao-lida { background: #fef3c7; }
+    .notif-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #fff; flex-shrink: 0; }
+    .notif-icon.presenca { background: #2E7D32; }
+    .notif-icon.lembrete { background: #E65100; }
+    .notif-icon.mudanca { background: #1565C0; }
+    .notif-icon.geral { background: #666; }
+    .notif-texto { font-size: 0.85rem; color: #555; line-height: 1.3; }
+    .notif-data { font-size: 0.7rem; color: #999; }
+    .orcamento-barra { height: 8px; border-radius: 4px; background: #e5e7eb; overflow: hidden; }
+    .orcamento-barra-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
 </style>
 
 <div class="dash-wrapper">
-    <!-- Header de Boas-vindas -->
     <section class="dash-welcome">
         <div class="container">
             <div class="d-flex align-items-center">
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
+                <div class="user-avatar"><i class="fas fa-user"></i></div>
                 <div>
                     <h1>Olá, @(Model.Pessoa?.Nome ?? Model.UserName)!</h1>
                     <p>Gerencie seus eventos com praticidade e eficiência</p>
@@ -296,38 +122,137 @@
         <div class="row g-3 mb-4">
             <div class="col-6 col-lg-3">
                 <div class="stat-card">
-                    <div class="stat-icon eventos">
-                        <i class="fas fa-calendar-alt"></i>
-                    </div>
+                    <div class="stat-icon eventos"><i class="fas fa-calendar-alt"></i></div>
                     <div class="stat-number">@ViewBag.TotalEventos</div>
                     <div class="stat-label">Total de Eventos</div>
                 </div>
             </div>
             <div class="col-6 col-lg-3">
                 <div class="stat-card">
-                    <div class="stat-icon convidados">
-                        <i class="fas fa-users"></i>
-                    </div>
+                    <div class="stat-icon convidados"><i class="fas fa-users"></i></div>
                     <div class="stat-number">@ViewBag.TotalConvidados</div>
                     <div class="stat-label">Convidados (@ViewBag.ConvidadosConfirmados confirmados)</div>
                 </div>
             </div>
             <div class="col-6 col-lg-3">
                 <div class="stat-card">
-                    <div class="stat-icon orcamento">
-                        <i class="fas fa-wallet"></i>
-                    </div>
+                    <div class="stat-icon orcamento"><i class="fas fa-wallet"></i></div>
                     <div class="stat-number">R$ @(((decimal)ViewBag.TotalDespesas).ToString("N0"))</div>
                     <div class="stat-label">Total em Despesas</div>
                 </div>
             </div>
             <div class="col-6 col-lg-3">
                 <div class="stat-card">
-                    <div class="stat-icon concluidos">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
+                    <div class="stat-icon concluidos"><i class="fas fa-check-circle"></i></div>
                     <div class="stat-number">@ViewBag.EventosConcluidos</div>
                     <div class="stat-label">Eventos Concluídos</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="chart-card">
+                    <h6><i class="fas fa-chart-bar me-2" style="color:#8B0000;"></i>Gastos por Evento</h6>
+                    <div class="chart-container" style="height: 280px;">
+                        <canvas id="gastosEventoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="chart-card">
+                    <h6><i class="fas fa-user-check me-2" style="color:#2E7D32;"></i>Status dos Convidados</h6>
+                    <div class="chart-container d-flex justify-content-center" style="height: 280px;">
+                        <canvas id="convidadosChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="chart-card">
+                    <h6><i class="fas fa-chart-line me-2" style="color:#E65100;"></i>Despesas Mensais</h6>
+                    <div class="chart-container" style="height: 240px;">
+                        <canvas id="despesasMensaisChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="chart-card text-center">
+                    <h6><i class="fas fa-tasks me-2" style="color:#1565C0;"></i>Progresso das Tarefas</h6>
+                    @{
+                        var totalTarefas = (int)ViewBag.TotalTarefas;
+                        var tarefasConcluidas = (int)ViewBag.TarefasConcluidas;
+                        var percentTarefas = totalTarefas > 0 ? (int)Math.Round((double)tarefasConcluidas / totalTarefas * 100) : 0;
+                    }
+                    <div class="d-flex justify-content-center my-3">
+                        <div class="progress-ring">
+                            <canvas id="tarefasRing" width="140" height="140"></canvas>
+                            <span class="progress-ring-text">@percentTarefas%</span>
+                        </div>
+                    </div>
+                    <div style="font-size:0.85rem; color:#666;">
+                        <strong>@tarefasConcluidas</strong> de <strong>@totalTarefas</strong> concluídas
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="chart-card text-center">
+                    <h6><i class="fas fa-shopping-cart me-2" style="color:#9C27B0;"></i>Pedidos</h6>
+                    <div class="chart-container d-flex justify-content-center" style="height: 180px;">
+                        <canvas id="pedidosChart"></canvas>
+                    </div>
+                    <div style="font-size:0.85rem; color:#666; margin-top: 0.5rem;">
+                        <strong>@ViewBag.TotalPedidos</strong> pedidos no total
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumo Financeiro -->
+        @{
+            var totalOrc = (decimal)ViewBag.TotalOrcamento;
+            var totalGasto = (decimal)ViewBag.TotalDespesas;
+            var saldo = totalOrc - totalGasto;
+            var percentOrc = totalOrc > 0 ? (double)(totalGasto / totalOrc) * 100 : 0;
+            var barColor = percentOrc > 100 ? "#dc3545" : percentOrc > 80 ? "#ffc107" : "#2E7D32";
+        }
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="chart-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0"><i class="fas fa-coins me-2" style="color:#E65100;"></i>Resumo Financeiro</h6>
+                        <a asp-action="Orcamento" style="color:#8B0000; font-size:0.85rem; font-weight:600; text-decoration:none;">
+                            Ver detalhes <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <div class="d-flex justify-content-between" style="font-size:0.85rem; color:#888;">
+                                <span>Orçamento Estimado</span>
+                                <strong style="color:#333;">R$ @totalOrc.ToString("N2")</strong>
+                            </div>
+                            <div class="d-flex justify-content-between" style="font-size:0.85rem; color:#888;">
+                                <span>Total Gasto</span>
+                                <strong style="color:#dc3545;">R$ @totalGasto.ToString("N2")</strong>
+                            </div>
+                            <div class="d-flex justify-content-between" style="font-size:0.85rem; color:#888;">
+                                <span>Saldo</span>
+                                <strong style="color:@(saldo >= 0 ? "#2E7D32" : "#dc3545");">R$ @saldo.ToString("N2")</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="d-flex justify-content-between mb-1" style="font-size:0.8rem;">
+                                <span style="color:#888;">@percentOrc.ToString("N0")% utilizado</span>
+                                <span style="color:#888;">R$ @totalGasto.ToString("N2") / R$ @totalOrc.ToString("N2")</span>
+                            </div>
+                            <div class="orcamento-barra">
+                                <div class="orcamento-barra-fill" style="width: @Math.Min(percentOrc, 100).ToString("N0")%; background: @barColor;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -335,34 +260,20 @@
         <div class="row g-4">
             <!-- Coluna Esquerda -->
             <div class="col-lg-8">
-                <!-- Próximo Evento -->
                 @if (proximoEvento != null)
                 {
                     <div class="next-event-card mb-4">
                         <h5><i class="fas fa-star me-2"></i>Próximo Evento</h5>
                         <div class="event-name">@proximoEvento.NomeEvento</div>
                         <div class="event-meta">
-                            <div class="event-meta-item">
-                                <i class="fas fa-calendar"></i>
-                                @proximoEvento.DataEvento.ToString("dd/MM/yyyy")
-                            </div>
-                            <div class="event-meta-item">
-                                <i class="fas fa-clock"></i>
-                                @proximoEvento.HoraInicio - @proximoEvento.HoraFim
-                            </div>
-                            <div class="event-meta-item">
-                                <i class="fas fa-tag"></i>
-                                @proximoEvento.TipoEvento
-                            </div>
-                            <div class="event-meta-item">
-                                <i class="fas fa-users"></i>
-                                @proximoEvento.PublicoEstimado pessoas
-                            </div>
+                            <div class="event-meta-item"><i class="fas fa-calendar"></i> @proximoEvento.DataEvento.ToString("dd/MM/yyyy")</div>
+                            <div class="event-meta-item"><i class="fas fa-clock"></i> @proximoEvento.HoraInicio - @proximoEvento.HoraFim</div>
+                            <div class="event-meta-item"><i class="fas fa-tag"></i> @proximoEvento.TipoEvento</div>
+                            <div class="event-meta-item"><i class="fas fa-users"></i> @proximoEvento.PublicoEstimado pessoas</div>
                         </div>
                     </div>
                 }
 
-                <!-- Lista de Eventos -->
                 <div class="eventos-list-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0"><i class="fas fa-list me-2"></i>Meus Eventos</h5>
@@ -370,7 +281,6 @@
                             <i class="fas fa-plus"></i> Novo
                         </a>
                     </div>
-
                     @if (Model.Eventos != null && Model.Eventos.Any())
                     {
                         @foreach (var evento in Model.Eventos.OrderByDescending(e => e.DataEvento).Take(5))
@@ -398,7 +308,6 @@
                                 </div>
                             </a>
                         }
-
                         @if (Model.Eventos.Count > 5)
                         {
                             <div class="text-center mt-3">
@@ -421,66 +330,98 @@
 
             <!-- Coluna Direita -->
             <div class="col-lg-4">
+                <!-- Notificações Recentes -->
+                <div class="chart-card mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0"><i class="fas fa-bell me-2" style="color:#E65100;"></i>Notificações
+                            @if ((int)ViewBag.NotificacoesNaoLidas > 0)
+                            {
+                                <span class="badge rounded-pill" style="background:#8B0000; font-size:0.7rem;">@ViewBag.NotificacoesNaoLidas</span>
+                            }
+                        </h6>
+                    </div>
+                    @if (notificacoes.Any())
+                    {
+                        @foreach (var notif in notificacoes)
+                        {
+                            var iconClass = notif.Tipo?.ToLower() switch {
+                                "presenca" or "confirmacao" => "presenca",
+                                "lembrete" => "lembrete",
+                                "mudanca" or "alteracao" => "mudanca",
+                                _ => "geral"
+                            };
+                            var iconFa = notif.Tipo?.ToLower() switch {
+                                "presenca" or "confirmacao" => "fa-user-check",
+                                "lembrete" => "fa-clock",
+                                "mudanca" or "alteracao" => "fa-edit",
+                                _ => "fa-bell"
+                            };
+                            <div class="notif-item @(!notif.Lida ? "nao-lida" : "")">
+                                <div class="notif-icon @iconClass"><i class="fas @iconFa"></i></div>
+                                <div>
+                                    <div class="notif-texto">@notif.MensagemNotificacao</div>
+                                    <div class="notif-data">@notif.DataEnvio.ToString("dd/MM HH:mm")</div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-3" style="color:#999; font-size:0.85rem;">
+                            <i class="fas fa-bell-slash d-block mb-2" style="font-size:2rem; opacity:0.3;"></i>
+                            Nenhuma notificação
+                        </div>
+                    }
+                </div>
+
                 <!-- Ações Rápidas -->
                 <h6 class="section-title"><i class="fas fa-bolt me-2"></i>Ações Rápidas</h6>
                 <div class="row g-3 mb-4">
                     <div class="col-6">
                         <a asp-action="CriarEvento" class="quick-action">
-                            <div class="qa-icon">
-                                <i class="fas fa-calendar-plus"></i>
-                            </div>
+                            <div class="qa-icon"><i class="fas fa-calendar-plus"></i></div>
                             <h6>Criar Evento</h6>
                             <p>Novo evento</p>
                         </a>
                     </div>
                     <div class="col-6">
-                        <a asp-controller="Convite" asp-action="Index" class="quick-action">
-                            <div class="qa-icon">
-                                <i class="fas fa-envelope"></i>
-                            </div>
-                            <h6>Convidar</h6>
-                            <p>Enviar convites</p>
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a asp-controller="Fornecedor" asp-action="Catalogo" class="quick-action">
-                            <div class="qa-icon">
-                                <i class="fas fa-store"></i>
-                            </div>
-                            <h6>Fornecedores</h6>
-                            <p>Ver catálogo</p>
+                        <a asp-controller="Marketplace" asp-action="Index" class="quick-action">
+                            <div class="qa-icon"><i class="fas fa-store"></i></div>
+                            <h6>Marketplace</h6>
+                            <p>Fornecedores</p>
                         </a>
                     </div>
                     <div class="col-6">
                         <a asp-controller="Organizador" asp-action="Orcamento" class="quick-action">
-                            <div class="qa-icon">
-                                <i class="fas fa-wallet"></i>
-                            </div>
-                            <h6>Orçamento</h6>
-                            <p>Visão geral</p>
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a asp-controller="TemplateConvite" asp-action="Index" class="quick-action">
-                            <div class="qa-icon">
-                                <i class="fas fa-palette"></i>
-                            </div>
-                            <h6>Templates</h6>
-                            <p>Convites</p>
+                            <div class="qa-icon"><i class="fas fa-wallet"></i></div>
+                            <h6>Financeiro</h6>
+                            <p>Orçamentos</p>
                         </a>
                     </div>
                     <div class="col-6">
                         <a asp-controller="IA" asp-action="Index" class="quick-action">
-                            <div class="qa-icon">
-                                <i class="fas fa-robot"></i>
-                            </div>
+                            <div class="qa-icon"><i class="fas fa-robot"></i></div>
                             <h6>Assistente IA</h6>
-                            <p>Ajuda inteligente</p>
+                            <p>Planejamento</p>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a asp-controller="TemplateConvite" asp-action="Index" class="quick-action">
+                            <div class="qa-icon"><i class="fas fa-palette"></i></div>
+                            <h6>Convites</h6>
+                            <p>Templates</p>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a asp-controller="Marketplace" asp-action="MinhasSolicitacoes" class="quick-action">
+                            <div class="qa-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                            <h6>Orçamentos</h6>
+                            <p>Solicitações</p>
                         </a>
                     </div>
                 </div>
 
-                <!-- Info do Perfil -->
+                <!-- Info Perfil -->
                 <div class="eventos-list-card">
                     <h5><i class="fas fa-user-circle me-2"></i>Meu Perfil</h5>
                     <div class="mt-3">
@@ -516,14 +457,119 @@
     </div>
 </div>
 
-<!-- BOTÃO FLUTUANTE CHAT IA -->
-<div class="floating-ai-btn" onclick="window.location.href='@Url.Action("Index", "IA")'">
-    <div class="ai-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M21 15C21 15.5 20.8 16 20.5 16.4L16.4 20.5C16 20.8 15.5 21 15 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H19C20.1 3 21 3.9 21 5V15Z" fill="white"/>
-            <circle cx="9" cy="9" r="1.5" fill="#4CAF50"/>
-            <circle cx="15" cy="9" r="1.5" fill="#4CAF50"/>
-        </svg>
-    </div>
+<!-- Chat IA Flutuante -->
+<div onclick="window.location.href='@Url.Action("Index", "IA")'" style="position:fixed; bottom:30px; right:30px; background:linear-gradient(135deg,#8B0000,#B22222); color:#fff; border-radius:50px; padding:12px 24px; cursor:pointer; box-shadow:0 4px 15px rgba(139,0,0,0.4); display:flex; align-items:center; gap:8px; font-weight:600; z-index:1000;">
+    <i class="fas fa-robot" style="font-size:1.2rem;"></i>
     <span>Chat IA</span>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        const cores = {
+            vinho: '#8B0000', vermelho: '#B22222', dourado: '#D4A574',
+            verde: '#2E7D32', azul: '#1565C0', laranja: '#E65100',
+            roxo: '#9C27B0', cinza: '#6b7280'
+        };
+
+        // Gastos por Evento
+        const gastosNomes = @Html.Raw(ViewBag.GastosEventoNomes ?? "[]");
+        const gastosValores = @Html.Raw(ViewBag.GastosEventoValores ?? "[]");
+        if (gastosNomes.length > 0) {
+            new Chart(document.getElementById('gastosEventoChart'), {
+                type: 'bar',
+                data: {
+                    labels: gastosNomes,
+                    datasets: [{ label: 'Gastos (R$)', data: gastosValores,
+                        backgroundColor: [cores.vinho, cores.vermelho, cores.dourado, cores.laranja, cores.azul],
+                        borderRadius: 8, borderSkipped: false }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } },
+                        x: { ticks: { maxRotation: 45 } }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('gastosEventoChart').parentElement.innerHTML = '<div class="text-center py-5" style="color:#999;"><i class="fas fa-chart-bar d-block mb-2" style="font-size:2rem;opacity:0.3;"></i>Sem dados de gastos</div>';
+        }
+
+        // Status dos Convidados
+        const convLabels = @Html.Raw(ViewBag.ConvidadosStatusLabels ?? "[]");
+        const convValores = @Html.Raw(ViewBag.ConvidadosStatusValores ?? "[]");
+        if (convValores.some(v => v > 0)) {
+            new Chart(document.getElementById('convidadosChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: convLabels,
+                    datasets: [{ data: convValores,
+                        backgroundColor: [cores.verde, '#fbbf24', '#ef4444'], borderWidth: 0, spacing: 2 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    plugins: { legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true, pointStyleWidth: 10 } } }
+                }
+            });
+        } else {
+            document.getElementById('convidadosChart').parentElement.innerHTML = '<div class="text-center py-5" style="color:#999;"><i class="fas fa-users d-block mb-2" style="font-size:2rem;opacity:0.3;"></i>Sem convidados</div>';
+        }
+
+        // Despesas Mensais
+        const despMesLabels = @Html.Raw(ViewBag.DespesasMensaisLabels ?? "[]");
+        const despMesValores = @Html.Raw(ViewBag.DespesasMensaisValores ?? "[]");
+        if (despMesLabels.length > 0) {
+            new Chart(document.getElementById('despesasMensaisChart'), {
+                type: 'line',
+                data: {
+                    labels: despMesLabels,
+                    datasets: [{ label: 'Despesas (R$)', data: despMesValores,
+                        borderColor: cores.laranja, backgroundColor: 'rgba(230,81,0,0.1)',
+                        fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: cores.laranja }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
+                }
+            });
+        } else {
+            document.getElementById('despesasMensaisChart').parentElement.innerHTML = '<div class="text-center py-5" style="color:#999;"><i class="fas fa-chart-line d-block mb-2" style="font-size:2rem;opacity:0.3;"></i>Sem despesas recentes</div>';
+        }
+
+        // Progresso Tarefas Ring
+        const tarefasCanvas = document.getElementById('tarefasRing');
+        if (tarefasCanvas) {
+            const ctx = tarefasCanvas.getContext('2d');
+            const pct = @percentTarefas / 100;
+            const cx = 70, cy = 70, r = 55, lw = 12;
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+            ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = lw; ctx.stroke();
+            ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + (2 * Math.PI * pct));
+            ctx.strokeStyle = cores.azul; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.stroke();
+        }
+
+        // Pedidos
+        const pedPend = @ViewBag.PedidosPendentes;
+        const pedPago = @ViewBag.PedidosPagos;
+        const pedEntr = @ViewBag.PedidosEntregues;
+        if (pedPend + pedPago + pedEntr > 0) {
+            new Chart(document.getElementById('pedidosChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pendentes', 'Pagos', 'Entregues'],
+                    datasets: [{ data: [pedPend, pedPago, pedEntr],
+                        backgroundColor: ['#fbbf24', cores.verde, cores.azul], borderWidth: 0 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '60%',
+                    plugins: { legend: { position: 'bottom', labels: { padding: 8, usePointStyle: true, pointStyleWidth: 8, font: { size: 11 } } } }
+                }
+            });
+        } else {
+            document.getElementById('pedidosChart').parentElement.innerHTML = '<div class="text-center py-4" style="color:#999;"><i class="fas fa-shopping-cart d-block mb-2" style="font-size:2rem;opacity:0.3;"></i>Sem pedidos</div>';
+        }
+    </script>
+}

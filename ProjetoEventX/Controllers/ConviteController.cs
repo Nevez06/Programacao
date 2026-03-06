@@ -21,12 +21,14 @@ namespace ProjetoEventX.Controllers
         private readonly EventXContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly AuditoriaService _auditoriaService;
+        private readonly EmailService _emailService;
 
-        public ConviteController(EventXContext context, UserManager<ApplicationUser> userManager, AuditoriaService auditoriaService)
+        public ConviteController(EventXContext context, UserManager<ApplicationUser> userManager, AuditoriaService auditoriaService, EmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _auditoriaService = auditoriaService;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -451,7 +453,20 @@ namespace ProjetoEventX.Controllers
                     $"Convite enviado para {convidado.Pessoa.Nome} no evento {evento.NomeEvento}", null, 
                     new { Convidado = convidado.Pessoa.Nome, Evento = evento.NomeEvento, TemplateUsado = templateConvite != null });
 
-                TempData["SuccessMessage"] = $"✅ Convite enviado com sucesso para {convidado.Pessoa.Nome}!";
+                // Enviar email via SMTP
+                var emailEnviado = await _emailService.EnviarEmailAsync(
+                    convidado.Pessoa.Email,
+                    $"Convite: {evento.NomeEvento}",
+                    htmlCompleto);
+
+                if (emailEnviado)
+                {
+                    TempData["SuccessMessage"] = $"✅ Convite enviado com sucesso para {convidado.Pessoa.Nome} ({convidado.Pessoa.Email})!";
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = $"✅ Convite registrado para {convidado.Pessoa.Nome}! (Email SMTP não configurado - configure SMTP_USER e SMTP_PASS)";
+                }
                 return RedirectToAction("Listar", new { eventoId });
             }
             catch (Exception ex)
@@ -522,7 +537,13 @@ namespace ProjetoEventX.Controllers
                 }
 
                 var statusAnterior = listaConvidado.ConfirmaPresenca;
-                var novoStatus = resposta == "Confirmado" ? "Confirmado" : "Recusado";
+                string novoStatus;
+                if (resposta == "Confirmado")
+                    novoStatus = "Confirmado";
+                else if (resposta == "NaoIra")
+                    novoStatus = "Não irá";
+                else
+                    novoStatus = "Recusado";
 
                 listaConvidado.ConfirmaPresenca = novoStatus;
                 listaConvidado.UpdatedAt = DateTime.UtcNow;
@@ -550,6 +571,140 @@ namespace ProjetoEventX.Controllers
                 TempData["ErrorMessage"] = "❌ Erro ao registrar resposta.";
                 return RedirectToAction("Index", "Home");
             }
+        }
+
+        // GET: Convite/Editor - Editor visual estilo Canva com Fabric.js
+        [HttpGet]
+        public async Task<IActionResult> Editor(int eventoId)
+        {
+            if (eventoId <= 0)
+                return RedirectToAction("Index", "Eventos");
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToAction("LoginOrganizador", "Auth");
+
+            if (!await User.IsOwnerOfEventoAsync(_userManager, eventoId, _context))
+                return RedirectToAction("AccessDenied", "Auth");
+
+            var evento = await _context.Eventos.Include(e => e.Local).FirstOrDefaultAsync(e => e.Id == eventoId);
+            if (evento == null)
+                return RedirectToAction("Index", "Eventos");
+
+            ViewBag.EventoId = eventoId;
+            ViewBag.NomeEvento = evento.NomeEvento;
+            ViewBag.DataEvento = evento.DataEvento.ToString("dd/MM/yyyy");
+            ViewBag.HoraInicio = evento.HoraInicio ?? "";
+            ViewBag.HoraFim = evento.HoraFim ?? "";
+            ViewBag.NomeLocal = evento.Local?.NomeLocal ?? "Local não informado";
+            ViewBag.EnderecoLocal = evento.Local?.EnderecoLocal ?? "";
+            ViewBag.TipoEvento = evento.TipoEvento ?? "Outro";
+            ViewBag.DescricaoEvento = evento.DescricaoEvento ?? "";
+
+            return View();
+        }
+
+        // POST: Convite/SalvarDesignCanvas - Salva JSON do Fabric.js canvas
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SalvarDesignCanvas(int eventoId, string canvasJson, string nomeTemplate)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Json(new { success = false, message = "Não autenticado" });
+
+            if (!await User.IsOwnerOfEventoAsync(_userManager, eventoId, _context))
+                return Json(new { success = false, message = "Sem permissão" });
+
+            var template = new TemplateConvite
+            {
+                EventoId = eventoId,
+                OrganizadorId = user.Id,
+                NomeTemplate = nomeTemplate ?? "Convite personalizado",
+                TituloConvite = "Convite",
+                MensagemPrincipal = "Convite criado no editor visual",
+                CSSPersonalizado = canvasJson, // Armazena o JSON do canvas no campo CSS
+                EstiloLayout = "Canvas",
+                Ativo = true,
+                PadraoSistema = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.TemplatesConvites.Add(template);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, templateId = template.Id });
+        }
+
+        // GET: Convite/Publico/{codigo} - Página pública do convite compartilhável
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> Publico(string codigo)
+        {
+            if (string.IsNullOrEmpty(codigo))
+                return NotFound();
+
+            var lista = await _context.ListasConvidados
+                .Include(l => l.Convidado).ThenInclude(c => c.Pessoa)
+                .Include(l => l.Evento).ThenInclude(e => e.Local)
+                .FirstOrDefaultAsync(l => l.CodigoQR == codigo);
+
+            if (lista == null)
+                return NotFound();
+
+            ViewBag.NomeConvidado = lista.Convidado?.Pessoa?.Nome ?? "Convidado";
+            ViewBag.NomeEvento = lista.Evento?.NomeEvento ?? "Evento";
+            ViewBag.DataEvento = lista.Evento?.DataEvento.ToString("dd/MM/yyyy") ?? "";
+            ViewBag.HoraInicio = lista.Evento?.HoraInicio ?? "";
+            ViewBag.HoraFim = lista.Evento?.HoraFim ?? "";
+            ViewBag.NomeLocal = lista.Evento?.Local?.NomeLocal ?? "";
+            ViewBag.EnderecoLocal = lista.Evento?.Local?.EnderecoLocal ?? "";
+            ViewBag.StatusAtual = lista.ConfirmaPresenca;
+            ViewBag.CodigoQR = codigo;
+            ViewBag.EventoId = lista.EventoId;
+            ViewBag.ConvidadoId = lista.ConvidadoId;
+
+            // Buscar template do convite
+            var template = await _context.TemplatesConvites
+                .FirstOrDefaultAsync(t => t.EventoId == lista.EventoId && t.Ativo && t.PadraoSistema);
+
+            if (template == null)
+                template = await _context.TemplatesConvites
+                    .FirstOrDefaultAsync(t => t.EventoId == lista.EventoId && t.Ativo);
+
+            ViewBag.Template = template;
+
+            return View();
+        }
+
+        // GET: Convite/GaleriaTemplates - Galeria de templates profissionais
+        [HttpGet]
+        public async Task<IActionResult> GaleriaTemplates(int eventoId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToAction("LoginOrganizador", "Auth");
+
+            if (!await User.IsOwnerOfEventoAsync(_userManager, eventoId, _context))
+                return RedirectToAction("AccessDenied", "Auth");
+
+            var evento = await _context.Eventos.Include(e => e.Local).FirstOrDefaultAsync(e => e.Id == eventoId);
+            if (evento == null)
+                return RedirectToAction("Index", "Eventos");
+
+            ViewBag.EventoId = eventoId;
+            ViewBag.NomeEvento = evento.NomeEvento;
+            ViewBag.TipoEvento = evento.TipoEvento;
+
+            // Buscar templates salvos do organizador
+            var templatesSalvos = await _context.TemplatesConvites
+                .Where(t => t.OrganizadorId == user.Id && t.Ativo)
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+            ViewBag.TemplatesSalvos = templatesSalvos;
+
+            return View();
         }
     }
 }

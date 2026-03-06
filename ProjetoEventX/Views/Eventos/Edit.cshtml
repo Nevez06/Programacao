@@ -334,6 +334,34 @@
                         </div>
                     </div>
 
+                    <!-- Imagem de Capa e Página Pública -->
+                    <div class="form-card">
+                        <h5><i class="fas fa-globe me-2"></i>Página Pública do Evento</h5>
+                        <div class="mb-3">
+                            <label asp-for="ImagemCapa" class="form-label">
+                                <i class="fas fa-image"></i> URL da Imagem de Capa
+                            </label>
+                            <input asp-for="ImagemCapa" class="form-control" placeholder="https://exemplo.com/imagem.jpg" />
+                            <span asp-validation-for="ImagemCapa" class="text-danger"></span>
+                            <small class="form-text">URL de uma imagem para a página pública do evento (opcional)</small>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.Slug))
+                        {
+                            <div class="mb-0">
+                                <label class="form-label">
+                                    <i class="fas fa-link"></i> Link público do evento
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" value="@Context.Request.Scheme://@Context.Request.Host/evento/@Model.Slug" readonly id="linkPublico" />
+                                    <button type="button" class="btn btn-outline-secondary" onclick="copiarLink()">
+                                        <i class="fas fa-copy"></i> Copiar
+                                    </button>
+                                </div>
+                                <small class="form-text">Compartilhe este link com seus convidados</small>
+                            </div>
+                        }
+                    </div>
+
                     <!-- Botões de Ação -->
                     <div class="form-card">
                         <div class="d-flex justify-content-between align-items-center">
@@ -443,5 +471,15 @@
                 }, { once: true });
             }
         });
+
+        function copiarLink() {
+            var input = document.getElementById('linkPublico');
+            navigator.clipboard.writeText(input.value).then(function() {
+                var btn = input.nextElementSibling;
+                var original = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+                setTimeout(function() { btn.innerHTML = original; }, 2000);
+            });
+        }
     </script>
 }

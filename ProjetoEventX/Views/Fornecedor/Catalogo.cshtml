@@ -164,6 +164,12 @@
                             <p class="produto-preco">R$ @produto.Preco.ToString("N2")</p>
                             <p class="produto-fornecedor">
                                 <i class="fas fa-store"></i> @produto.Fornecedor?.Pessoa?.Nome
+                                @if (produto.Fornecedor != null && produto.Fornecedor.AvaliacaoMedia > 0)
+                                {
+                                    <span style="color:#f59e0b; margin-left:0.5rem;">
+                                        <i class="fas fa-star"></i> @produto.Fornecedor.AvaliacaoMedia.ToString("N1")
+                                    </span>
+                                }
                             </p>
                             <span class="ver-detalhes-btn">
                                 <i class="fas fa-eye"></i> Ver Detalhes

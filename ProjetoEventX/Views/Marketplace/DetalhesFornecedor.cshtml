@@ -1,0 +1,392 @@
+@model ProjetoEventX.Models.Fornecedor
+@{
+    ViewData["Title"] = Model.Pessoa?.Nome + " - Marketplace";
+    var totalAvaliacoes = Model.Avaliacoes?.Count ?? 0;
+    var avaliacoes = Model.Avaliacoes?.OrderByDescending(a => a.DataAvaliacao).ToList() ?? new List<ProjetoEventX.Models.AvaliacaoFornecedor>();
+    var isOrganizador = ViewBag.IsOrganizador == true;
+    var eventos = ViewBag.EventosOrganizador as List<ProjetoEventX.Models.Evento> ?? new List<ProjetoEventX.Models.Evento>();
+}
+
+<style>
+    .perfil-hero {
+        background: linear-gradient(135deg, #8B0000 0%, #b22222 50%, #a0522d 100%);
+        padding: 3rem 0;
+        color: #fff;
+        margin-top: -1.5rem;
+        margin-bottom: 2rem;
+    }
+    .perfil-avatar {
+        width: 100px;
+        height: 100px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    .perfil-nome { font-weight: 800; font-size: 2rem; margin-bottom: 0.3rem; }
+    .perfil-categoria {
+        background: rgba(255,255,255,0.25);
+        padding: 5px 18px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+    .perfil-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 1rem;
+    }
+    .perfil-stat { text-align: center; }
+    .perfil-stat .num { font-size: 1.8rem; font-weight: 800; }
+    .perfil-stat .label { font-size: 0.8rem; opacity: 0.8; }
+    .perfil-stars { font-size: 1.3rem; color: #f59e0b; margin-bottom: 0.3rem; }
+    .perfil-stars .empty { color: rgba(255,255,255,0.3); }
+
+    .info-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        margin-bottom: 1.5rem;
+    }
+    .info-card h5 {
+        color: #8B0000;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 2px solid #f5f1ed;
+    }
+    .info-row {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding: 0.6rem 0;
+        font-size: 0.95rem;
+        color: #555;
+    }
+    .info-row i { color: #8B0000; width: 20px; text-align: center; }
+
+    .produto-grid-card {
+        background: #faf8f5;
+        border-radius: 14px;
+        padding: 1.2rem;
+        transition: all 0.3s;
+        height: 100%;
+    }
+    .produto-grid-card:hover {
+        background: #fff;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        transform: translateY(-3px);
+    }
+    .produto-grid-card h6 { font-weight: 700; color: #333; margin-bottom: 0.3rem; }
+    .produto-grid-card .tipo-badge {
+        background: #8B0000;
+        color: #fff;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    .produto-grid-card .preco {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #8B0000;
+        margin-top: 0.5rem;
+    }
+    .produto-grid-card .descricao {
+        font-size: 0.85rem;
+        color: #777;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin: 0.4rem 0;
+    }
+
+    .avaliacao-card {
+        background: #faf8f5;
+        border-radius: 14px;
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+    }
+    .avaliacao-card .avaliador {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 0.6rem;
+    }
+    .avaliacao-card .avaliador-avatar {
+        width: 40px;
+        height: 40px;
+        background: #8B0000;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+    .avaliacao-card .avaliador-nome { font-weight: 600; color: #333; font-size: 0.95rem; }
+    .avaliacao-card .avaliador-data { font-size: 0.8rem; color: #999; }
+    .avaliacao-card .avaliacao-stars { color: #f59e0b; font-size: 0.85rem; margin-bottom: 0.4rem; }
+    .avaliacao-card .avaliacao-texto { font-size: 0.9rem; color: #666; }
+    .avaliacao-card .avaliacao-evento {
+        font-size: 0.8rem;
+        color: #8B0000;
+        margin-top: 0.4rem;
+    }
+
+    .btn-solicitar-orcamento {
+        background: #8B0000;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 0.8rem 2rem;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+        width: 100%;
+    }
+    .btn-solicitar-orcamento:hover { background: #a00000; color: #fff; transform: translateY(-2px); }
+
+    .btn-voltar-marketplace {
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.3s;
+    }
+    .btn-voltar-marketplace:hover { color: #fff; }
+
+    .cta-orcamento {
+        background: linear-gradient(135deg, #8B0000, #b22222);
+        border-radius: 16px;
+        padding: 2rem;
+        color: #fff;
+        text-align: center;
+    }
+    .cta-orcamento h5 { font-weight: 700; margin-bottom: 0.5rem; }
+    .cta-orcamento p { opacity: 0.9; font-size: 0.9rem; margin-bottom: 1rem; }
+</style>
+
+<!-- Hero -->
+<section class="perfil-hero">
+    <div class="container">
+        <a asp-action="Index" class="btn-voltar-marketplace mb-3 d-inline-block">
+            <i class="fas fa-arrow-left"></i> Voltar ao Marketplace
+        </a>
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="perfil-avatar">
+                    <i class="fas fa-store"></i>
+                </div>
+                <h1 class="perfil-nome">@Model.Pessoa?.Nome</h1>
+                <span class="perfil-categoria">@Model.TipoServico</span>
+                <div class="perfil-stars">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= Math.Round(Model.AvaliacaoMedia))
+                        {
+                            <i class="fas fa-star"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-star empty"></i>
+                        }
+                    }
+                    <span style="font-size: 1rem; margin-left: 0.5rem;">
+                        @Model.AvaliacaoMedia.ToString("N1") (@totalAvaliacoes @(totalAvaliacoes == 1 ? "avaliação" : "avaliações"))
+                    </span>
+                </div>
+                <div class="perfil-stats">
+                    <div class="perfil-stat">
+                        <div class="num">@Model.Produtos.Count</div>
+                        <div class="label">Produtos</div>
+                    </div>
+                    <div class="perfil-stat">
+                        <div class="num">@totalAvaliacoes</div>
+                        <div class="label">Avaliações</div>
+                    </div>
+                    <div class="perfil-stat">
+                        <div class="num">@ViewBag.TotalPedidos</div>
+                        <div class="label">Pedidos</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                @if (isOrganizador)
+                {
+                    <a asp-action="SolicitarOrcamento" asp-route-id="@Model.Id" class="btn btn-solicitar-orcamento" style="width: auto; padding: 0.8rem 2.5rem;">
+                        <i class="fas fa-file-invoice-dollar"></i> Solicitar Orçamento
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container" style="margin-bottom: 3rem;">
+    <div class="row">
+        <!-- Coluna Lateral -->
+        <div class="col-lg-4">
+            <!-- Info do Fornecedor -->
+            <div class="info-card">
+                <h5><i class="fas fa-info-circle"></i> Informações</h5>
+                <div class="info-row">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>@Model.Cidade, @Model.UF</span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Pessoa?.Telefone))
+                {
+                    <div class="info-row">
+                        <i class="fas fa-phone"></i>
+                        <span>@Model.Pessoa.Telefone</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Email))
+                {
+                    <div class="info-row">
+                        <i class="fas fa-envelope"></i>
+                        <span>@Model.Email</span>
+                    </div>
+                }
+                <div class="info-row">
+                    <i class="fas fa-id-card"></i>
+                    <span>CNPJ: @Model.Cnpj</span>
+                </div>
+                <div class="info-row">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Desde @Model.DataCadastro.ToString("MMMM yyyy")</span>
+                </div>
+            </div>
+
+            <!-- CTA Orçamento -->
+            @if (isOrganizador)
+            {
+                <div class="cta-orcamento">
+                    <h5><i class="fas fa-handshake"></i> Precisa de um orçamento?</h5>
+                    <p>Envie uma solicitação personalizada e receba uma proposta diretamente deste fornecedor.</p>
+                    <a asp-action="SolicitarOrcamento" asp-route-id="@Model.Id" class="btn btn-light" style="font-weight: 700; border-radius: 12px; padding: 0.6rem 2rem;">
+                        <i class="fas fa-paper-plane"></i> Solicitar Orçamento
+                    </a>
+                </div>
+            }
+            else if (!User.Identity!.IsAuthenticated)
+            {
+                <div class="cta-orcamento">
+                    <h5><i class="fas fa-sign-in-alt"></i> Quer solicitar um orçamento?</h5>
+                    <p>Faça login como organizador para enviar solicitações de orçamento.</p>
+                    <a asp-controller="Auth" asp-action="LoginOrganizador" class="btn btn-light" style="font-weight: 700; border-radius: 12px; padding: 0.6rem 2rem;">
+                        <i class="fas fa-sign-in-alt"></i> Entrar
+                    </a>
+                </div>
+            }
+        </div>
+
+        <!-- Coluna Principal -->
+        <div class="col-lg-8">
+            <!-- Produtos -->
+            <div class="info-card">
+                <h5><i class="fas fa-box"></i> Produtos e Serviços (@Model.Produtos.Count)</h5>
+                @if (Model.Produtos.Any())
+                {
+                    <div class="row">
+                        @foreach (var produto in Model.Produtos)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <a asp-controller="Fornecedor" asp-action="DetalhesProduto" asp-route-id="@produto.Id" style="text-decoration:none; color:inherit;">
+                                    <div class="produto-grid-card">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6>@produto.Nome</h6>
+                                            <span class="tipo-badge">@produto.Tipo</span>
+                                        </div>
+                                        <p class="descricao">@produto.Descricao</p>
+                                        <div class="preco">R$ @produto.Preco.ToString("N2")</div>
+                                    </div>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center py-3"><i class="fas fa-box-open"></i> Nenhum produto cadastrado.</p>
+                }
+            </div>
+
+            <!-- Avaliações -->
+            <div class="info-card">
+                <h5><i class="fas fa-star"></i> Avaliações (@totalAvaliacoes)</h5>
+                @if (avaliacoes.Any())
+                {
+                    <!-- Resumo -->
+                    <div class="d-flex align-items-center gap-3 mb-3 p-3" style="background: #faf8f5; border-radius: 12px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2.5rem; font-weight: 800; color: #8B0000;">@Model.AvaliacaoMedia.ToString("N1")</div>
+                            <div style="color: #f59e0b;">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fas fa-star@(i <= Math.Round(Model.AvaliacaoMedia) ? "" : " empty" )" style="@(i <= Math.Round(Model.AvaliacaoMedia) ? "color:#f59e0b;" : "color:#ddd;")"></i>
+                                }
+                            </div>
+                            <div style="font-size: 0.8rem; color: #999;">@totalAvaliacoes @(totalAvaliacoes == 1 ? "avaliação" : "avaliações")</div>
+                        </div>
+                        <div style="flex: 1;">
+                            @for (int star = 5; star >= 1; star--)
+                            {
+                                var count = avaliacoes.Count(a => a.Nota == star);
+                                var percent = totalAvaliacoes > 0 ? (double)count / totalAvaliacoes * 100 : 0;
+                                <div class="d-flex align-items-center gap-2" style="margin-bottom: 0.2rem;">
+                                    <span style="font-size: 0.8rem; width: 20px; color: #999;">@star</span>
+                                    <div style="flex: 1; height: 8px; background: #e5e7eb; border-radius: 4px;">
+                                        <div style="width: @percent%; height: 100%; background: #f59e0b; border-radius: 4px;"></div>
+                                    </div>
+                                    <span style="font-size: 0.75rem; color: #999; width: 25px;">@count</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    @foreach (var avaliacao in avaliacoes.Take(10))
+                    {
+                        var inicialNome = avaliacao.Organizador?.Pessoa?.Nome?.Substring(0, 1).ToUpper() ?? "?";
+                        <div class="avaliacao-card">
+                            <div class="avaliador">
+                                <div class="avaliador-avatar">@inicialNome</div>
+                                <div>
+                                    <div class="avaliador-nome">@(avaliacao.Organizador?.Pessoa?.Nome ?? "Organizador")</div>
+                                    <div class="avaliador-data">@avaliacao.DataAvaliacao.ToString("dd/MM/yyyy")</div>
+                                </div>
+                            </div>
+                            <div class="avaliacao-stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fas fa-star" style="color: @(i <= avaliacao.Nota ? "#f59e0b" : "#ddd")"></i>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(avaliacao.Comentario))
+                            {
+                                <div class="avaliacao-texto">@avaliacao.Comentario</div>
+                            }
+                            @if (avaliacao.Evento != null)
+                            {
+                                <div class="avaliacao-evento">
+                                    <i class="fas fa-calendar-alt"></i> @avaliacao.Evento.NomeEvento
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted text-center py-3"><i class="fas fa-star"></i> Nenhuma avaliação ainda.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

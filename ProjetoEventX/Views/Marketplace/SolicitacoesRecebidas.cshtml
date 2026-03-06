@@ -1,0 +1,321 @@
+@model IEnumerable<ProjetoEventX.Models.SolicitacaoOrcamento>
+@{
+    ViewData["Title"] = "Solicitações de Orçamento Recebidas";
+}
+
+<style>
+    .solicitacoes-section {
+        background: #f5f0eb;
+        min-height: 80vh;
+        padding: 2rem 0 3rem;
+    }
+    .solicitacoes-header h2 {
+        color: #8B0000;
+        font-weight: 700;
+    }
+
+    .solicitacao-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+    }
+    .solicitacao-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    .solicitacao-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    .solicitacao-titulo { font-weight: 700; font-size: 1.1rem; color: #333; margin-bottom: 0.2rem; }
+    .solicitacao-organizador { font-size: 0.9rem; color: #8B0000; font-weight: 600; }
+
+    .status-badge {
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .status-pendente { background: #fef3c7; color: #92400e; }
+    .status-respondido { background: #dbeafe; color: #1e40af; }
+    .status-aceito { background: #d1fae5; color: #065f46; }
+    .status-recusado { background: #fee2e2; color: #991b1b; }
+
+    .solicitacao-detalhes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.8rem;
+        margin: 1rem 0;
+    }
+    .detalhe-item { font-size: 0.85rem; color: #666; }
+    .detalhe-item i { color: #8B0000; margin-right: 0.3rem; }
+    .detalhe-item .valor { font-weight: 600; color: #333; }
+
+    .resposta-form {
+        background: #faf8f5;
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        border: 2px solid #e0d6cc;
+    }
+    .resposta-form h6 { font-weight: 700; color: #8B0000; margin-bottom: 1rem; }
+    .form-control-resp {
+        border: 1px solid #e0d6cc;
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        background: #fff;
+    }
+    .form-control-resp:focus { border-color: #8B0000; box-shadow: 0 0 0 3px rgba(139,0,0,0.1); }
+
+    .btn-responder {
+        background: #8B0000;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+    }
+    .btn-responder:hover { background: #a00000; color: #fff; }
+    .btn-recusar {
+        background: none;
+        color: #dc3545;
+        border: 2px solid #dc3545;
+        border-radius: 10px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+    }
+    .btn-recusar:hover { background: #dc3545; color: #fff; }
+
+    .resposta-enviada {
+        background: #f0f7ff;
+        border-radius: 12px;
+        padding: 1.2rem;
+        margin-top: 1rem;
+        border-left: 4px solid #3b82f6;
+    }
+    .resposta-enviada h6 { font-weight: 700; color: #1e40af; }
+
+    .aceito-badge {
+        background: #d1fae5;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1rem;
+        text-align: center;
+        color: #065f46;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    }
+    .empty-state i { font-size: 4rem; color: #ddd; margin-bottom: 1rem; }
+
+    .tab-filtros {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .tab-filtro {
+        padding: 0.4rem 1.2rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 2px solid #e0d6cc;
+        color: #666;
+        background: #fff;
+    }
+    .tab-filtro:hover, .tab-filtro.active { border-color: #8B0000; color: #8B0000; background: #faf5f0; }
+</style>
+
+<section class="solicitacoes-section">
+    <div class="container">
+        <div class="solicitacoes-header mb-4">
+            <h2><i class="fas fa-inbox"></i> Solicitações Recebidas</h2>
+            <p class="text-muted">Gerencie as solicitações de orçamento enviadas por organizadores</p>
+        </div>
+
+        <div class="tab-filtros">
+            <span class="tab-filtro active" onclick="filtrarStatus('')">Todas (@Model.Count())</span>
+            <span class="tab-filtro" onclick="filtrarStatus('Pendente')">
+                <i class="fas fa-clock"></i> Pendentes (@Model.Count(s => s.Status == "Pendente"))
+            </span>
+            <span class="tab-filtro" onclick="filtrarStatus('Respondido')">
+                <i class="fas fa-reply"></i> Respondidas (@Model.Count(s => s.Status == "Respondido"))
+            </span>
+            <span class="tab-filtro" onclick="filtrarStatus('Aceito')">
+                <i class="fas fa-check-circle"></i> Aceitas (@Model.Count(s => s.Status == "Aceito"))
+            </span>
+        </div>
+
+        @if (Model.Any())
+        {
+            @foreach (var solicitacao in Model)
+            {
+                var statusClass = solicitacao.Status switch
+                {
+                    "Pendente" => "status-pendente",
+                    "Respondido" => "status-respondido",
+                    "Aceito" => "status-aceito",
+                    "Recusado" => "status-recusado",
+                    _ => ""
+                };
+
+                <div class="solicitacao-card" data-status="@solicitacao.Status">
+                    <div class="solicitacao-card-header">
+                        <div>
+                            <div class="solicitacao-titulo">@solicitacao.Titulo</div>
+                            <div class="solicitacao-organizador">
+                                <i class="fas fa-user-tie"></i> @(solicitacao.Organizador?.Pessoa?.Nome ?? "Organizador")
+                            </div>
+                        </div>
+                        <span class="status-badge @statusClass">@solicitacao.Status</span>
+                    </div>
+
+                    <p style="font-size: 0.9rem; color: #666;">@solicitacao.Descricao</p>
+
+                    <div class="solicitacao-detalhes">
+                        <div class="detalhe-item">
+                            <i class="fas fa-calendar"></i> Recebido em
+                            <div class="valor">@solicitacao.DataSolicitacao.ToString("dd/MM/yyyy")</div>
+                        </div>
+                        @if (solicitacao.DataEvento.HasValue)
+                        {
+                            <div class="detalhe-item">
+                                <i class="fas fa-calendar-alt"></i> Data do evento
+                                <div class="valor">@solicitacao.DataEvento.Value.ToString("dd/MM/yyyy")</div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(solicitacao.LocalEvento))
+                        {
+                            <div class="detalhe-item">
+                                <i class="fas fa-map-marker-alt"></i> Local
+                                <div class="valor">@solicitacao.LocalEvento</div>
+                            </div>
+                        }
+                        @if (solicitacao.OrcamentoEstimado.HasValue)
+                        {
+                            <div class="detalhe-item">
+                                <i class="fas fa-wallet"></i> Orçamento do cliente
+                                <div class="valor">R$ @solicitacao.OrcamentoEstimado.Value.ToString("N2")</div>
+                            </div>
+                        }
+                        @if (solicitacao.QuantidadeConvidados.HasValue)
+                        {
+                            <div class="detalhe-item">
+                                <i class="fas fa-users"></i> Convidados
+                                <div class="valor">@solicitacao.QuantidadeConvidados</div>
+                            </div>
+                        }
+                        @if (solicitacao.Evento != null)
+                        {
+                            <div class="detalhe-item">
+                                <i class="fas fa-calendar-check"></i> Evento
+                                <div class="valor">@solicitacao.Evento.NomeEvento</div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(solicitacao.TipoServicoDesejado))
+                        {
+                            <div class="detalhe-item">
+                                <i class="fas fa-tag"></i> Serviço desejado
+                                <div class="valor">@solicitacao.TipoServicoDesejado</div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (solicitacao.Status == "Pendente")
+                    {
+                        <div class="resposta-form">
+                            <h6><i class="fas fa-reply"></i> Responder Solicitação</h6>
+                            <form method="post" asp-action="ResponderOrcamento">
+                                <input type="hidden" name="solicitacaoId" value="@solicitacao.Id" />
+                                <div class="mb-3">
+                                    <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">Sua Proposta / Resposta</label>
+                                    <textarea name="resposta" class="form-control form-control-resp" rows="3"
+                                              placeholder="Descreva sua proposta, condições, prazos..." required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">Valor Proposto (R$)</label>
+                                    <input type="number" name="valorProposto" class="form-control form-control-resp"
+                                           step="0.01" min="0" placeholder="Valor do seu orçamento" />
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" name="acao" value="responder" class="btn-responder">
+                                        <i class="fas fa-paper-plane"></i> Enviar Proposta
+                                    </button>
+                                    <button type="submit" name="acao" value="recusar" class="btn-recusar"
+                                            onclick="return confirm('Deseja realmente recusar esta solicitação?')">
+                                        <i class="fas fa-times"></i> Recusar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    }
+                    else if (solicitacao.Status == "Respondido")
+                    {
+                        <div class="resposta-enviada">
+                            <h6><i class="fas fa-check-circle"></i> Sua Resposta</h6>
+                            <p style="font-size: 0.9rem; color: #555;">@solicitacao.RespostaFornecedor</p>
+                            @if (solicitacao.ValorProposto.HasValue)
+                            {
+                                <div style="font-size: 1.2rem; font-weight: 700; color: #8B0000;">
+                                    R$ @solicitacao.ValorProposto.Value.ToString("N2")
+                                </div>
+                            }
+                            <small class="text-muted">Aguardando resposta do organizador</small>
+                        </div>
+                    }
+                    else if (solicitacao.Status == "Aceito")
+                    {
+                        <div class="aceito-badge">
+                            <i class="fas fa-check-circle fa-2x d-block mb-2"></i>
+                            Orçamento aceito pelo organizador!
+                            @if (solicitacao.ValorProposto.HasValue)
+                            {
+                                <div style="font-size: 1.3rem; font-weight: 800; margin-top: 0.5rem;">
+                                    R$ @solicitacao.ValorProposto.Value.ToString("N2")
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-inbox d-block"></i>
+                <h4 style="color: #999; font-weight: 600;">Nenhuma solicitação recebida</h4>
+                <p class="text-muted">Quando organizadores solicitarem orçamentos, eles aparecerão aqui.</p>
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function filtrarStatus(status) {
+            document.querySelectorAll('.tab-filtro').forEach(t => t.classList.remove('active'));
+            event.target.closest('.tab-filtro').classList.add('active');
+
+            document.querySelectorAll('.solicitacao-card').forEach(card => {
+                if (!status || card.dataset.status === status) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+}

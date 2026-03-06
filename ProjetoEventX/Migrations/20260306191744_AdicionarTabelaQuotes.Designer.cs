@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjetoEventX.Data;
@@ -11,9 +12,11 @@ using ProjetoEventX.Data;
 namespace ProjetoEventX.Migrations
 {
     [DbContext(typeof(EventXContext))]
-    partial class EventXContextModelSnapshot : ModelSnapshot
+    [Migration("20260306191744_AdicionarTabelaQuotes")]
+    partial class AdicionarTabelaQuotes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1391,45 +1394,6 @@ namespace ProjetoEventX.Migrations
                     b.ToTable("Quotes");
                 });
 
-            modelBuilder.Entity("ProjetoEventX.Models.QuoteMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsRead")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<int>("QuoteId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SenderType")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
-
-                    b.Property<int>("SenderUserId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuoteId");
-
-                    b.ToTable("QuoteMessages");
-                });
-
             modelBuilder.Entity("ProjetoEventX.Models.SolicitacaoOrcamento", b =>
                 {
                     b.Property<int>("Id")
@@ -2110,17 +2074,6 @@ namespace ProjetoEventX.Migrations
                     b.Navigation("PedidoGerado");
 
                     b.Navigation("Supplier");
-                });
-
-            modelBuilder.Entity("ProjetoEventX.Models.QuoteMessage", b =>
-                {
-                    b.HasOne("ProjetoEventX.Models.Quote", "Quote")
-                        .WithMany()
-                        .HasForeignKey("QuoteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Quote");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.SolicitacaoOrcamento", b =>

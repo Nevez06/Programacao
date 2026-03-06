@@ -1,0 +1,222 @@
+@{
+    ViewData["Title"] = "Avaliar Fornecedor";
+    var fornecedor = (ProjetoEventX.Models.Fornecedor)ViewBag.Fornecedor;
+    var evento = (ProjetoEventX.Models.Evento)ViewBag.Evento;
+}
+
+<style>
+    .avaliacao-wrapper {
+        background: #f5f1ed;
+        min-height: 100vh;
+        padding-bottom: 3rem;
+    }
+
+    .avaliacao-header {
+        background: linear-gradient(135deg, #8B0000 0%, #B22222 40%, #D4A574 100%);
+        color: #fff;
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .avaliacao-header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .avaliacao-header p { opacity: 0.85; font-size: 1rem; margin: 0; }
+
+    .avaliacao-header .header-icon {
+        width: 60px; height: 60px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; margin-right: 1rem;
+    }
+
+    .form-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-card h5 {
+        font-weight: 700; color: #8B0000;
+        margin-bottom: 1.5rem; font-size: 1.1rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .stars-input {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 0.3rem;
+    }
+
+    .stars-input input { display: none; }
+
+    .stars-input label {
+        font-size: 2.5rem;
+        color: #ddd;
+        cursor: pointer;
+        transition: color 0.2s, transform 0.15s;
+    }
+
+    .stars-input label:hover,
+    .stars-input label:hover ~ label,
+    .stars-input input:checked ~ label {
+        color: #f59e0b;
+        transform: scale(1.1);
+    }
+
+    .nota-desc {
+        font-size: 0.9rem;
+        color: #888;
+        margin-top: 0.5rem;
+        min-height: 1.5rem;
+    }
+
+    .fornecedor-info-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        border-left: 5px solid #8B0000;
+        margin-bottom: 1.5rem;
+    }
+
+    .fornecedor-avatar {
+        width: 56px; height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8B0000, #B22222);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; font-weight: 700; color: #fff;
+    }
+
+    .btn-enviar {
+        background: linear-gradient(135deg, #8B0000, #B22222);
+        color: #fff; border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 12px;
+        font-weight: 700; font-size: 1rem;
+        transition: all 0.2s;
+    }
+
+    .btn-enviar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(139,0,0,0.3);
+        color: #fff;
+    }
+
+    .btn-voltar {
+        background: #f0ece8; color: #555; border: none;
+        padding: 0.75rem 1.5rem; border-radius: 12px;
+        font-weight: 600; font-size: 0.95rem;
+        text-decoration: none; transition: all 0.2s;
+    }
+
+    .btn-voltar:hover { background: #e5e0db; color: #333; }
+</style>
+
+<div class="avaliacao-wrapper">
+    <section class="avaliacao-header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <div class="header-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div>
+                    <h1>Avaliar Fornecedor</h1>
+                    <p>Compartilhe sua experiência com <strong>@fornecedor.Pessoa?.Nome</strong></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+
+                <!-- Info do Fornecedor -->
+                <div class="fornecedor-info-card">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="fornecedor-avatar">
+                            @(fornecedor.Pessoa?.Nome?.Substring(0, 1).ToUpper())
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">@fornecedor.Pessoa?.Nome</h6>
+                            <small class="text-muted">@fornecedor.TipoServico &bull; @fornecedor.Cidade/@fornecedor.UF</small>
+                        </div>
+                        <div class="ms-auto text-end">
+                            <small class="text-muted d-block">Evento</small>
+                            <span class="fw-bold" style="color: #8B0000;">@evento.NomeEvento</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulário -->
+                <form method="post" asp-action="Criar" asp-route-fornecedorId="@fornecedor.Id" asp-route-eventoId="@evento.Id">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-card">
+                        <h5><i class="fas fa-star me-2"></i>Sua Avaliação</h5>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Nota</label>
+                            <div class="stars-input">
+                                <input type="radio" name="nota" id="star5" value="5" />
+                                <label for="star5" title="Excelente"><i class="fas fa-star"></i></label>
+                                <input type="radio" name="nota" id="star4" value="4" />
+                                <label for="star4" title="Muito bom"><i class="fas fa-star"></i></label>
+                                <input type="radio" name="nota" id="star3" value="3" />
+                                <label for="star3" title="Bom"><i class="fas fa-star"></i></label>
+                                <input type="radio" name="nota" id="star2" value="2" />
+                                <label for="star2" title="Regular"><i class="fas fa-star"></i></label>
+                                <input type="radio" name="nota" id="star1" value="1" />
+                                <label for="star1" title="Ruim"><i class="fas fa-star"></i></label>
+                            </div>
+                            <div class="nota-desc" id="notaDesc"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-comment me-1"></i> Comentário <small class="text-muted fw-normal">(opcional)</small>
+                            </label>
+                            <textarea name="comentario" class="form-control" rows="4"
+                                      placeholder="Conte como foi sua experiência com este fornecedor..."
+                                      maxlength="1000"></textarea>
+                            <small class="form-text text-muted">Máximo 1000 caracteres</small>
+                        </div>
+                    </div>
+
+                    <div class="form-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a asp-action="Avaliacoes" asp-route-fornecedorId="@fornecedor.Id" class="btn-voltar">
+                                <i class="fas fa-arrow-left me-1"></i> Voltar
+                            </a>
+                            <button type="submit" class="btn-enviar" id="btnEnviar" disabled>
+                                <i class="fas fa-paper-plane me-1"></i> Enviar Avaliação
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var descricoes = { 1: 'Ruim', 2: 'Regular', 3: 'Bom', 4: 'Muito bom', 5: 'Excelente' };
+            var radios = document.querySelectorAll('.stars-input input');
+            var desc = document.getElementById('notaDesc');
+            var btn = document.getElementById('btnEnviar');
+
+            radios.forEach(function (r) {
+                r.addEventListener('change', function () {
+                    desc.textContent = descricoes[this.value] || '';
+                    btn.disabled = false;
+                });
+            });
+        });
+    </script>
+}

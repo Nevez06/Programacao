@@ -390,7 +390,7 @@
                         <i class="fas fa-star"></i>
                     </div>
                     <div class="stat-number">@(Model.AvaliacaoMedia.ToString("N1"))</div>
-                    <div class="stat-label">Avaliação Média (@ViewBag.TotalFeedbacks avaliações)</div>
+                    <div class="stat-label">Avaliação Média (@ViewBag.TotalAvaliacoes avaliações)</div>
                 </div>
             </div>
         </div>
@@ -559,23 +559,38 @@
                     }
                 </div>
 
-                <!-- Feedbacks -->
+                <!-- Avaliações de Fornecedores -->
                 <div class="produtos-list-card">
-                    <h5><i class="fas fa-comment-dots me-2"></i>Avaliações</h5>
-                    @if (Model.Feedbacks != null && Model.Feedbacks.Any())
+                    <h5><i class="fas fa-star me-2"></i>Avaliações Recentes</h5>
+                    @{
+                        var avaliacoesRecentes = ViewBag.AvaliacoesRecentes as List<ProjetoEventX.Models.AvaliacaoFornecedor>;
+                    }
+                    @if (avaliacoesRecentes != null && avaliacoesRecentes.Any())
                     {
-                        @foreach (var feedback in Model.Feedbacks.OrderByDescending(f => f.DataEnvioFeedback).Take(3))
+                        @foreach (var avaliacao in avaliacoesRecentes)
                         {
                             <div class="produto-row">
                                 <div class="produto-icon-sm" style="background: linear-gradient(135deg, #1565C0, #42A5F5);">
                                     <i class="fas fa-star"></i>
                                 </div>
                                 <div class="produto-info-sm">
-                                    <div class="produto-nome-sm">@feedback.AvaliacaoFeedback</div>
-                                    <div class="produto-tipo-sm">@(feedback.ComentarioFeedback ?? "Sem comentário")</div>
+                                    <div class="produto-nome-sm">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="fa@(i <= avaliacao.Nota ? "s" : "r") fa-star" style="color:@(i <= avaliacao.Nota ? "#f59e0b" : "#ddd"); font-size: 0.85rem;"></i>
+                                        }
+                                        <span class="ms-2 text-muted" style="font-size:0.8rem;">@avaliacao.Organizador?.Pessoa?.Nome</span>
+                                    </div>
+                                    <div class="produto-tipo-sm">@(avaliacao.Comentario ?? "Sem comentário")</div>
                                 </div>
                             </div>
                         }
+                        <div class="text-center mt-2">
+                            <a asp-controller="AvaliacaoFornecedor" asp-action="Avaliacoes" asp-route-fornecedorId="@Model.Id"
+                               class="text-decoration-none" style="color:#8B0000; font-weight:600; font-size:0.9rem;">
+                                Ver todas as avaliações <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
                     }
                     else
                     {

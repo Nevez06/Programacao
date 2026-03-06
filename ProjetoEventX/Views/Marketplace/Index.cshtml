@@ -1,0 +1,543 @@
+@model IEnumerable<ProjetoEventX.Models.Fornecedor>
+@{
+    ViewData["Title"] = "Marketplace de Fornecedores";
+    var categorias = ViewBag.Categorias as List<string> ?? new List<string>();
+    var ufs = ViewBag.UFs as List<string> ?? new List<string>();
+}
+
+<style>
+    .marketplace-hero {
+        background: linear-gradient(135deg, #8B0000 0%, #b22222 50%, #a0522d 100%);
+        padding: 3rem 0;
+        color: #fff;
+        margin-top: -1.5rem;
+        margin-bottom: 2rem;
+    }
+    .marketplace-hero h1 { font-weight: 800; font-size: 2.2rem; }
+    .marketplace-hero p { opacity: 0.9; font-size: 1.1rem; }
+    .search-box {
+        background: rgba(255,255,255,0.15);
+        border-radius: 16px;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+    }
+    .search-box input, .search-box select {
+        border: none;
+        border-radius: 12px;
+        padding: 0.7rem 1rem;
+        font-size: 0.95rem;
+    }
+    .search-box input:focus, .search-box select:focus {
+        box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+    }
+    .btn-buscar {
+        background: #fff;
+        color: #8B0000;
+        font-weight: 700;
+        border-radius: 12px;
+        padding: 0.7rem 2rem;
+        border: none;
+        transition: all 0.3s;
+    }
+    .btn-buscar:hover { background: #f5f1ed; transform: translateY(-2px); }
+
+    .filtros-lateral {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        position: sticky;
+        top: 80px;
+    }
+    .filtros-lateral h5 {
+        color: #8B0000;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 1.2rem;
+    }
+    .filtro-grupo { margin-bottom: 1.2rem; }
+    .filtro-grupo label {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #555;
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+    .filtro-grupo select, .filtro-grupo input {
+        width: 100%;
+        border: 1px solid #e0d6cc;
+        border-radius: 10px;
+        padding: 0.5rem 0.8rem;
+        font-size: 0.9rem;
+        background: #faf8f5;
+    }
+    .filtro-grupo select:focus, .filtro-grupo input:focus {
+        border-color: #8B0000;
+        box-shadow: 0 0 0 3px rgba(139,0,0,0.1);
+        outline: none;
+    }
+
+    .star-filter { display: flex; gap: 0.3rem; margin-top: 0.3rem; }
+    .star-filter .star-btn {
+        background: none;
+        border: 2px solid #e0d6cc;
+        border-radius: 8px;
+        padding: 0.3rem 0.6rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+        color: #999;
+    }
+    .star-filter .star-btn:hover, .star-filter .star-btn.active {
+        border-color: #f59e0b;
+        color: #f59e0b;
+        background: #fef3c7;
+    }
+
+    .btn-filtrar {
+        width: 100%;
+        background: #8B0000;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 0.7rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-filtrar:hover { background: #a00000; color: #fff; }
+    .btn-limpar {
+        width: 100%;
+        background: none;
+        color: #8B0000;
+        border: 1px solid #8B0000;
+        border-radius: 12px;
+        padding: 0.6rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        margin-top: 0.5rem;
+    }
+    .btn-limpar:hover { background: #8B0000; color: #fff; }
+
+    .resultados-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+    .resultados-header h5 { font-weight: 700; color: #333; margin: 0; }
+    .resultados-header .badge { background: #8B0000; }
+    .ordenar-select {
+        border: 1px solid #e0d6cc;
+        border-radius: 10px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        background: #fff;
+    }
+
+    .fornecedor-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        height: 100%;
+    }
+    .fornecedor-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+    .fornecedor-card-header {
+        background: linear-gradient(135deg, #8B0000, #b22222);
+        padding: 1.5rem;
+        color: #fff;
+        position: relative;
+    }
+    .fornecedor-avatar {
+        width: 60px;
+        height: 60px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 0.8rem;
+    }
+    .fornecedor-card-header h5 {
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+        font-size: 1.1rem;
+    }
+    .fornecedor-card-header .categoria-badge {
+        background: rgba(255,255,255,0.25);
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .fornecedor-card-body { padding: 1.2rem 1.5rem; }
+    .fornecedor-info-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.6rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    .fornecedor-info-row i { color: #8B0000; width: 18px; text-align: center; }
+    .fornecedor-stars { color: #f59e0b; font-size: 0.85rem; }
+    .fornecedor-stars .empty { color: #ddd; }
+    .preco-range {
+        background: #faf8f5;
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        margin: 0.8rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .preco-range .label { font-size: 0.8rem; color: #999; }
+    .preco-range .valor { font-weight: 700; color: #8B0000; font-size: 1rem; }
+    .produtos-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.8rem;
+    }
+    .produto-tag {
+        background: #f5f1ed;
+        color: #8B0000;
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .fornecedor-card-footer {
+        padding: 0 1.5rem 1.2rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+    .btn-ver-perfil {
+        flex: 1;
+        background: #8B0000;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 0.6rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .btn-ver-perfil:hover { background: #a00000; color: #fff; }
+    .btn-orcamento {
+        flex: 1;
+        background: none;
+        color: #8B0000;
+        border: 2px solid #8B0000;
+        border-radius: 10px;
+        padding: 0.6rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .btn-orcamento:hover { background: #8B0000; color: #fff; }
+
+    .empty-marketplace {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    }
+    .empty-marketplace i { font-size: 4rem; color: #ddd; margin-bottom: 1rem; }
+    .empty-marketplace h4 { color: #999; font-weight: 600; }
+
+    .stats-bar {
+        display: flex;
+        gap: 2rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    .stat-item { text-align: center; }
+    .stat-item .stat-num { font-size: 1.5rem; font-weight: 800; }
+    .stat-item .stat-label { font-size: 0.8rem; opacity: 0.8; }
+</style>
+
+<!-- Hero -->
+<section class="marketplace-hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h1><i class="fas fa-store"></i> Marketplace de Fornecedores</h1>
+                <p>Encontre os melhores fornecedores para o seu evento. Compare preços, avaliações e solicite orçamentos diretamente.</p>
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-num">@ViewBag.TotalFornecedores</div>
+                        <div class="stat-label">Fornecedores</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num">@(categorias.Count)</div>
+                        <div class="stat-label">Categorias</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num">@(ufs.Count)</div>
+                        <div class="stat-label">Estados</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <form method="get" asp-action="Index" class="search-box">
+                    <div class="input-group">
+                        <input type="text" name="busca" class="form-control" placeholder="Buscar fornecedores, serviços..."
+                               value="@ViewBag.FiltroBusca" />
+                        <button type="submit" class="btn btn-buscar ms-2">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container" style="margin-bottom: 3rem;">
+    <div class="row">
+        <!-- Filtros Laterais -->
+        <div class="col-lg-3 mb-4">
+            <form method="get" asp-action="Index" class="filtros-lateral" id="filtrosForm">
+                <!-- Preservar busca -->
+                <input type="hidden" name="busca" value="@ViewBag.FiltroBusca" />
+
+                <h5><i class="fas fa-sliders-h"></i> Filtros</h5>
+
+                <div class="filtro-grupo">
+                    <label><i class="fas fa-tags"></i> Categoria</label>
+                    <select name="categoria" class="form-select">
+                        <option value="">Todas as categorias</option>
+                        @foreach (var cat in categorias)
+                        {
+                            <option value="@cat" selected="@(ViewBag.FiltroCategoria == cat)">@cat</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="filtro-grupo">
+                    <label><i class="fas fa-map-marker-alt"></i> Estado (UF)</label>
+                    <select name="uf" class="form-select">
+                        <option value="">Todos os estados</option>
+                        @foreach (var estado in ufs)
+                        {
+                            <option value="@estado" selected="@(ViewBag.FiltroUF == estado)">@estado</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="filtro-grupo">
+                    <label><i class="fas fa-city"></i> Cidade</label>
+                    <input type="text" name="localizacao" placeholder="Digite a cidade..."
+                           value="@ViewBag.FiltroLocalizacao" />
+                </div>
+
+                <div class="filtro-grupo">
+                    <label><i class="fas fa-dollar-sign"></i> Faixa de Preço</label>
+                    <div class="d-flex gap-2">
+                        <input type="number" name="precoMin" placeholder="Mín"
+                               value="@ViewBag.FiltroPrecoMin" step="0.01" min="0" style="width:48%;" />
+                        <input type="number" name="precoMax" placeholder="Máx"
+                               value="@ViewBag.FiltroPrecoMax" step="0.01" min="0" style="width:48%;" />
+                    </div>
+                </div>
+
+                <div class="filtro-grupo">
+                    <label><i class="fas fa-star"></i> Avaliação Mínima</label>
+                    <div class="star-filter">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            var isActive = ViewBag.FiltroAvaliacaoMin != null && (int)ViewBag.FiltroAvaliacaoMin == i;
+                            <button type="button" class="star-btn @(isActive ? "active" : "")" data-rating="@i" onclick="setRating(@i)">
+                                @i <i class="fas fa-star"></i>
+                            </button>
+                        }
+                    </div>
+                    <input type="hidden" name="avaliacaoMin" id="avaliacaoMinInput" value="@ViewBag.FiltroAvaliacaoMin" />
+                </div>
+
+                <button type="submit" class="btn btn-filtrar">
+                    <i class="fas fa-filter"></i> Aplicar Filtros
+                </button>
+                <a asp-action="Index" class="btn btn-limpar">
+                    <i class="fas fa-times"></i> Limpar Filtros
+                </a>
+            </form>
+        </div>
+
+        <!-- Lista de Fornecedores -->
+        <div class="col-lg-9">
+            <div class="resultados-header">
+                <div>
+                    <h5>Fornecedores Encontrados <span class="badge">@ViewBag.TotalFornecedores</span></h5>
+                </div>
+                <div>
+                    @{
+                        var ordenarAtual = (string?)ViewBag.FiltroOrdenar ?? "";
+                    }
+                    <select class="ordenar-select" onchange="ordenarPor(this.value)">
+                        @if (string.IsNullOrEmpty(ordenarAtual))
+                        {
+                            <option value="" disabled selected>Ordenar por</option>
+                        }
+                        else
+                        {
+                            <option value="" disabled>Ordenar por</option>
+                        }
+                        @foreach (var opt in new[] {
+                            ("avaliacao", "Melhor avaliação"),
+                            ("preco_asc", "Menor preço"),
+                            ("preco_desc", "Maior preço"),
+                            ("nome", "Nome A-Z"),
+                            ("recente", "Mais recentes")
+                        })
+                        {
+                            if (ordenarAtual == opt.Item1)
+                            {
+                                <option value="@opt.Item1" selected>@opt.Item2</option>
+                            }
+                            else
+                            {
+                                <option value="@opt.Item1">@opt.Item2</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            @if (Model.Any())
+            {
+                <div class="row">
+                    @foreach (var fornecedor in Model)
+                    {
+                        var precoMin = fornecedor.Produtos.Any() ? fornecedor.Produtos.Min(p => p.Preco) : 0;
+                        var precoMax = fornecedor.Produtos.Any() ? fornecedor.Produtos.Max(p => p.Preco) : 0;
+                        var totalAvaliacoes = fornecedor.Avaliacoes?.Count ?? 0;
+
+                        <div class="col-lg-6 col-xl-4 mb-4">
+                            <div class="fornecedor-card">
+                                <div class="fornecedor-card-header">
+                                    <div class="fornecedor-avatar">
+                                        <i class="fas fa-store"></i>
+                                    </div>
+                                    <h5>@fornecedor.Pessoa?.Nome</h5>
+                                    <span class="categoria-badge">@fornecedor.TipoServico</span>
+                                </div>
+                                <div class="fornecedor-card-body">
+                                    <div class="fornecedor-info-row">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span>@fornecedor.Cidade, @fornecedor.UF</span>
+                                    </div>
+                                    <div class="fornecedor-info-row">
+                                        <i class="fas fa-star" style="color: #f59e0b;"></i>
+                                        <span class="fornecedor-stars">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= Math.Round(fornecedor.AvaliacaoMedia))
+                                                {
+                                                    <i class="fas fa-star"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="fas fa-star empty"></i>
+                                                }
+                                            }
+                                            <span style="color: #666; margin-left: 0.3rem;">
+                                                @fornecedor.AvaliacaoMedia.ToString("N1")
+                                                (@totalAvaliacoes @(totalAvaliacoes == 1 ? "avaliação" : "avaliações"))
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <div class="fornecedor-info-row">
+                                        <i class="fas fa-box"></i>
+                                        <span>@fornecedor.Produtos.Count @(fornecedor.Produtos.Count == 1 ? "produto" : "produtos")</span>
+                                    </div>
+
+                                    <div class="preco-range">
+                                        <div>
+                                            <div class="label">A partir de</div>
+                                            <div class="valor">R$ @precoMin.ToString("N2")</div>
+                                        </div>
+                                        @if (precoMin != precoMax)
+                                        {
+                                            <div style="text-align: right;">
+                                                <div class="label">Até</div>
+                                                <div class="valor">R$ @precoMax.ToString("N2")</div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="produtos-tags">
+                                        @foreach (var produto in fornecedor.Produtos.Take(3))
+                                        {
+                                            <span class="produto-tag">@produto.Nome</span>
+                                        }
+                                        @if (fornecedor.Produtos.Count > 3)
+                                        {
+                                            <span class="produto-tag">+@(fornecedor.Produtos.Count - 3) mais</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="fornecedor-card-footer">
+                                    <a asp-action="DetalhesFornecedor" asp-route-id="@fornecedor.Id" class="btn-ver-perfil">
+                                        <i class="fas fa-eye"></i> Ver Perfil
+                                    </a>
+                                    <a asp-action="SolicitarOrcamento" asp-route-id="@fornecedor.Id" class="btn-orcamento">
+                                        <i class="fas fa-file-invoice-dollar"></i> Orçamento
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-marketplace">
+                    <i class="fas fa-search d-block"></i>
+                    <h4>Nenhum fornecedor encontrado</h4>
+                    <p class="text-muted">Tente ajustar os filtros ou faça uma busca diferente.</p>
+                    <a asp-action="Index" class="btn btn-filtrar" style="width: auto; display: inline-block; padding: 0.6rem 2rem;">
+                        <i class="fas fa-undo"></i> Ver todos os fornecedores
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function setRating(rating) {
+            const input = document.getElementById('avaliacaoMinInput');
+            const buttons = document.querySelectorAll('.star-btn');
+
+            if (input.value == rating) {
+                input.value = '';
+                buttons.forEach(b => b.classList.remove('active'));
+            } else {
+                input.value = rating;
+                buttons.forEach(b => {
+                    b.classList.toggle('active', parseInt(b.dataset.rating) === rating);
+                });
+            }
+        }
+
+        function ordenarPor(valor) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('ordenar', valor);
+            window.location.href = url.toString();
+        }
+    </script>
+}

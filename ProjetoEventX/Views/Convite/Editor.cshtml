@@ -1,0 +1,1077 @@
+@{
+    ViewData["Title"] = "Editor de Convites";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventX - Editor de Convites</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;600;700&family=Dancing+Script:wght@400;700&family=Poppins:wght@300;400;600;700&family=Montserrat:wght@300;400;600;700;800&family=Lora:wght@400;600;700&family=Raleway:wght@300;400;600;700&family=Great+Vibes&family=Pacifico&family=Lobster&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --panel-width: 260px;
+            --header-height: 52px;
+            --primary: #8B0000;
+            --primary-light: #b22222;
+            --bg-dark: #1a1a2e;
+            --bg-sidebar: #16213e;
+            --bg-panel: #0f3460;
+            --text-light: #e0e0e0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; background: #0a0a1a; color: #eee; }
+
+        /* Header */
+        .editor-header {
+            height: var(--header-height);
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            z-index: 100;
+        }
+        .editor-header .logo { font-weight: 800; font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
+        .editor-header .actions { display: flex; gap: 0.5rem; }
+        .btn-header { background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.4rem; }
+        .btn-header:hover { background: rgba(255,255,255,0.3); }
+        .btn-header.primary { background: #fff; color: var(--primary); }
+        .btn-header.primary:hover { background: #f0f0f0; }
+
+        /* Layout */
+        .editor-layout {
+            display: flex;
+            height: calc(100vh - var(--header-height));
+        }
+
+        /* Sidebar esquerda */
+        .sidebar-left {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .sidebar-tabs {
+            display: flex;
+            overflow-x: auto;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .sidebar-tab {
+            flex: 1;
+            padding: 10px 4px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.5);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .sidebar-tab:hover { color: rgba(255,255,255,0.8); }
+        .sidebar-tab.active { color: #fff; border-bottom-color: var(--primary-light); background: rgba(255,255,255,0.05); }
+        .sidebar-tab i { display: block; font-size: 1.1rem; margin-bottom: 3px; }
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 1rem; }
+        .sidebar-content::-webkit-scrollbar { width: 4px; }
+        .sidebar-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+        /* Canvas central */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1e1e3a;
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0);
+            background-size: 20px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .canvas-wrapper {
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border-radius: 4px;
+            position: relative;
+        }
+
+        /* Painel direito */
+        .panel-right {
+            width: var(--panel-width);
+            background: var(--bg-panel);
+            border-left: 1px solid rgba(255,255,255,0.08);
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        .panel-right::-webkit-scrollbar { width: 4px; }
+        .panel-right::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+        .panel-section { margin-bottom: 1.2rem; }
+        .panel-section h6 { font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); margin-bottom: 0.6rem; }
+        .panel-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .panel-row label { font-size: 0.8rem; color: rgba(255,255,255,0.7); min-width: 50px; }
+        .panel-input { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 5px 8px; font-size: 0.8rem; color: #fff; outline: none; }
+        .panel-input:focus { border-color: var(--primary-light); }
+        .panel-color { width: 32px; height: 32px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; padding: 0; }
+
+        /* Templates gallery */
+        .template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .template-card {
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        .template-card:hover { border-color: var(--primary-light); transform: scale(1.03); }
+        .template-card.active { border-color: #fff; }
+        .template-preview {
+            width: 100%;
+            aspect-ratio: 3/4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.55rem;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .template-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 4px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            background: rgba(0,0,0,0.7);
+            text-align: center;
+        }
+
+        /* Elements list */
+        .element-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+        .element-item:hover { background: rgba(255,255,255,0.08); }
+        .element-item i { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 0.9rem; background: rgba(255,255,255,0.08); }
+
+        /* Shapes gallery */
+        .shapes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .shape-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.06);
+            transition: all 0.2s;
+            font-size: 1.2rem;
+        }
+        .shape-item:hover { background: rgba(255,255,255,0.15); transform: scale(1.1); }
+
+        /* Icons gallery */
+        .icons-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .icon-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.06);
+            transition: all 0.2s;
+            font-size: 1rem;
+            color: var(--text-light);
+        }
+        .icon-item:hover { background: var(--primary); color: #fff; }
+
+        /* Emojis grid */
+        .emojis-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+        .emoji-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .emoji-item:hover { background: rgba(255,255,255,0.1); transform: scale(1.2); }
+
+        /* Font selector */
+        .font-grid { max-height: 200px; overflow-y: auto; }
+        .font-item { padding: 6px 10px; border-radius: 6px; cursor: pointer; margin-bottom: 2px; transition: all 0.2s; }
+        .font-item:hover { background: rgba(255,255,255,0.08); }
+        .font-item.active { background: var(--primary); }
+
+        /* Zoom controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.3rem;
+            background: rgba(0,0,0,0.7);
+            border-radius: 10px;
+            padding: 4px;
+        }
+        .zoom-btn { background: none; border: none; color: #fff; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s; }
+        .zoom-btn:hover { background: rgba(255,255,255,0.15); }
+        .zoom-level { color: rgba(255,255,255,0.7); font-size: 0.75rem; padding: 0 8px; display: flex; align-items: center; }
+
+        /* Category filter */
+        .cat-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 0.8rem; }
+        .cat-pill {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s;
+        }
+        .cat-pill:hover, .cat-pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* Background options */
+        .bg-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .bg-option:hover, .bg-option.active { border-color: #fff; transform: scale(1.1); }
+
+        .separator { height: 1px; background: rgba(255,255,255,0.08); margin: 1rem 0; }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .sidebar-left { width: 60px; }
+            .sidebar-tab span { display: none; }
+            .sidebar-content { padding: 0.5rem; }
+            .panel-right { width: 200px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="editor-header">
+        <div class="logo">
+            <i class="fas fa-palette"></i>
+            <span>EventX Editor</span>
+            <span style="font-weight:400; opacity:0.7; font-size:0.8rem; margin-left:0.5rem;">@ViewBag.NomeEvento</span>
+        </div>
+        <div class="actions">
+            <button class="btn-header" onclick="undoAction()"><i class="fas fa-undo"></i> Desfazer</button>
+            <button class="btn-header" onclick="redoAction()"><i class="fas fa-redo"></i> Refazer</button>
+            <button class="btn-header" onclick="exportPNG()"><i class="fas fa-image"></i> PNG</button>
+            <button class="btn-header" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+            <button class="btn-header" onclick="salvarTemplate()"><i class="fas fa-save"></i> Salvar</button>
+            <a href="@Url.Action("Criar", "Convite", new { eventoId = ViewBag.EventoId })" class="btn-header"><i class="fas fa-paper-plane"></i> Enviar</a>
+            <a href="@Url.Action("GaleriaTemplates", "Convite", new { eventoId = ViewBag.EventoId })" class="btn-header primary"><i class="fas fa-th"></i> Templates</a>
+        </div>
+    </div>
+
+    <div class="editor-layout">
+        <!-- Sidebar Esquerda - Elementos -->
+        <div class="sidebar-left">
+            <div class="sidebar-tabs">
+                <div class="sidebar-tab active" data-tab="templates" onclick="switchTab('templates')">
+                    <i class="fas fa-th-large"></i><span>Templates</span>
+                </div>
+                <div class="sidebar-tab" data-tab="texto" onclick="switchTab('texto')">
+                    <i class="fas fa-font"></i><span>Texto</span>
+                </div>
+                <div class="sidebar-tab" data-tab="formas" onclick="switchTab('formas')">
+                    <i class="fas fa-shapes"></i><span>Formas</span>
+                </div>
+                <div class="sidebar-tab" data-tab="icones" onclick="switchTab('icones')">
+                    <i class="fas fa-icons"></i><span>Ícones</span>
+                </div>
+                <div class="sidebar-tab" data-tab="emojis" onclick="switchTab('emojis')">
+                    <i class="fas fa-smile"></i><span>Emojis</span>
+                </div>
+                <div class="sidebar-tab" data-tab="imagens" onclick="switchTab('imagens')">
+                    <i class="fas fa-image"></i><span>Imagens</span>
+                </div>
+                <div class="sidebar-tab" data-tab="fundo" onclick="switchTab('fundo')">
+                    <i class="fas fa-fill-drip"></i><span>Fundo</span>
+                </div>
+            </div>
+
+            <div class="sidebar-content">
+                <!-- Tab: Templates -->
+                <div id="tab-templates" class="tab-content">
+                    <div class="cat-pills">
+                        <span class="cat-pill active" onclick="filterTemplates('todos')">Todos</span>
+                        <span class="cat-pill" onclick="filterTemplates('aniversario')">Aniversário</span>
+                        <span class="cat-pill" onclick="filterTemplates('casamento')">Casamento</span>
+                        <span class="cat-pill" onclick="filterTemplates('formatura')">Formatura</span>
+                        <span class="cat-pill" onclick="filterTemplates('corporativo')">Corporativo</span>
+                        <span class="cat-pill" onclick="filterTemplates('festa')">Festa</span>
+                        <span class="cat-pill" onclick="filterTemplates('show')">Show</span>
+                        <span class="cat-pill" onclick="filterTemplates('chadebebe')">Chá de Bebê</span>
+                        <span class="cat-pill" onclick="filterTemplates('infantil')">Infantil</span>
+                        <span class="cat-pill" onclick="filterTemplates('elegante')">Elegante</span>
+                        <span class="cat-pill" onclick="filterTemplates('minimalista')">Minimalista</span>
+                    </div>
+                    <div class="template-grid" id="templatesGrid"></div>
+                </div>
+
+                <!-- Tab: Texto -->
+                <div id="tab-texto" class="tab-content" style="display:none">
+                    <div class="element-item" onclick="addHeading()">
+                        <i class="fas fa-heading"></i> Adicionar Título
+                    </div>
+                    <div class="element-item" onclick="addSubheading()">
+                        <i class="fas fa-h"></i> Adicionar Subtítulo
+                    </div>
+                    <div class="element-item" onclick="addBodyText()">
+                        <i class="fas fa-paragraph"></i> Texto Normal
+                    </div>
+                    <div class="element-item" onclick="addDecorativeText()">
+                        <i class="fas fa-wand-magic-sparkles"></i> Texto Decorativo
+                    </div>
+                    <div class="separator"></div>
+                    <h6 style="font-size:0.75rem; color:rgba(255,255,255,0.5); margin-bottom:0.5rem;">FONTES</h6>
+                    <div class="font-grid" id="fontGrid"></div>
+                </div>
+
+                <!-- Tab: Formas -->
+                <div id="tab-formas" class="tab-content" style="display:none">
+                    <div class="shapes-grid">
+                        <div class="shape-item" onclick="addShape('rect')" title="Retângulo">▬</div>
+                        <div class="shape-item" onclick="addShape('circle')" title="Círculo">●</div>
+                        <div class="shape-item" onclick="addShape('triangle')" title="Triângulo">▲</div>
+                        <div class="shape-item" onclick="addShape('diamond')" title="Diamante">◆</div>
+                        <div class="shape-item" onclick="addShape('star')" title="Estrela">★</div>
+                        <div class="shape-item" onclick="addShape('heart')" title="Coração">♥</div>
+                        <div class="shape-item" onclick="addShape('hexagon')" title="Hexágono">⬡</div>
+                        <div class="shape-item" onclick="addShape('line')" title="Linha">—</div>
+                        <div class="shape-item" onclick="addShape('roundedRect')" title="Rect Arredondado">▢</div>
+                        <div class="shape-item" onclick="addShape('ellipse')" title="Elipse">⬭</div>
+                        <div class="shape-item" onclick="addShape('arrow')" title="Seta">→</div>
+                        <div class="shape-item" onclick="addShape('divider')" title="Divisor">━</div>
+                    </div>
+                    <div class="separator"></div>
+                    <p style="font-size:0.75rem; color:rgba(255,255,255,0.4);">Clique para adicionar ao canvas. Arraste, redimensione e gire livremente.</p>
+                </div>
+
+                <!-- Tab: Ícones -->
+                <div id="tab-icones" class="tab-content" style="display:none">
+                    <div class="icons-grid" id="iconsGrid"></div>
+                </div>
+
+                <!-- Tab: Emojis -->
+                <div id="tab-emojis" class="tab-content" style="display:none">
+                    <div class="emojis-grid" id="emojisGrid"></div>
+                </div>
+
+                <!-- Tab: Imagens -->
+                <div id="tab-imagens" class="tab-content" style="display:none">
+                    <div class="element-item" onclick="document.getElementById('imgUpload').click()">
+                        <i class="fas fa-upload"></i> Upload de Imagem
+                    </div>
+                    <input type="file" id="imgUpload" accept="image/*" style="display:none" onchange="uploadImage(event)">
+                    <div class="element-item" onclick="addImageFromUrl()">
+                        <i class="fas fa-link"></i> Imagem por URL
+                    </div>
+                    <div class="separator"></div>
+                    <p style="font-size:0.75rem; color:rgba(255,255,255,0.4);">Formatos: PNG, JPG, SVG. Arraste para posicionar.</p>
+                </div>
+
+                <!-- Tab: Fundo -->
+                <div id="tab-fundo" class="tab-content" style="display:none">
+                    <h6 style="font-size:0.75rem; color:rgba(255,255,255,0.5); margin-bottom:0.5rem;">COR SÓLIDA</h6>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:1rem;" id="bgColors"></div>
+                    <div class="panel-row">
+                        <label>Cor:</label>
+                        <input type="color" class="panel-color" id="bgCustomColor" value="#ffffff" onchange="setCanvasBg(this.value)">
+                    </div>
+                    <div class="separator"></div>
+                    <h6 style="font-size:0.75rem; color:rgba(255,255,255,0.5); margin-bottom:0.5rem;">GRADIENTES</h6>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;" id="bgGradients"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas Central -->
+        <div class="canvas-area">
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <canvas id="fabricCanvas"></canvas>
+            </div>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomOut()"><i class="fas fa-minus"></i></button>
+                <span class="zoom-level" id="zoomLevel">100%</span>
+                <button class="zoom-btn" onclick="zoomIn()"><i class="fas fa-plus"></i></button>
+                <button class="zoom-btn" onclick="zoomReset()"><i class="fas fa-expand"></i></button>
+            </div>
+        </div>
+
+        <!-- Painel Direito - Configurações -->
+        <div class="panel-right" id="panelRight">
+            <div class="panel-section" id="canvasSettings">
+                <h6>Canvas</h6>
+                <div class="panel-row">
+                    <label>Largura:</label>
+                    <input type="number" class="panel-input" id="canvasWidth" value="600" onchange="resizeCanvas()">
+                </div>
+                <div class="panel-row">
+                    <label>Altura:</label>
+                    <input type="number" class="panel-input" id="canvasHeight" value="800" onchange="resizeCanvas()">
+                </div>
+                <div style="display:flex; gap:4px; margin-top:0.5rem;">
+                    <button class="btn-header" style="flex:1; font-size:0.7rem;" onclick="setPreset('vertical')">Vertical</button>
+                    <button class="btn-header" style="flex:1; font-size:0.7rem;" onclick="setPreset('horizontal')">Horizontal</button>
+                    <button class="btn-header" style="flex:1; font-size:0.7rem;" onclick="setPreset('square')">Quadrado</button>
+                    <button class="btn-header" style="flex:1; font-size:0.7rem;" onclick="setPreset('story')">Story</button>
+                </div>
+            </div>
+
+            <div class="separator"></div>
+
+            <!-- Configurações do objeto selecionado -->
+            <div id="objectSettings" style="display:none;">
+                <div class="panel-section">
+                    <h6>Objeto Selecionado</h6>
+                    <div class="panel-row">
+                        <label>X:</label>
+                        <input type="number" class="panel-input" id="objX" onchange="updateObjPosition()">
+                    </div>
+                    <div class="panel-row">
+                        <label>Y:</label>
+                        <input type="number" class="panel-input" id="objY" onchange="updateObjPosition()">
+                    </div>
+                    <div class="panel-row">
+                        <label>Rotação:</label>
+                        <input type="number" class="panel-input" id="objAngle" onchange="updateObjAngle()" min="-360" max="360">
+                    </div>
+                    <div class="panel-row">
+                        <label>Opacidade:</label>
+                        <input type="range" class="panel-input" id="objOpacity" min="0" max="1" step="0.1" onchange="updateObjOpacity()" style="padding:0;">
+                    </div>
+                </div>
+
+                <!-- Texto settings -->
+                <div id="textSettings" style="display:none;">
+                    <div class="panel-section">
+                        <h6>Texto</h6>
+                        <div class="panel-row">
+                            <label>Fonte:</label>
+                            <select class="panel-input" id="textFont" onchange="updateTextFont()"></select>
+                        </div>
+                        <div class="panel-row">
+                            <label>Tamanho:</label>
+                            <input type="number" class="panel-input" id="textSize" onchange="updateTextSize()" min="8" max="200">
+                        </div>
+                        <div class="panel-row">
+                            <label>Cor:</label>
+                            <input type="color" class="panel-color" id="textColor" onchange="updateTextColor()">
+                        </div>
+                        <div style="display:flex; gap:4px; margin-top:0.5rem;">
+                            <button class="btn-header" style="flex:1; font-size:0.75rem;" id="btnBold" onclick="toggleBold()"><i class="fas fa-bold"></i></button>
+                            <button class="btn-header" style="flex:1; font-size:0.75rem;" id="btnItalic" onclick="toggleItalic()"><i class="fas fa-italic"></i></button>
+                            <button class="btn-header" style="flex:1; font-size:0.75rem;" id="btnUnderline" onclick="toggleUnderline()"><i class="fas fa-underline"></i></button>
+                            <button class="btn-header" style="flex:1; font-size:0.75rem;" id="btnAlignLeft" onclick="setTextAlign('left')"><i class="fas fa-align-left"></i></button>
+                            <button class="btn-header" style="flex:1; font-size:0.75rem;" id="btnAlignCenter" onclick="setTextAlign('center')"><i class="fas fa-align-center"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shape settings -->
+                <div id="shapeSettings" style="display:none;">
+                    <div class="panel-section">
+                        <h6>Forma</h6>
+                        <div class="panel-row">
+                            <label>Cor:</label>
+                            <input type="color" class="panel-color" id="shapeFill" onchange="updateShapeFill()">
+                        </div>
+                        <div class="panel-row">
+                            <label>Borda:</label>
+                            <input type="color" class="panel-color" id="shapeStroke" onchange="updateShapeStroke()">
+                        </div>
+                        <div class="panel-row">
+                            <label>Espess.:</label>
+                            <input type="number" class="panel-input" id="shapeStrokeWidth" min="0" max="20" onchange="updateShapeStrokeWidth()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h6>Ações</h6>
+                    <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                        <button class="btn-header" style="font-size:0.7rem;" onclick="bringToFront()"><i class="fas fa-layer-group"></i> Frente</button>
+                        <button class="btn-header" style="font-size:0.7rem;" onclick="sendToBack()"><i class="fas fa-layer-group fa-flip-vertical"></i> Trás</button>
+                        <button class="btn-header" style="font-size:0.7rem;" onclick="duplicateObj()"><i class="fas fa-clone"></i> Duplicar</button>
+                        <button class="btn-header" style="font-size:0.7rem; background:rgba(220,38,38,0.3);" onclick="deleteObj()"><i class="fas fa-trash"></i> Excluir</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info do evento -->
+            <div class="panel-section" style="margin-top:auto; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.08);">
+                <h6>Dados do Evento</h6>
+                <div style="font-size:0.75rem; color:rgba(255,255,255,0.5); line-height:1.6;">
+                    <div><i class="fas fa-calendar" style="width:14px;"></i> @ViewBag.DataEvento</div>
+                    <div><i class="fas fa-clock" style="width:14px;"></i> @ViewBag.HoraInicio - @ViewBag.HoraFim</div>
+                    <div><i class="fas fa-map-marker-alt" style="width:14px;"></i> @ViewBag.NomeLocal</div>
+                </div>
+                <div style="margin-top:0.5rem;">
+                    <button class="btn-header" style="width:100%; font-size:0.7rem; justify-content:center;" onclick="insertEventInfo()">
+                        <i class="fas fa-plus"></i> Inserir Dados no Canvas
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // ==================== INIT ====================
+        const CANVAS_W = 600, CANVAS_H = 800;
+        let canvas, zoomLvl = 1, history = [], historyIdx = -1;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            canvas = new fabric.Canvas('fabricCanvas', {
+                width: CANVAS_W,
+                height: CANVAS_H,
+                backgroundColor: '#ffffff',
+                preserveObjectStacking: true
+            });
+
+            canvas.on('selection:created', onObjectSelected);
+            canvas.on('selection:updated', onObjectSelected);
+            canvas.on('selection:cleared', onObjectDeselected);
+            canvas.on('object:modified', saveHistory);
+
+            populateTemplates();
+            populateFonts();
+            populateIcons();
+            populateEmojis();
+            populateBgColors();
+            populateBgGradients();
+            populateFontSelect();
+            saveHistory();
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                        deleteObj();
+                    }
+                }
+                if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undoAction(); }
+                if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redoAction(); }
+                if (e.ctrlKey && e.key === 'd') { e.preventDefault(); duplicateObj(); }
+            });
+        });
+
+        // ==================== TABS ====================
+        function switchTab(tab) {
+            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.getElementById(`tab-${tab}`).style.display = '';
+        }
+
+        // ==================== TEMPLATES ====================
+        const templates = [
+            { id: 'aniv1', cat: 'aniversario', name: 'Festa Neon', bg: 'linear-gradient(135deg,#667eea,#764ba2)', accent: '#ffd700', font: 'Poppins', titleSize: 42 },
+            { id: 'aniv2', cat: 'aniversario', name: 'Balões', bg: 'linear-gradient(135deg,#f093fb,#f5576c)', accent: '#fff', font: 'Dancing Script', titleSize: 48 },
+            { id: 'cas1', cat: 'casamento', name: 'Elegância Dourada', bg: 'linear-gradient(135deg,#1a1a2e,#16213e)', accent: '#c9a96e', font: 'Playfair Display', titleSize: 40 },
+            { id: 'cas2', cat: 'casamento', name: 'Floral Romântico', bg: 'linear-gradient(135deg,#ffecd2,#fcb69f)', accent: '#8B0000', font: 'Great Vibes', titleSize: 50 },
+            { id: 'form1', cat: 'formatura', name: 'Acadêmico', bg: 'linear-gradient(135deg,#0c3547,#234e6b)', accent: '#ffd700', font: 'Montserrat', titleSize: 38 },
+            { id: 'form2', cat: 'formatura', name: 'Celebração', bg: 'linear-gradient(135deg,#141E30,#243B55)', accent: '#e0c3fc', font: 'Raleway', titleSize: 36 },
+            { id: 'corp1', cat: 'corporativo', name: 'Profissional', bg: 'linear-gradient(135deg,#2c3e50,#34495e)', accent: '#3498db', font: 'Inter', titleSize: 34 },
+            { id: 'corp2', cat: 'corporativo', name: 'Tech Summit', bg: 'linear-gradient(135deg,#0f0c29,#302b63)', accent: '#00d2ff', font: 'Montserrat', titleSize: 36 },
+            { id: 'fest1', cat: 'festa', name: 'Neon Party', bg: 'linear-gradient(135deg,#0f0f0f,#1a1a2e)', accent: '#39ff14', font: 'Poppins', titleSize: 44 },
+            { id: 'fest2', cat: 'festa', name: 'Tropical', bg: 'linear-gradient(135deg,#11998e,#38ef7d)', accent: '#fff', font: 'Pacifico', titleSize: 42 },
+            { id: 'show1', cat: 'show', name: 'Rock Concert', bg: 'linear-gradient(135deg,#1a1a1a,#8B0000)', accent: '#ff4444', font: 'Lobster', titleSize: 46 },
+            { id: 'show2', cat: 'show', name: 'Festival', bg: 'linear-gradient(135deg,#fc466b,#3f5efb)', accent: '#ffd700', font: 'Poppins', titleSize: 40 },
+            { id: 'cha1', cat: 'chadebebe', name: 'Doce Espera', bg: 'linear-gradient(135deg,#ffecd2,#ffd1ff)', accent: '#ff69b4', font: 'Dancing Script', titleSize: 44 },
+            { id: 'cha2', cat: 'chadebebe', name: 'Nuvens Azuis', bg: 'linear-gradient(135deg,#e0f7fa,#b3e5fc)', accent: '#1976d2', font: 'Lora', titleSize: 40 },
+            { id: 'inf1', cat: 'infantil', name: 'Diversão', bg: 'linear-gradient(135deg,#ffeaa7,#fdcb6e)', accent: '#e17055', font: 'Poppins', titleSize: 42 },
+            { id: 'inf2', cat: 'infantil', name: 'Arco-íris', bg: 'linear-gradient(135deg,#a8e6cf,#dcedc1,#ffd3b6,#ffaaa5)', accent: '#6c5ce7', font: 'Pacifico', titleSize: 44 },
+            { id: 'ele1', cat: 'elegante', name: 'Noir', bg: 'linear-gradient(135deg,#0c0c0c,#1a1a1a)', accent: '#c9a96e', font: 'Playfair Display', titleSize: 42 },
+            { id: 'ele2', cat: 'elegante', name: 'Mármore', bg: 'linear-gradient(135deg,#f5f5f5,#e0e0e0)', accent: '#333', font: 'Lora', titleSize: 38 },
+            { id: 'min1', cat: 'minimalista', name: 'Clean', bg: '#ffffff', accent: '#333', font: 'Inter', titleSize: 36 },
+            { id: 'min2', cat: 'minimalista', name: 'Mono', bg: '#f8f8f8', accent: '#000', font: 'Montserrat', titleSize: 34 },
+        ];
+
+        function populateTemplates() {
+            const grid = document.getElementById('templatesGrid');
+            grid.innerHTML = '';
+            templates.forEach(t => {
+                grid.innerHTML += `
+                    <div class="template-card" data-cat="${t.cat}" onclick="applyTemplate('${t.id}')">
+                        <div class="template-preview" style="background:${t.bg};">
+                            <div style="font-family:'${t.font}'; font-size:0.7rem; font-weight:700; color:${t.accent}; margin-bottom:4px;">Você está convidado</div>
+                            <div style="font-size:0.5rem; opacity:0.7;">Evento EventX</div>
+                            <span class="template-label">${t.name}</span>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function filterTemplates(cat) {
+            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('#templatesGrid .template-card').forEach(c => {
+                c.style.display = (cat === 'todos' || c.dataset.cat === cat) ? '' : 'none';
+            });
+        }
+
+        function applyTemplate(id) {
+            const t = templates.find(x => x.id === id);
+            if (!t) return;
+            canvas.clear();
+
+            // Background
+            if (t.bg.includes('gradient')) {
+                const match = t.bg.match(/#[0-9a-fA-F]{3,8}/g);
+                if (match && match.length >= 2) {
+                    const grad = new fabric.Gradient({
+                        type: 'linear',
+                        coords: { x1: 0, y1: 0, x2: canvas.width, y2: canvas.height },
+                        colorStops: match.map((c, i) => ({ offset: i / (match.length - 1), color: c }))
+                    });
+                    const bgRect = new fabric.Rect({ width: canvas.width, height: canvas.height, fill: grad, selectable: false, evented: false });
+                    canvas.add(bgRect);
+                    canvas.sendToBack(bgRect);
+                }
+            } else {
+                canvas.backgroundColor = t.bg;
+            }
+
+            // Decorative line top
+            canvas.add(new fabric.Line([100, 160, canvas.width - 100, 160], { stroke: t.accent, strokeWidth: 1, opacity: 0.5, selectable: true }));
+
+            // Title
+            canvas.add(new fabric.IText('Você está\nConvidado(a)', {
+                left: canvas.width / 2, top: 200, originX: 'center', fontFamily: t.font,
+                fontSize: t.titleSize, fill: t.accent, fontWeight: 'bold', textAlign: 'center', lineHeight: 1.2
+            }));
+
+            // Event name
+            canvas.add(new fabric.IText('@ViewBag.NomeEvento', {
+                left: canvas.width / 2, top: 340, originX: 'center', fontFamily: t.font,
+                fontSize: 22, fill: t.accent, textAlign: 'center', opacity: 0.85
+            }));
+
+            // Decorative line
+            canvas.add(new fabric.Line([150, 400, canvas.width - 150, 400], { stroke: t.accent, strokeWidth: 1, opacity: 0.5, selectable: true }));
+
+            // Date info
+            canvas.add(new fabric.IText('📅  @ViewBag.DataEvento', {
+                left: canvas.width / 2, top: 430, originX: 'center', fontFamily: 'Inter',
+                fontSize: 18, fill: t.accent, textAlign: 'center', opacity: 0.9
+            }));
+
+            // Time
+            canvas.add(new fabric.IText('🕐  @ViewBag.HoraInicio - @ViewBag.HoraFim', {
+                left: canvas.width / 2, top: 465, originX: 'center', fontFamily: 'Inter',
+                fontSize: 16, fill: t.accent, textAlign: 'center', opacity: 0.8
+            }));
+
+            // Location
+            canvas.add(new fabric.IText('📍  @ViewBag.NomeLocal', {
+                left: canvas.width / 2, top: 500, originX: 'center', fontFamily: 'Inter',
+                fontSize: 16, fill: t.accent, textAlign: 'center', opacity: 0.8
+            }));
+
+            // CTA
+            const ctaRect = new fabric.Rect({
+                width: 220, height: 48, rx: 24, ry: 24, fill: t.accent, originX: 'center', originY: 'center'
+            });
+            const ctaText = new fabric.Text('Confirmar Presença', {
+                fontFamily: 'Inter', fontSize: 14, fontWeight: '700',
+                fill: t.bg.includes('#fff') || t.bg.includes('#f8f') || t.bg.includes('#f5f') ? '#333' : '#fff',
+                originX: 'center', originY: 'center'
+            });
+            const ctaGroup = new fabric.Group([ctaRect, ctaText], { left: canvas.width / 2, top: 580, originX: 'center' });
+            canvas.add(ctaGroup);
+
+            // Footer line
+            canvas.add(new fabric.Line([100, 660, canvas.width - 100, 660], { stroke: t.accent, strokeWidth: 1, opacity: 0.3, selectable: true }));
+
+            // Footer text
+            canvas.add(new fabric.IText('Aguardamos sua presença!', {
+                left: canvas.width / 2, top: 690, originX: 'center', fontFamily: t.font,
+                fontSize: 16, fill: t.accent, textAlign: 'center', opacity: 0.6, fontStyle: 'italic'
+            }));
+
+            canvas.renderAll();
+            saveHistory();
+        }
+
+        // ==================== TEXT ====================
+        const fonts = ['Inter','Playfair Display','Dancing Script','Poppins','Montserrat','Lora','Raleway','Great Vibes','Pacifico','Lobster','Arial','Georgia','Courier New','Verdana'];
+
+        function populateFonts() {
+            const grid = document.getElementById('fontGrid');
+            grid.innerHTML = '';
+            fonts.forEach(f => {
+                grid.innerHTML += `<div class="font-item" style="font-family:'${f}'" onclick="addTextWithFont('${f}')">${f}</div>`;
+            });
+        }
+
+        function populateFontSelect() {
+            const sel = document.getElementById('textFont');
+            sel.innerHTML = '';
+            fonts.forEach(f => { sel.innerHTML += `<option value="${f}" style="font-family:'${f}'">${f}</option>`; });
+        }
+
+        function addHeading() {
+            const text = new fabric.IText('Título', {
+                left: canvas.width / 2, top: 100, originX: 'center',
+                fontFamily: 'Playfair Display', fontSize: 48, fill: '#333', fontWeight: 'bold', textAlign: 'center'
+            });
+            canvas.add(text); canvas.setActiveObject(text); canvas.renderAll(); saveHistory();
+        }
+        function addSubheading() {
+            const text = new fabric.IText('Subtítulo', {
+                left: canvas.width / 2, top: 200, originX: 'center',
+                fontFamily: 'Inter', fontSize: 28, fill: '#555', fontWeight: '600', textAlign: 'center'
+            });
+            canvas.add(text); canvas.setActiveObject(text); canvas.renderAll(); saveHistory();
+        }
+        function addBodyText() {
+            const text = new fabric.IText('Texto do convite aqui...', {
+                left: canvas.width / 2, top: 300, originX: 'center',
+                fontFamily: 'Inter', fontSize: 16, fill: '#666', textAlign: 'center'
+            });
+            canvas.add(text); canvas.setActiveObject(text); canvas.renderAll(); saveHistory();
+        }
+        function addDecorativeText() {
+            const text = new fabric.IText('Evento Especial', {
+                left: canvas.width / 2, top: 150, originX: 'center',
+                fontFamily: 'Great Vibes', fontSize: 56, fill: '#8B0000', textAlign: 'center'
+            });
+            canvas.add(text); canvas.setActiveObject(text); canvas.renderAll(); saveHistory();
+        }
+        function addTextWithFont(font) {
+            const text = new fabric.IText('Seu texto aqui', {
+                left: canvas.width / 2, top: canvas.height / 2, originX: 'center',
+                fontFamily: font, fontSize: 24, fill: '#333', textAlign: 'center'
+            });
+            canvas.add(text); canvas.setActiveObject(text); canvas.renderAll(); saveHistory();
+        }
+
+        // ==================== SHAPES ====================
+        function addShape(type) {
+            let shape;
+            const cx = canvas.width / 2, cy = canvas.height / 2;
+            switch(type) {
+                case 'rect':
+                    shape = new fabric.Rect({ left: cx-60, top: cy-40, width: 120, height: 80, fill: '#8B0000', rx: 0, ry: 0 }); break;
+                case 'roundedRect':
+                    shape = new fabric.Rect({ left: cx-60, top: cy-40, width: 120, height: 80, fill: '#8B0000', rx: 15, ry: 15 }); break;
+                case 'circle':
+                    shape = new fabric.Circle({ left: cx-40, top: cy-40, radius: 40, fill: '#8B0000' }); break;
+                case 'ellipse':
+                    shape = new fabric.Ellipse({ left: cx-60, top: cy-30, rx: 60, ry: 30, fill: '#8B0000' }); break;
+                case 'triangle':
+                    shape = new fabric.Triangle({ left: cx-40, top: cy-40, width: 80, height: 80, fill: '#8B0000' }); break;
+                case 'diamond':
+                    shape = new fabric.Rect({ left: cx-35, top: cy-35, width: 70, height: 70, fill: '#8B0000', angle: 45 }); break;
+                case 'line':
+                    shape = new fabric.Line([cx-80, cy, cx+80, cy], { stroke: '#8B0000', strokeWidth: 3 }); break;
+                case 'divider':
+                    shape = new fabric.Line([cx-120, cy, cx+120, cy], { stroke: '#c9a96e', strokeWidth: 1, opacity: 0.7 }); break;
+                case 'arrow':
+                    shape = new fabric.Path('M 0 15 L 50 15 L 50 5 L 70 20 L 50 35 L 50 25 L 0 25 Z', { left: cx, top: cy, fill: '#8B0000', scaleX: 1.5, scaleY: 1.5 }); break;
+                case 'star':
+                    shape = new fabric.Path('M 25 0 L 31 18 L 50 18 L 35 29 L 40 47 L 25 36 L 10 47 L 15 29 L 0 18 L 19 18 Z', { left: cx, top: cy, fill: '#ffd700', scaleX: 1.5, scaleY: 1.5 }); break;
+                case 'heart':
+                    shape = new fabric.Path('M 25 45 C 10 30 0 15 12 5 C 20 -2 25 5 25 12 C 25 5 30 -2 38 5 C 50 15 40 30 25 45 Z', { left: cx, top: cy, fill: '#e74c3c', scaleX: 2, scaleY: 2 }); break;
+                case 'hexagon':
+                    shape = new fabric.Polygon([{x:25,y:0},{x:50,y:14},{x:50,y:43},{x:25,y:57},{x:0,y:43},{x:0,y:14}], { left: cx, top: cy, fill: '#8B0000', scaleX: 1.5, scaleY: 1.5 }); break;
+            }
+            if (shape) { canvas.add(shape); canvas.setActiveObject(shape); canvas.renderAll(); saveHistory(); }
+        }
+
+        // ==================== ICONS ====================
+        const icons = ['🎉','🎊','🎈','🎁','🌟','💫','✨','🎵','🎶','💝','💐','🌹','🥂','🍾','🎂','🎄','🎃','🎆','🎇','🏆','👑','💎','🎭','🎪','📸','✉️','📌','🔔','💌','🪄','🎯','⭐','🌸','🌻','🦋','🕊️','🌙','☀️','🌈','❤️'];
+
+        function populateIcons() {
+            const grid = document.getElementById('iconsGrid');
+            grid.innerHTML = '';
+            icons.forEach(ic => {
+                grid.innerHTML += `<div class="icon-item" onclick="addEmoji('${ic}')">${ic}</div>`;
+            });
+        }
+
+        // ==================== EMOJIS ====================
+        const emojis = ['😊','😍','🥳','🎉','🎊','✨','💫','🌟','❤️','💕','💖','💝','🎁','🎈','🎂','🍰','🥂','🍾','🎵','🎶','🎤','🎧','📸','📹','🌹','🌸','🌺','🌻','🦋','🕊️','👑','💎','🏆','🎭','🎪','🎯','🌙','☀️','⭐','🌈','🎆','🎇','🔔','✉️','💌','🪄','🫶','💃','🕺','🤵'];
+
+        function populateEmojis() {
+            const grid = document.getElementById('emojisGrid');
+            grid.innerHTML = '';
+            emojis.forEach(em => {
+                grid.innerHTML += `<div class="emoji-item" onclick="addEmoji('${em}')">${em}</div>`;
+            });
+        }
+
+        function addEmoji(emoji) {
+            const text = new fabric.IText(emoji, {
+                left: canvas.width / 2, top: canvas.height / 2, originX: 'center',
+                fontSize: 60, textAlign: 'center'
+            });
+            canvas.add(text); canvas.setActiveObject(text); canvas.renderAll(); saveHistory();
+        }
+
+        // ==================== IMAGES ====================
+        function uploadImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                fabric.Image.fromURL(evt.target.result, function(img) {
+                    const scale = Math.min(300 / img.width, 300 / img.height, 1);
+                    img.set({ left: canvas.width / 2, top: canvas.height / 2, originX: 'center', originY: 'center', scaleX: scale, scaleY: scale });
+                    canvas.add(img); canvas.setActiveObject(img); canvas.renderAll(); saveHistory();
+                });
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        }
+
+        function addImageFromUrl() {
+            const url = prompt('Cole a URL da imagem:');
+            if (!url) return;
+            fabric.Image.fromURL(url, function(img) {
+                if (!img || !img.width) { alert('Não foi possível carregar a imagem.'); return; }
+                const scale = Math.min(300 / img.width, 300 / img.height, 1);
+                img.set({ left: canvas.width / 2, top: canvas.height / 2, originX: 'center', originY: 'center', scaleX: scale, scaleY: scale });
+                canvas.add(img); canvas.setActiveObject(img); canvas.renderAll(); saveHistory();
+            }, { crossOrigin: 'anonymous' });
+        }
+
+        // ==================== BACKGROUND ====================
+        const bgColorPalette = ['#ffffff','#f8f8f8','#f5f0eb','#1a1a2e','#0f0f0f','#2c3e50','#8B0000','#1e3a5f','#0c3547','#16213e','#141E30','#2d1b69','#ffecd2','#e0f7fa','#ffd1ff','#f5f5dc','#ffeaa7','#d4edda','#d4a574','#ff6b6b'];
+
+        function populateBgColors() {
+            const cont = document.getElementById('bgColors');
+            cont.innerHTML = '';
+            bgColorPalette.forEach(c => {
+                cont.innerHTML += `<div class="bg-option" style="background:${c}; ${c==='#ffffff'?'border:1px solid #ccc;':''}" onclick="setCanvasBg('${c}')"></div>`;
+            });
+        }
+
+        const gradients = [
+            'linear-gradient(135deg,#667eea,#764ba2)','linear-gradient(135deg,#f093fb,#f5576c)','linear-gradient(135deg,#1a1a2e,#16213e)',
+            'linear-gradient(135deg,#ffecd2,#fcb69f)','linear-gradient(135deg,#0c3547,#234e6b)','linear-gradient(135deg,#11998e,#38ef7d)',
+            'linear-gradient(135deg,#fc466b,#3f5efb)','linear-gradient(135deg,#0f0c29,#302b63)','linear-gradient(135deg,#e0f7fa,#b3e5fc)',
+            'linear-gradient(135deg,#a8e6cf,#ffd3b6)','linear-gradient(135deg,#141E30,#243B55)','linear-gradient(135deg,#f5f5f5,#e0e0e0)',
+        ];
+
+        function populateBgGradients() {
+            const cont = document.getElementById('bgGradients');
+            cont.innerHTML = '';
+            gradients.forEach(g => {
+                cont.innerHTML += `<div class="bg-option" style="background:${g}" onclick="setCanvasGradient('${g}')"></div>`;
+            });
+        }
+
+        function setCanvasBg(color) {
+            // Remove existing bg rect
+            canvas.getObjects().forEach(o => { if (o._isBgRect) canvas.remove(o); });
+            canvas.backgroundColor = color;
+            canvas.renderAll(); saveHistory();
+        }
+
+        function setCanvasGradient(gradStr) {
+            const match = gradStr.match(/#[0-9a-fA-F]{3,8}/g);
+            if (!match || match.length < 2) return;
+            canvas.getObjects().forEach(o => { if (o._isBgRect) canvas.remove(o); });
+            canvas.backgroundColor = '';
+            const grad = new fabric.Gradient({
+                type: 'linear',
+                coords: { x1: 0, y1: 0, x2: canvas.width, y2: canvas.height },
+                colorStops: match.map((c, i) => ({ offset: i / (match.length - 1), color: c }))
+            });
+            const bgRect = new fabric.Rect({ width: canvas.width, height: canvas.height, fill: grad, selectable: false, evented: false });
+            bgRect._isBgRect = true;
+            canvas.add(bgRect);
+            canvas.sendToBack(bgRect);
+            canvas.renderAll(); saveHistory();
+        }
+
+        // ==================== OBJECT PANEL ====================
+        function onObjectSelected(e) {
+            const obj = e.selected?.[0] || canvas.getActiveObject();
+            if (!obj) return;
+            document.getElementById('objectSettings').style.display = '';
+            document.getElementById('objX').value = Math.round(obj.left || 0);
+            document.getElementById('objY').value = Math.round(obj.top || 0);
+            document.getElementById('objAngle').value = Math.round(obj.angle || 0);
+            document.getElementById('objOpacity').value = obj.opacity ?? 1;
+
+            const isText = obj.type === 'i-text' || obj.type === 'text' || obj.type === 'textbox';
+            document.getElementById('textSettings').style.display = isText ? '' : 'none';
+            document.getElementById('shapeSettings').style.display = !isText ? '' : 'none';
+
+            if (isText) {
+                document.getElementById('textFont').value = obj.fontFamily || 'Inter';
+                document.getElementById('textSize').value = obj.fontSize || 16;
+                document.getElementById('textColor').value = obj.fill || '#333333';
+            } else {
+                document.getElementById('shapeFill').value = obj.fill && typeof obj.fill === 'string' ? obj.fill : '#8B0000';
+                document.getElementById('shapeStroke').value = obj.stroke || '#000000';
+                document.getElementById('shapeStrokeWidth').value = obj.strokeWidth || 0;
+            }
+        }
+
+        function onObjectDeselected() {
+            document.getElementById('objectSettings').style.display = 'none';
+        }
+
+        function updateObjPosition() {
+            const obj = canvas.getActiveObject(); if (!obj) return;
+            obj.set({ left: +document.getElementById('objX').value, top: +document.getElementById('objY').value });
+            canvas.renderAll(); saveHistory();
+        }
+        function updateObjAngle() {
+            const obj = canvas.getActiveObject(); if (!obj) return;
+            obj.set({ angle: +document.getElementById('objAngle').value }); canvas.renderAll(); saveHistory();
+        }
+        function updateObjOpacity() {
+            const obj = canvas.getActiveObject(); if (!obj) return;
+            obj.set({ opacity: +document.getElementById('objOpacity').value }); canvas.renderAll(); saveHistory();
+        }
+        function updateTextFont() { const obj = canvas.getActiveObject(); if (obj) { obj.set('fontFamily', document.getElementById('textFont').value); canvas.renderAll(); saveHistory(); } }
+        function updateTextSize() { const obj = canvas.getActiveObject(); if (obj) { obj.set('fontSize', +document.getElementById('textSize').value); canvas.renderAll(); saveHistory(); } }
+        function updateTextColor() { const obj = canvas.getActiveObject(); if (obj) { obj.set('fill', document.getElementById('textColor').value); canvas.renderAll(); saveHistory(); } }
+        function updateShapeFill() { const obj = canvas.getActiveObject(); if (obj) { obj.set('fill', document.getElementById('shapeFill').value); canvas.renderAll(); saveHistory(); } }
+        function updateShapeStroke() { const obj = canvas.getActiveObject(); if (obj) { obj.set('stroke', document.getElementById('shapeStroke').value); canvas.renderAll(); saveHistory(); } }
+        function updateShapeStrokeWidth() { const obj = canvas.getActiveObject(); if (obj) { obj.set('strokeWidth', +document.getElementById('shapeStrokeWidth').value); canvas.renderAll(); saveHistory(); } }
+
+        function toggleBold() { const obj = canvas.getActiveObject(); if (obj) { obj.set('fontWeight', obj.fontWeight === 'bold' ? 'normal' : 'bold'); canvas.renderAll(); saveHistory(); } }
+        function toggleItalic() { const obj = canvas.getActiveObject(); if (obj) { obj.set('fontStyle', obj.fontStyle === 'italic' ? 'normal' : 'italic'); canvas.renderAll(); saveHistory(); } }
+        function toggleUnderline() { const obj = canvas.getActiveObject(); if (obj) { obj.set('underline', !obj.underline); canvas.renderAll(); saveHistory(); } }
+        function setTextAlign(align) { const obj = canvas.getActiveObject(); if (obj) { obj.set('textAlign', align); canvas.renderAll(); saveHistory(); } }
+
+        function bringToFront() { const obj = canvas.getActiveObject(); if (obj) { canvas.bringToFront(obj); canvas.renderAll(); } }
+        function sendToBack() { const obj = canvas.getActiveObject(); if (obj) { canvas.sendToBack(obj); canvas.renderAll(); } }
+        function duplicateObj() {
+            const obj = canvas.getActiveObject(); if (!obj) return;
+            obj.clone(function(cloned) { cloned.set({ left: obj.left + 20, top: obj.top + 20 }); canvas.add(cloned); canvas.setActiveObject(cloned); canvas.renderAll(); saveHistory(); });
+        }
+        function deleteObj() { const obj = canvas.getActiveObject(); if (obj) { canvas.remove(obj); canvas.renderAll(); saveHistory(); } }
+
+        function insertEventInfo() {
+            const info = `📅  @ViewBag.DataEvento\n🕐  @ViewBag.HoraInicio - @ViewBag.HoraFim\n📍  @ViewBag.NomeLocal`;
+            const text = new fabric.IText(info, {
+                left: canvas.width / 2, top: canvas.height / 2, originX: 'center',
+                fontFamily: 'Inter', fontSize: 16, fill: '#333', textAlign: 'center', lineHeight: 1.8
+            });
+            canvas.add(text); canvas.setActiveObject(text); canvas.renderAll(); saveHistory();
+        }
+
+        // ==================== CANVAS ====================
+        function resizeCanvas() {
+            const w = +document.getElementById('canvasWidth').value, h = +document.getElementById('canvasHeight').value;
+            if (w > 0 && h > 0) { canvas.setWidth(w); canvas.setHeight(h); canvas.renderAll(); }
+        }
+        function setPreset(type) {
+            const presets = { vertical: [600, 800], horizontal: [800, 600], square: [600, 600], story: [540, 960] };
+            const [w, h] = presets[type] || [600, 800];
+            document.getElementById('canvasWidth').value = w;
+            document.getElementById('canvasHeight').value = h;
+            canvas.setWidth(w); canvas.setHeight(h); canvas.renderAll();
+        }
+
+        // ==================== ZOOM ====================
+        function zoomIn() { zoomLvl = Math.min(zoomLvl + 0.1, 3); applyZoom(); }
+        function zoomOut() { zoomLvl = Math.max(zoomLvl - 0.1, 0.3); applyZoom(); }
+        function zoomReset() { zoomLvl = 1; applyZoom(); }
+        function applyZoom() {
+            document.getElementById('canvasWrapper').style.transform = `scale(${zoomLvl})`;
+            document.getElementById('zoomLevel').textContent = Math.round(zoomLvl * 100) + '%';
+        }
+
+        // ==================== HISTORY ====================
+        function saveHistory() {
+            const json = JSON.stringify(canvas.toJSON());
+            history = history.slice(0, historyIdx + 1);
+            history.push(json);
+            historyIdx = history.length - 1;
+        }
+        function undoAction() {
+            if (historyIdx <= 0) return;
+            historyIdx--;
+            canvas.loadFromJSON(history[historyIdx], () => canvas.renderAll());
+        }
+        function redoAction() {
+            if (historyIdx >= history.length - 1) return;
+            historyIdx++;
+            canvas.loadFromJSON(history[historyIdx], () => canvas.renderAll());
+        }
+
+        // ==================== EXPORT ====================
+        function exportPNG() {
+            const dataURL = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 2 });
+            const a = document.createElement('a');
+            a.href = dataURL;
+            a.download = 'convite-@(ViewBag.NomeEvento?.ToString().Replace(" ", "-") ?? "eventx").png';
+            a.click();
+        }
+
+        function exportPDF() {
+            const dataURL = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 2 });
+            const { jsPDF } = window.jspdf;
+            const w = canvas.width, h = canvas.height;
+            const orientation = w > h ? 'l' : 'p';
+            const pdf = new jsPDF(orientation, 'px', [w, h]);
+            pdf.addImage(dataURL, 'PNG', 0, 0, w, h);
+            pdf.save('convite-@(ViewBag.NomeEvento?.ToString().Replace(" ", "-") ?? "eventx").pdf');
+        }
+
+        function salvarTemplate() {
+            const nome = prompt('Nome do template:', 'Convite - @ViewBag.NomeEvento');
+            if (!nome) return;
+            const json = JSON.stringify(canvas.toJSON());
+
+            // Get CSRF token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("SalvarDesignCanvas", "Convite")';
+            form.innerHTML = `
+                <input type="hidden" name="eventoId" value="@ViewBag.EventoId" />
+                <input type="hidden" name="canvasJson" value='${json.replace(/'/g, "&#39;")}' />
+                <input type="hidden" name="nomeTemplate" value="${nome}" />
+                <input type="hidden" name="__RequestVerificationToken" value="${token}" />
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+    @Html.AntiForgeryToken()
+</body>
+</html>

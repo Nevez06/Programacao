@@ -356,6 +356,29 @@
                     </a>
                 </div>
 
+                @if (!string.IsNullOrWhiteSpace(Model.Slug))
+                {
+                    <div class="acoes-card">
+                        <h5><i class="fas fa-globe me-2"></i>Página Pública</h5>
+                        <div class="mb-2">
+                            <small style="color:#999;">Compartilhe com seus convidados:</small>
+                        </div>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" style="font-size:0.85rem;" value="@Context.Request.Scheme://@Context.Request.Host/evento/@Model.Slug" readonly id="linkPublico" />
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copiarLinkPublico()">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <a href="/evento/@Model.Slug" target="_blank" class="acao-link">
+                            <div class="acao-icon edit"><i class="fas fa-external-link-alt"></i></div>
+                            <div>
+                                <div>Ver Página Pública</div>
+                                <small style="color: #999; font-weight: 400;">Abrir em nova aba</small>
+                            </div>
+                        </a>
+                    </div>
+                }
+
                 <div class="acoes-card">
                     <h5><i class="fas fa-arrow-left me-2"></i>Navegação</h5>
                     <a asp-action="Index" class="acao-link">
@@ -370,3 +393,17 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function copiarLinkPublico() {
+            var input = document.getElementById('linkPublico');
+            navigator.clipboard.writeText(input.value).then(function () {
+                var btn = input.nextElementSibling;
+                var original = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(function () { btn.innerHTML = original; }, 2000);
+            });
+        }
+    </script>
+}

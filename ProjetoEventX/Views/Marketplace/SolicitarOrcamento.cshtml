@@ -1,0 +1,196 @@
+@{
+    ViewData["Title"] = "Solicitar Orçamento";
+    var fornecedor = ViewBag.Fornecedor as ProjetoEventX.Models.Fornecedor;
+    var eventos = ViewBag.EventosOrganizador as List<ProjetoEventX.Models.Evento> ?? new List<ProjetoEventX.Models.Evento>();
+}
+
+<style>
+    .orcamento-section {
+        background: #f5f0eb;
+        min-height: 80vh;
+        padding: 2rem 0 3rem;
+    }
+    .orcamento-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        padding: 2rem;
+    }
+    .orcamento-card h3 {
+        color: #8B0000;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    .fornecedor-info-banner {
+        background: linear-gradient(135deg, #8B0000, #b22222);
+        border-radius: 14px;
+        padding: 1.5rem;
+        color: #fff;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .fornecedor-info-banner .avatar {
+        width: 55px;
+        height: 55px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .fornecedor-info-banner h5 { margin: 0; font-weight: 700; }
+    .fornecedor-info-banner .info-sub { opacity: 0.85; font-size: 0.9rem; }
+    .form-label-custom {
+        font-weight: 600;
+        color: #555;
+        font-size: 0.9rem;
+        margin-bottom: 0.3rem;
+    }
+    .form-control-custom {
+        border: 1px solid #e0d6cc;
+        border-radius: 12px;
+        padding: 0.7rem 1rem;
+        background: #faf8f5;
+        transition: all 0.3s;
+    }
+    .form-control-custom:focus {
+        border-color: #8B0000;
+        box-shadow: 0 0 0 3px rgba(139,0,0,0.1);
+        background: #fff;
+    }
+    .btn-enviar {
+        background: #8B0000;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 0.8rem 2.5rem;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    .btn-enviar:hover { background: #a00000; color: #fff; transform: translateY(-2px); }
+    .btn-cancelar {
+        background: none;
+        color: #8B0000;
+        border: 2px solid #8B0000;
+        border-radius: 12px;
+        padding: 0.8rem 2rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .btn-cancelar:hover { background: #8B0000; color: #fff; }
+    .campo-obrigatorio { color: #dc3545; }
+    .dica-texto { font-size: 0.8rem; color: #999; margin-top: 0.3rem; }
+</style>
+
+<section class="orcamento-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <a asp-action="DetalhesFornecedor" asp-route-id="@fornecedor?.Id" class="text-decoration-none d-inline-block mb-3" style="color: #8B0000;">
+                    <i class="fas fa-arrow-left"></i> Voltar ao perfil do fornecedor
+                </a>
+
+                <div class="orcamento-card">
+                    <h3><i class="fas fa-file-invoice-dollar"></i> Solicitar Orçamento</h3>
+                    <p class="text-muted mb-3">Preencha os detalhes abaixo para enviar uma solicitação de orçamento</p>
+
+                    @if (fornecedor != null)
+                    {
+                        <div class="fornecedor-info-banner">
+                            <div class="avatar"><i class="fas fa-store"></i></div>
+                            <div>
+                                <h5>@fornecedor.Pessoa?.Nome</h5>
+                                <div class="info-sub">
+                                    <i class="fas fa-tag"></i> @fornecedor.TipoServico &nbsp;|&nbsp;
+                                    <i class="fas fa-map-marker-alt"></i> @fornecedor.Cidade, @fornecedor.UF
+                                    @if (fornecedor.AvaliacaoMedia > 0)
+                                    {
+                                        <span>&nbsp;|&nbsp; <i class="fas fa-star" style="color:#f59e0b;"></i> @fornecedor.AvaliacaoMedia.ToString("N1")</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <form method="post" asp-action="SolicitarOrcamento">
+                        <input type="hidden" name="fornecedorId" value="@fornecedor?.Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label-custom">Título da Solicitação <span class="campo-obrigatorio">*</span></label>
+                            <input type="text" name="titulo" class="form-control form-control-custom" required
+                                   maxlength="200" placeholder="Ex: Buffet para casamento 200 convidados" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label-custom">Descrição Detalhada <span class="campo-obrigatorio">*</span></label>
+                            <textarea name="descricao" class="form-control form-control-custom" rows="5" required
+                                      maxlength="2000" placeholder="Descreva em detalhes o que você precisa: tipo de serviço, especificações, preferências, etc."></textarea>
+                            <div class="dica-texto">Quanto mais detalhes, melhor será o orçamento recebido.</div>
+                        </div>
+
+                        @if (eventos.Any())
+                        {
+                            <div class="mb-3">
+                                <label class="form-label-custom">Vincular a um Evento</label>
+                                <select name="eventoId" class="form-control form-control-custom">
+                                    <option value="">— Nenhum evento específico —</option>
+                                    @foreach (var evento in eventos)
+                                    {
+                                        <option value="@evento.Id">@evento.NomeEvento (@evento.DataEvento.ToString("dd/MM/yyyy"))</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label-custom">Tipo de Serviço Desejado</label>
+                                <input type="text" name="tipoServicoDesejado" class="form-control form-control-custom"
+                                       maxlength="100" placeholder="Ex: Buffet, Decoração, DJ..."
+                                       value="@fornecedor?.TipoServico" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label-custom">Data do Evento</label>
+                                <input type="date" name="dataEvento" class="form-control form-control-custom" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label-custom">Local do Evento</label>
+                                <input type="text" name="localEvento" class="form-control form-control-custom"
+                                       maxlength="200" placeholder="Cidade, estado ou endereço" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label-custom">Número de Convidados</label>
+                                <input type="number" name="quantidadeConvidados" class="form-control form-control-custom"
+                                       min="1" max="100000" placeholder="Quantidade estimada" />
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label-custom">Orçamento Estimado (R$)</label>
+                            <input type="number" name="orcamentoEstimado" class="form-control form-control-custom"
+                                   step="0.01" min="0" placeholder="Seu orçamento disponível (opcional)" />
+                            <div class="dica-texto">Opcional — ajuda o fornecedor a adequar a proposta ao seu budget.</div>
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-enviar">
+                                <i class="fas fa-paper-plane"></i> Enviar Solicitação
+                            </button>
+                            <a asp-action="DetalhesFornecedor" asp-route-id="@fornecedor?.Id" class="btn btn-cancelar">
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

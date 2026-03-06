@@ -57,6 +57,12 @@ namespace ProjetoEventX.Controllers
                     .ThenInclude(e => e.ListasConvidados)
                 .Include(o => o.Eventos)
                     .ThenInclude(e => e.Despesas)
+                .Include(o => o.Eventos)
+                    .ThenInclude(e => e.TarefasEventos)
+                .Include(o => o.Eventos)
+                    .ThenInclude(e => e.ChecklistEventos)
+                .Include(o => o.Eventos)
+                    .ThenInclude(e => e.Pedidos)
                 .FirstOrDefaultAsync(o => o.Email == user.Email);
 
             if (organizador == null)
@@ -69,11 +75,68 @@ namespace ProjetoEventX.Controllers
             ViewBag.EventosConcluidos = eventos.Count(e => e.StatusEvento == "Concluído" || e.StatusEvento == "Finalizado");
             ViewBag.TotalConvidados = eventos.SelectMany(e => e.ListasConvidados).Count();
             ViewBag.ConvidadosConfirmados = eventos.SelectMany(e => e.ListasConvidados).Count(c => c.ConfirmaPresenca == "Confirmado");
+            ViewBag.ConvidadosPendentes = eventos.SelectMany(e => e.ListasConvidados).Count(c => c.ConfirmaPresenca == "Pendente");
+            ViewBag.ConvidadosRecusados = eventos.SelectMany(e => e.ListasConvidados).Count(c => c.ConfirmaPresenca == "Recusado" || c.ConfirmaPresenca == "Não irá");
             ViewBag.TotalDespesas = eventos.SelectMany(e => e.Despesas).Sum(d => d.Valor);
+            ViewBag.TotalOrcamento = eventos.Sum(e => e.CustoEstimado);
             ViewBag.ProximoEvento = eventos
                 .Where(e => e.DataEvento >= DateTime.Now)
                 .OrderBy(e => e.DataEvento)
                 .FirstOrDefault();
+
+            // Dados para gráficos
+            // Gráfico de gastos por evento (top 5)
+            var gastosPorEvento = eventos
+                .Where(e => e.Despesas.Any())
+                .OrderByDescending(e => e.Despesas.Sum(d => d.Valor))
+                .Take(5)
+                .Select(e => new { Nome = e.NomeEvento, Valor = e.Despesas.Sum(d => d.Valor) })
+                .ToList();
+            ViewBag.GastosEventoNomes = System.Text.Json.JsonSerializer.Serialize(gastosPorEvento.Select(g => g.Nome));
+            ViewBag.GastosEventoValores = System.Text.Json.JsonSerializer.Serialize(gastosPorEvento.Select(g => g.Valor));
+
+            // Gráfico de status de convidados
+            var todosConvidados = eventos.SelectMany(e => e.ListasConvidados).ToList();
+            ViewBag.ConvidadosStatusLabels = System.Text.Json.JsonSerializer.Serialize(new[] { "Confirmados", "Pendentes", "Não irá" });
+            ViewBag.ConvidadosStatusValores = System.Text.Json.JsonSerializer.Serialize(new[] {
+                todosConvidados.Count(c => c.ConfirmaPresenca == "Confirmado"),
+                todosConvidados.Count(c => c.ConfirmaPresenca == "Pendente"),
+                todosConvidados.Count(c => c.ConfirmaPresenca == "Recusado" || c.ConfirmaPresenca == "Não irá")
+            });
+
+            // Gráfico de progresso de tarefas
+            var todasTarefas = eventos.SelectMany(e => e.ChecklistEventos).ToList();
+            var tarefasConcluidas = todasTarefas.Count(t => t.Concluido);
+            var tarefasPendentes = todasTarefas.Count(t => !t.Concluido);
+            ViewBag.TarefasConcluidas = tarefasConcluidas;
+            ViewBag.TarefasPendentes = tarefasPendentes;
+            ViewBag.TotalTarefas = todasTarefas.Count;
+
+            // Gráfico de pedidos por status
+            var todosPedidos = eventos.SelectMany(e => e.Pedidos).ToList();
+            ViewBag.PedidosPendentes = todosPedidos.Count(p => p.StatusPedido == "Pendente");
+            ViewBag.PedidosPagos = todosPedidos.Count(p => p.StatusPedido == "Pago");
+            ViewBag.PedidosEntregues = todosPedidos.Count(p => p.StatusPedido == "Entregue");
+            ViewBag.TotalPedidos = todosPedidos.Count;
+
+            // Gastos mensais (últimos 6 meses)
+            var despesasMensais = eventos.SelectMany(e => e.Despesas)
+                .Where(d => d.DataDespesa >= DateTime.Now.AddMonths(-6))
+                .GroupBy(d => new { d.DataDespesa.Year, d.DataDespesa.Month })
+                .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
+                .Select(g => new { Mes = $"{g.Key.Month:D2}/{g.Key.Year}", Valor = g.Sum(d => d.Valor) })
+                .ToList();
+            ViewBag.DespesasMensaisLabels = System.Text.Json.JsonSerializer.Serialize(despesasMensais.Select(d => d.Mes));
+            ViewBag.DespesasMensaisValores = System.Text.Json.JsonSerializer.Serialize(despesasMensais.Select(d => d.Valor));
+
+            // Notificações recentes
+            ViewBag.Notificacoes = await _context.Notificacoes
+                .Where(n => n.DestinatarioId == organizador.PessoaId)
+                .OrderByDescending(n => n.DataEnvio)
+                .Take(5)
+                .ToListAsync();
+            ViewBag.NotificacoesNaoLidas = await _context.Notificacoes
+                .CountAsync(n => n.DestinatarioId == organizador.PessoaId && !n.Lida);
 
             return View(organizador);
         }

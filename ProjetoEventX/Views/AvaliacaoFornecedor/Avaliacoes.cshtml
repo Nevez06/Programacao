@@ -1,0 +1,289 @@
+@model IEnumerable<ProjetoEventX.Models.AvaliacaoFornecedor>
+
+@{
+    ViewData["Title"] = "Avaliações do Fornecedor";
+    var fornecedor = (ProjetoEventX.Models.Fornecedor)ViewBag.Fornecedor;
+    var eventosPendentes = ViewBag.EventosPendentes as List<ProjetoEventX.Models.Evento> ?? new List<ProjetoEventX.Models.Evento>();
+    var avaliacoes = Model.ToList();
+    var totalAvaliacoes = avaliacoes.Count;
+    var media = totalAvaliacoes > 0 ? avaliacoes.Average(a => a.Nota) : 0;
+    var distribuicao = Enumerable.Range(1, 5).ToDictionary(n => n, n => totalAvaliacoes > 0 ? avaliacoes.Count(a => a.Nota == n) * 100.0 / totalAvaliacoes : 0);
+}
+
+<style>
+    .avaliacoes-wrapper {
+        background: #f5f1ed;
+        min-height: 100vh;
+        padding-bottom: 3rem;
+    }
+
+    .avaliacoes-header {
+        background: linear-gradient(135deg, #8B0000 0%, #B22222 40%, #D4A574 100%);
+        color: #fff;
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .avaliacoes-header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .avaliacoes-header p { opacity: 0.85; font-size: 1rem; margin: 0; }
+
+    .avaliacoes-header .header-icon {
+        width: 60px; height: 60px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; margin-right: 1rem;
+    }
+
+    .resumo-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        margin-bottom: 1.5rem;
+    }
+
+    .media-grande {
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: #8B0000;
+        line-height: 1;
+    }
+
+    .estrelas-media {
+        color: #f59e0b;
+        font-size: 1.4rem;
+        margin: 0.5rem 0;
+    }
+
+    .barra-nota {
+        height: 10px;
+        border-radius: 5px;
+        background: #f0ece8;
+        overflow: hidden;
+        flex: 1;
+    }
+
+    .barra-nota-fill {
+        height: 100%;
+        border-radius: 5px;
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        transition: width 0.5s ease;
+    }
+
+    .nota-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .nota-row .nota-label { width: 60px; color: #888; font-weight: 500; }
+    .nota-row .nota-pct { width: 40px; text-align: right; color: #666; font-size: 0.85rem; }
+
+    .avaliacao-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        margin-bottom: 1rem;
+        border-left: 4px solid transparent;
+        transition: border-color 0.2s;
+    }
+
+    .avaliacao-card:hover { border-left-color: #8B0000; }
+
+    .avaliacao-avatar {
+        width: 42px; height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8B0000, #D4A574);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; font-weight: 700; color: #fff;
+        flex-shrink: 0;
+    }
+
+    .estrelas-sm { color: #f59e0b; font-size: 0.9rem; }
+    .estrelas-sm .vazia { color: #ddd; }
+
+    .btn-avaliar {
+        background: linear-gradient(135deg, #8B0000, #B22222);
+        color: #fff; border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-avaliar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(139,0,0,0.3);
+        color: #fff;
+    }
+
+    .btn-voltar {
+        background: #f0ece8; color: #555; border: none;
+        padding: 0.6rem 1.5rem; border-radius: 10px;
+        font-weight: 600; text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-voltar:hover { background: #e5e0db; color: #333; }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #999;
+    }
+
+    .empty-state i { font-size: 3rem; margin-bottom: 1rem; color: #ddd; }
+</style>
+
+<div class="avaliacoes-wrapper">
+    <section class="avaliacoes-header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <div class="header-icon">
+                    <i class="fas fa-star-half-alt"></i>
+                </div>
+                <div>
+                    <h1>Avaliações</h1>
+                    <p><strong>@fornecedor.Pessoa?.Nome</strong> &bull; @fornecedor.TipoServico</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius:12px;">
+                <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["InfoMessage"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert" style="border-radius:12px;">
+                <i class="fas fa-info-circle me-2"></i> @TempData["InfoMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <div class="row g-4">
+            <!-- Resumo -->
+            <div class="col-lg-4">
+                <div class="resumo-card text-center">
+                    <div class="media-grande">@media.ToString("N1")</div>
+                    <div class="estrelas-media">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= Math.Round(media))
+                            {
+                                <i class="fas fa-star"></i>
+                            }
+                            else
+                            {
+                                <i class="far fa-star" style="color:#ddd;"></i>
+                            }
+                        }
+                    </div>
+                    <div class="text-muted mb-3">@totalAvaliacoes avaliação(ões)</div>
+
+                    <div class="px-2">
+                        @for (int n = 5; n >= 1; n--)
+                        {
+                            <div class="nota-row">
+                                <span class="nota-label">@n estrela@(n > 1 ? "s" : "")</span>
+                                <div class="barra-nota">
+                                    <div class="barra-nota-fill" style="width: @distribuicao[n].ToString("N0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+                                </div>
+                                <span class="nota-pct">@distribuicao[n].ToString("N0")%</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @if (eventosPendentes.Any())
+                {
+                    <div class="resumo-card">
+                        <h6 class="fw-bold mb-3" style="color:#8B0000;">
+                            <i class="fas fa-pen me-2"></i>Avaliar para:
+                        </h6>
+                        @foreach (var ev in eventosPendentes)
+                        {
+                            <a asp-action="Criar" asp-route-fornecedorId="@fornecedor.Id" asp-route-eventoId="@ev.Id"
+                               class="btn-avaliar d-block text-center mb-2" style="font-size:0.9rem;">
+                                <i class="fas fa-star"></i> @ev.NomeEvento
+                            </a>
+                        }
+                    </div>
+                }
+
+                <a asp-controller="Fornecedor" asp-action="Catalogo" class="btn-voltar d-block text-center">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar ao Catálogo
+                </a>
+            </div>
+
+            <!-- Lista de avaliações -->
+            <div class="col-lg-8">
+                @if (avaliacoes.Any())
+                {
+                    @foreach (var avaliacao in avaliacoes)
+                    {
+                        var nomeOrg = avaliacao.Organizador?.Pessoa?.Nome ?? "Organizador";
+                        <div class="avaliacao-card">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="avaliacao-avatar">
+                                    @nomeOrg.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <div>
+                                            <strong>@nomeOrg</strong>
+                                            <div class="estrelas-sm">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    <i class="fa@(i <= avaliacao.Nota ? "s" : "r") fa-star @(i > avaliacao.Nota ? "vazia" : "")"></i>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted">@avaliacao.DataAvaliacao.ToString("dd/MM/yyyy")</small>
+                                            @if (avaliacao.Evento != null)
+                                            {
+                                                <br />
+                                                <small class="text-muted"><i class="fas fa-calendar me-1"></i>@avaliacao.Evento.NomeEvento</small>
+                                            }
+                                        </div>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(avaliacao.Comentario))
+                                    {
+                                        <p class="mb-0 mt-2" style="color:#555; line-height: 1.6;">@avaliacao.Comentario</p>
+                                    }
+                                    else
+                                    {
+                                        <p class="mb-0 mt-2 text-muted fst-italic" style="font-size:0.9rem;">Sem comentário</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="resumo-card empty-state">
+                        <i class="fas fa-star d-block"></i>
+                        <h5>Nenhuma avaliação ainda</h5>
+                        <p>Este fornecedor ainda não recebeu avaliações.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
