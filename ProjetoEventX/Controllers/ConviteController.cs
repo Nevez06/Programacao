@@ -476,7 +476,9 @@ namespace ProjetoEventX.Controllers
                     .FirstOrDefaultAsync(t => t.EventoId == eventoId && t.Ativo);
 
                 var htmlConvite = templateConvite != null
-                    ? templateConvite.GerarHTMLConvite(convidado.Pessoa!.Nome, linkConfirmacao)
+                    ? $"<h1>{templateConvite.Titulo ?? $"Convite para {evento.NomeEvento}"}</h1>" +
+                      $"<p>{templateConvite.Saudacao ?? $"Olá {convidado.Pessoa!.Nome},"}</p>" +
+                      $"<p>{templateConvite.Mensagem ?? "Você está convidado!"}</p>"
                     : $"<h1>Convite para {evento.NomeEvento}</h1><p>Olá {convidado.Pessoa!.Nome}, você está convidado!</p>";
 
                 var htmlCompleto = $@"

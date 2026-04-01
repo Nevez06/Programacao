@@ -117,8 +117,8 @@
                     {
                         <div class="tmpl-card">
                             <div class="tmpl-preview" style="background: @(t.CorFundo ?? "#fff");">
-                                <div class="title" style="color: @(t.CorTexto ?? "#333"); font-family: @(t.FonteTitulo ?? "Inter");">@t.NomeTemplate</div>
-                                <div class="subtitle" style="color: @(t.CorTexto ?? "#666");">@(t.TituloConvite ?? "Sem título")</div>
+                                <div class="title" style="color: @(t.CorTexto ?? "#333"); font-family: @(t.Fonte ?? "Inter");">@t.Nome</div>
+                                <div class="subtitle" style="color: @(t.CorTexto ?? "#666");">@(t.Titulo ?? "Sem título")</div>
                                 <span class="tmpl-tag">Salvo</span>
                                 <div class="tmpl-overlay">
                                     <a href="@Url.Action("Editor", "Convite", new { eventoId = ViewBag.EventoId })" class="btn btn-light">
@@ -127,8 +127,8 @@
                                 </div>
                             </div>
                             <div class="tmpl-info">
-                                <h6>@t.NomeTemplate</h6>
-                                <p>Estilo: @t.EstiloLayout</p>
+                                <h6>@t.Nome</h6>
+                                <p>Estilo: @t.Estilo</p>
                             </div>
                         </div>
                     }
