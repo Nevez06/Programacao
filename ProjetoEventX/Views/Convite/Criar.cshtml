@@ -698,13 +698,9 @@
                                         <div class="saved-template-card" data-saved-id="@tpl.Id" onclick="selecionarTemplateSalvo(this, @tpl.Id)">
                                             <div class="st-color" style="background: @tpl.CorPrimaria;"></div>
                                             <div class="st-info">
-                                                <div class="st-name">@tpl.NomeTemplate</div>
-                                                <div class="st-meta">@tpl.EstiloLayout &bull; Criado em @tpl.CreatedAt.ToString("dd/MM")</div>
+                                                <div class="st-name">@tpl.Nome</div>
+                                                <div class="st-meta">@tpl.Estilo</div>
                                             </div>
-                                            @if (tpl.PadraoSistema)
-                                            {
-                                                <span class="st-badge">Padrão</span>
-                                            }
                                         </div>
                                     }
                                 </div>

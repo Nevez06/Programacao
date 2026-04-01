@@ -22,6 +22,6 @@ namespace ProjetoEventX.Models
         public ICollection<ListaConvidado> ListasConvidados { get; set; } = new List<ListaConvidado>();
             [System.ComponentModel.DataAnnotations.Schema.NotMapped]
             public ListaConvidado ListaConvidado { get; set; }
-            public bool EmailConfirmed { get; set; }
+            public new bool EmailConfirmed { get; set; }
     }
 }

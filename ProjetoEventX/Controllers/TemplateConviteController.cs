@@ -15,7 +15,7 @@ namespace ProjetoEventX.Controllers
 {
     [Authorize]
     [ServiceFilter(typeof(SecurityActionFilter))]
-    public class ConviteController : Controller
+    public class TemplateConviteController : Controller
     {
         private readonly EventXContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -24,7 +24,7 @@ namespace ProjetoEventX.Controllers
         private readonly NotificationService _notificationService;
         private readonly EventLogService _eventLogService;
 
-        public ConviteController(
+        public TemplateConviteController(
             EventXContext context,
             UserManager<ApplicationUser> userManager,
             AuditoriaService auditoriaService,
@@ -476,7 +476,9 @@ namespace ProjetoEventX.Controllers
                     .FirstOrDefaultAsync(t => t.EventoId == eventoId && t.Ativo);
 
                 var htmlConvite = templateConvite != null
-                    ? templateConvite.GerarHTMLConvite(convidado.Pessoa!.Nome, linkConfirmacao)
+                    ? $"<h1>{templateConvite.Titulo ?? $"Convite para {evento.NomeEvento}"}</h1>" +
+                      $"<p>{templateConvite.Saudacao ?? $"Olá {convidado.Pessoa!.Nome},"}</p>" +
+                      $"<p>{templateConvite.Mensagem ?? "Você está convidado!"}</p>"
                     : $"<h1>Convite para {evento.NomeEvento}</h1><p>Olá {convidado.Pessoa!.Nome}, você está convidado!</p>";
 
                 var htmlCompleto = $@"
