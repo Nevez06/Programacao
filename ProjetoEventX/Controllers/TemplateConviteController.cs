@@ -7,9 +7,14 @@ using ProjetoEventX.Models;
 using ProjetoEventX.Security;
 using ProjetoEventX.Services;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 
 namespace ProjetoEventX.Controllers
 {
@@ -23,6 +28,7 @@ namespace ProjetoEventX.Controllers
         private readonly EmailService _emailService;
         private readonly NotificationService _notificationService;
         private readonly EventLogService _eventLogService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public TemplateConviteController(
             EventXContext context,
@@ -30,7 +36,8 @@ namespace ProjetoEventX.Controllers
             AuditoriaService auditoriaService,
             EmailService emailService,
             NotificationService notificationService,
-            EventLogService eventLogService)
+            EventLogService eventLogService,
+            IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _userManager = userManager;
@@ -38,6 +45,7 @@ namespace ProjetoEventX.Controllers
             _emailService = emailService;
             _notificationService = notificationService;
             _eventLogService = eventLogService;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         [HttpGet]
@@ -708,7 +716,170 @@ namespace ProjetoEventX.Controllers
             ViewBag.TipoEvento = evento.TipoEvento ?? "Outro";
             ViewBag.DescricaoEvento = evento.DescricaoEvento ?? "";
 
-            return View();
+            var template = await _context.TemplatesConvites
+                .Where(t => t.EventoId == eventoId && t.Ativo)
+                .OrderByDescending(t => t.Id)
+                .FirstOrDefaultAsync();
+
+            if (template == null)
+            {
+                template = new TemplateConvite
+                {
+                    EventoId = eventoId,
+                    Nome = "Convite personalizado",
+                    Titulo = evento.NomeEvento,
+                    Mensagem = evento.DescricaoEvento ?? "Seu evento começa em breve!",
+                    LayoutJson = BuildDefaultLayoutJson(evento),
+                    Estilo = "Canva",
+                    Ativo = true,
+                    CorFundo = "#ffffff",
+                    CorTexto = "#0f172a",
+                    CorPrimaria = "#992008",
+                    Fonte = "'Inter', sans-serif",
+                    Saudacao = "Olá!",
+                    TextoBotao = "Confirmar Presença"
+                };
+
+                _context.TemplatesConvites.Add(template);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Edit), new { id = template.Id });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            if (id <= 0)
+            {
+                return RedirectToAction("Index", "Eventos");
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("LoginOrganizador", "Auth");
+            }
+
+            var template = await _context.TemplatesConvites
+                .Include(t => t.Evento)
+                .FirstOrDefaultAsync(t => t.Id == id && t.Ativo);
+
+            if (template == null || !template.EventoId.HasValue)
+            {
+                TempData["ErrorMessage"] = "❌ Template de convite não encontrado.";
+                return RedirectToAction("Index", "Eventos");
+            }
+
+            if (!await User.IsOwnerOfEventoAsync(_userManager, template.EventoId.Value, _context))
+            {
+                return RedirectToAction("AccessDenied", "Auth");
+            }
+
+            var layoutJson = template.LayoutJson;
+            if (string.IsNullOrWhiteSpace(layoutJson))
+            {
+                layoutJson = BuildDefaultLayoutJson(template.Evento);
+            }
+
+            var model = new TemplateConviteEditorViewModel
+            {
+                TemplateId = template.Id,
+                Nome = template.Nome,
+                NomeEvento = template.Evento?.NomeEvento ?? "Evento",
+                LayoutJson = layoutJson
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveLayout([FromBody] SaveTemplateLayoutRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Dados inválidos para salvar o layout." });
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "Não autenticado." });
+            }
+
+            var template = await _context.TemplatesConvites.FirstOrDefaultAsync(t => t.Id == request.TemplateId && t.Ativo);
+            if (template == null || !template.EventoId.HasValue)
+            {
+                return Json(new { success = false, message = "Template de convite não encontrado." });
+            }
+
+            if (!await User.IsOwnerOfEventoAsync(_userManager, template.EventoId.Value, _context))
+            {
+                return Json(new { success = false, message = "Sem permissão para editar este template." });
+            }
+
+            if (!IsValidJson(request.LayoutJson))
+            {
+                return Json(new { success = false, message = "LayoutJson inválido." });
+            }
+
+            template.LayoutJson = request.LayoutJson;
+            _context.Update(template);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadImage(IFormFile file, int templateId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "Não autenticado." });
+            }
+
+            var template = await _context.TemplatesConvites.FirstOrDefaultAsync(t => t.Id == templateId && t.Ativo);
+            if (template == null || !template.EventoId.HasValue)
+            {
+                return Json(new { success = false, message = "Template inválido para upload." });
+            }
+
+            if (!await User.IsOwnerOfEventoAsync(_userManager, template.EventoId.Value, _context))
+            {
+                return Json(new { success = false, message = "Sem permissão para upload neste template." });
+            }
+
+            if (file == null || file.Length == 0)
+            {
+                return Json(new { success = false, message = "Nenhuma imagem enviada." });
+            }
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension))
+            {
+                return Json(new { success = false, message = "Formato inválido. Use JPG, PNG ou WEBP." });
+            }
+
+            var uploadsRoot = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "convites");
+            if (!Directory.Exists(uploadsRoot))
+            {
+                Directory.CreateDirectory(uploadsRoot);
+            }
+
+            var fileName = $"{Guid.NewGuid():N}{extension}";
+            var fullPath = Path.Combine(uploadsRoot, fileName);
+
+            await using (var stream = new FileStream(fullPath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var imageUrl = Url.Content($"~/uploads/convites/{fileName}");
+            return Json(new { success = true, url = imageUrl });
         }
 
         [HttpPost]
@@ -811,6 +982,93 @@ namespace ProjetoEventX.Controllers
             ViewBag.TemplatesSalvos = templatesSalvos;
 
             return View();
+        }
+
+        private static bool IsValidJson(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return false;
+            }
+
+            try
+            {
+                JsonDocument.Parse(json);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static string BuildDefaultLayoutJson(Evento? evento)
+        {
+            var defaultLayout = new
+            {
+                background = "#ffffff",
+                width = 760,
+                height = 1080,
+                elements = new List<object>
+                {
+                    new
+                    {
+                        id = "el-title",
+                        type = "title",
+                        text = evento?.NomeEvento ?? "Seu Evento",
+                        x = 70,
+                        y = 90,
+                        width = 620,
+                        height = 90,
+                        zIndex = 1,
+                        color = "#0f172a",
+                        background = "transparent",
+                        fontSize = 46,
+                        fontFamily = "'Inter', sans-serif",
+                        fontWeight = "800",
+                        textAlign = "center",
+                        imageUrl = ""
+                    },
+                    new
+                    {
+                        id = "el-text",
+                        type = "text",
+                        text = evento?.DescricaoEvento ?? "Você está convidado para um momento especial.",
+                        x = 80,
+                        y = 240,
+                        width = 600,
+                        height = 130,
+                        zIndex = 2,
+                        color = "#334155",
+                        background = "transparent",
+                        fontSize = 24,
+                        fontFamily = "'Inter', sans-serif",
+                        fontWeight = "500",
+                        textAlign = "center",
+                        imageUrl = ""
+                    },
+                    new
+                    {
+                        id = "el-button",
+                        type = "button",
+                        text = "Confirmar Presença",
+                        x = 225,
+                        y = 930,
+                        width = 310,
+                        height = 62,
+                        zIndex = 3,
+                        color = "#ffffff",
+                        background = "#992008",
+                        fontSize = 24,
+                        fontFamily = "'Inter', sans-serif",
+                        fontWeight = "700",
+                        textAlign = "center",
+                        imageUrl = ""
+                    }
+                }
+            };
+
+            return JsonSerializer.Serialize(defaultLayout);
         }
     }
 }
