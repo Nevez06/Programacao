@@ -56,7 +56,7 @@ namespace ProjetoEventX.Security
                 {
                     EnderecoIP = remoteIp,
                     DataAcesso = now,
-                    Usuario = context.HttpContext.User.Identity.Name ?? "Anônimo",
+                    Usuario = context.HttpContext.User.Identity?.Name ?? "Anônimo",
                     UrlAcesso = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString.Value,
                     UserAgent = context.HttpContext.Request.Headers["User-Agent"].ToString()
                 });

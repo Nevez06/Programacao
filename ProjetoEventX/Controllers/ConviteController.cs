@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using ProjetoEventX.Data;
 using ProjetoEventX.Models;
 using ProjetoEventX.Security;
@@ -731,8 +732,16 @@ namespace ProjetoEventX.Controllers
             ConviteRascunho? rascunho = null;
             if (rascunhoId.HasValue)
             {
-                rascunho = await _context.ConvitesRascunhos
-                    .FirstOrDefaultAsync(r => r.Id == rascunhoId.Value && r.EventoId == eventoId);
+                try
+                {
+                    rascunho = await _context.ConvitesRascunhos
+                        .FirstOrDefaultAsync(r => r.Id == rascunhoId.Value && r.EventoId == eventoId);
+                }
+                catch (Exception ex) when (IsConvitesRascunhosTableMissing(ex))
+                {
+                    TempData["WarningMessage"] = "⚠️ O recurso de rascunhos de convite ainda não foi configurado no banco. Aplique as migrations para habilitar.";
+                    rascunho = null;
+                }
             }
 
             TemplateConvite? template = null;
@@ -773,32 +782,43 @@ namespace ProjetoEventX.Controllers
                 return Json(new { success = false, message = "Sem permissão" });
 
             ConviteRascunho? rascunho = null;
-            if (request.RascunhoId.HasValue)
+            try
             {
-                rascunho = await _context.ConvitesRascunhos
-                    .FirstOrDefaultAsync(r => r.Id == request.RascunhoId.Value && r.EventoId == request.EventoId);
-            }
-
-            if (rascunho == null)
-            {
-                rascunho = new ConviteRascunho
+                if (request.RascunhoId.HasValue)
                 {
-                    EventoId = request.EventoId,
-                    OrganizadorId = user.Id,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _context.ConvitesRascunhos.Add(rascunho);
+                    rascunho = await _context.ConvitesRascunhos
+                        .FirstOrDefaultAsync(r => r.Id == request.RascunhoId.Value && r.EventoId == request.EventoId);
+                }
+
+                if (rascunho == null)
+                {
+                    rascunho = new ConviteRascunho
+                    {
+                        EventoId = request.EventoId,
+                        OrganizadorId = user.Id,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.ConvitesRascunhos.Add(rascunho);
+                }
+
+                rascunho.TemplateId = request.TemplateId;
+                rascunho.NomeRascunho = string.IsNullOrWhiteSpace(request.NomeRascunho) ? "Convite sem título" : request.NomeRascunho.Trim();
+                rascunho.LayoutJson = request.LayoutJson;
+                rascunho.PreviewHtml = request.PreviewHtml;
+                rascunho.PreviewUrl = request.PreviewUrl;
+                rascunho.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, rascunhoId = rascunho.Id, updatedAt = rascunho.UpdatedAt });
             }
-
-            rascunho.TemplateId = request.TemplateId;
-            rascunho.NomeRascunho = string.IsNullOrWhiteSpace(request.NomeRascunho) ? "Convite sem título" : request.NomeRascunho.Trim();
-            rascunho.LayoutJson = request.LayoutJson;
-            rascunho.PreviewHtml = request.PreviewHtml;
-            rascunho.PreviewUrl = request.PreviewUrl;
-            rascunho.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-            return Json(new { success = true, rascunhoId = rascunho.Id, updatedAt = rascunho.UpdatedAt });
+            catch (Exception ex) when (IsConvitesRascunhosTableMissing(ex))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Tabela ConvitesRascunhos não encontrada no banco. Execute as migrations para habilitar rascunhos."
+                });
+            }
         }
 
         [HttpPost]
@@ -825,9 +845,18 @@ namespace ProjetoEventX.Controllers
             if (!await User.IsOwnerOfEventoAsync(_userManager, eventoId, _context))
                 return RedirectToAction("AccessDenied", "Auth");
 
-            var rascunho = await _context.ConvitesRascunhos
-                .Include(r => r.Evento)
-                .FirstOrDefaultAsync(r => r.Id == rascunhoId && r.EventoId == eventoId);
+            ConviteRascunho? rascunho;
+            try
+            {
+                rascunho = await _context.ConvitesRascunhos
+                    .Include(r => r.Evento)
+                    .FirstOrDefaultAsync(r => r.Id == rascunhoId && r.EventoId == eventoId);
+            }
+            catch (Exception ex) when (IsConvitesRascunhosTableMissing(ex))
+            {
+                TempData["ErrorMessage"] = "❌ Tabela ConvitesRascunhos não encontrada. Aplique as migrations antes de enviar convites por rascunho.";
+                return RedirectToAction(nameof(GaleriaTemplates), new { eventoId });
+            }
 
             if (rascunho == null)
                 return RedirectToAction(nameof(GaleriaTemplates), new { eventoId });
@@ -858,9 +887,19 @@ namespace ProjetoEventX.Controllers
             if (!await User.IsOwnerOfEventoAsync(_userManager, eventoId, _context))
                 return RedirectToAction("AccessDenied", "Auth");
 
-            var rascunho = await _context.ConvitesRascunhos
-                .Include(r => r.Evento)
-                .FirstOrDefaultAsync(r => r.Id == rascunhoId && r.EventoId == eventoId);
+            ConviteRascunho? rascunho;
+            try
+            {
+                rascunho = await _context.ConvitesRascunhos
+                    .Include(r => r.Evento)
+                    .FirstOrDefaultAsync(r => r.Id == rascunhoId && r.EventoId == eventoId);
+            }
+            catch (Exception ex) when (IsConvitesRascunhosTableMissing(ex))
+            {
+                TempData["ErrorMessage"] = "❌ Tabela ConvitesRascunhos não encontrada. Aplique as migrations antes de enviar convites por rascunho.";
+                return RedirectToAction(nameof(GaleriaTemplates), new { eventoId });
+            }
+
             if (rascunho == null)
                 return RedirectToAction(nameof(GaleriaTemplates), new { eventoId });
 
@@ -931,11 +970,20 @@ namespace ProjetoEventX.Controllers
             if (evento == null)
                 return RedirectToAction("Index", "Eventos");
 
-            var rascunhos = await _context.ConvitesRascunhos
-                .Where(r => r.EventoId == eventoId)
-                .OrderByDescending(r => r.UpdatedAt)
-                .Take(8)
-                .ToListAsync();
+            List<ConviteRascunho> rascunhos;
+            try
+            {
+                rascunhos = await _context.ConvitesRascunhos
+                    .Where(r => r.EventoId == eventoId)
+                    .OrderByDescending(r => r.UpdatedAt)
+                    .Take(8)
+                    .ToListAsync();
+            }
+            catch (Exception ex) when (IsConvitesRascunhosTableMissing(ex))
+            {
+                TempData["WarningMessage"] = "⚠️ Tabela ConvitesRascunhos ausente no banco. Execute as migrations para habilitar os rascunhos no editor.";
+                rascunhos = new List<ConviteRascunho>();
+            }
 
             var model = new ConviteCentralViewModel
             {
@@ -948,11 +996,30 @@ namespace ProjetoEventX.Controllers
             return View(model);
         }
 
+        private static bool IsConvitesRascunhosTableMissing(Exception ex)
+        {
+            Exception? current = ex;
+            while (current != null)
+            {
+                if (current is PostgresException pgEx &&
+                    pgEx.SqlState == PostgresErrorCodes.UndefinedTable &&
+                    (string.Equals(pgEx.TableName, "ConvitesRascunhos", StringComparison.OrdinalIgnoreCase) ||
+                     pgEx.MessageText.Contains("ConvitesRascunhos", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return true;
+                }
+
+                current = current.InnerException;
+            }
+
+            return false;
+        }
+
         private static string BuildDefaultLayoutJson(Evento? evento)
         {
             var nomeEvento = evento?.NomeEvento ?? "Seu evento";
             var dataEvento = evento?.DataEvento.ToString("dd/MM/yyyy") ?? "Data a definir";
-            return $$"""
+            return """
             {
               "version": "5.3.1",
               "objects": [

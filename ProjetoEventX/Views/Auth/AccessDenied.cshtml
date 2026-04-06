@@ -23,7 +23,7 @@
 
                     <div class="mb-4">
                         <p><strong>🔐 Nível de Acesso Requerido:</strong> @ViewContext.HttpContext.User?.Identity?.AuthenticationType</p>
-                        <p><strong>👤 Usuário Atual:</strong> @User.Identity.Name</p>
+                        <p><strong>👤 Usuário Atual:</strong> @(User.Identity?.Name ?? "Anônimo")</p>
                         <p><strong>📅 Data/Hora:</strong> @DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")</p>
                     </div>
 
