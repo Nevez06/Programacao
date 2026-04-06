@@ -41,6 +41,35 @@ namespace ProjetoEventX.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> Index(int? eventoId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToAction("LoginOrganizador", "Auth");
+
+            if (!eventoId.HasValue)
+            {
+                eventoId = await _context.Eventos
+                    .Where(e => e.Organizador != null && e.Organizador.Email == user.Email)
+                    .OrderBy(e => e.DataEvento < DateTime.UtcNow)
+                    .ThenBy(e => e.DataEvento)
+                    .Select(e => (int?)e.Id)
+                    .FirstOrDefaultAsync();
+            }
+
+            if (!eventoId.HasValue)
+            {
+                TempData["ErrorMessage"] = "❌ Você ainda não possui eventos para gerenciar convites.";
+                return RedirectToAction("Create", "Eventos");
+            }
+
+            if (!await User.IsOwnerOfEventoAsync(_userManager, eventoId.Value, _context))
+                return RedirectToAction("AccessDenied", "Auth");
+
+            return RedirectToAction(nameof(GaleriaTemplates), new { eventoId = eventoId.Value });
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Criar(int eventoId)
         {
             if (eventoId <= 0)
@@ -725,6 +754,7 @@ namespace ProjetoEventX.Controllers
             var template = new TemplateConvite
             {
                 EventoId = eventoId,
+                OrganizadorId = user.Id,
                 Nome = nomeTemplate ?? "Convite personalizado",
                 Titulo = "Convite",
                 Mensagem = "Convite criado no editor visual",

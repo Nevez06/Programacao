@@ -744,7 +744,7 @@
                             <i class="fas fa-plus me-2"></i>Novo Evento
                         </a>
 
-                        <a asp-controller="TemplateConvite" asp-action="Index" class="btn btn-outline-light">
+                        <a asp-controller="Convite" asp-action="Index" asp-route-eventoId="@(Model?.ProximoEvento?.Id)" class="btn btn-outline-light">
                             <i class="fas fa-envelope-open-text me-2"></i>Convites
                         </a>
 
@@ -879,7 +879,7 @@
                                 <i class="fas fa-eye me-1"></i>Ver detalhes
                             </a>
 
-                            <a asp-controller="TemplateConvite" asp-action="Index" class="btn btn-eventx-outline btn-sm">
+                            <a asp-controller="Convite" asp-action="Index" asp-route-eventoId="@Model.ProximoEvento.Id" class="btn btn-eventx-outline btn-sm">
                                 <i class="fas fa-envelope me-1"></i>Gerenciar convites
                             </a>
 
@@ -928,7 +928,7 @@
                         </div>
                     </a>
 
-                    <a asp-controller="TemplateConvite" asp-action="Index" class="linear-action">
+                    <a asp-controller="Convite" asp-action="Index" asp-route-eventoId="@(Model?.ProximoEvento?.Id)" class="linear-action">
                         <div class="linear-action-icon" style="background: linear-gradient(135deg, #2563EB, #60A5FA);">
                             <i class="fas fa-envelope-open-text"></i>
                         </div>
