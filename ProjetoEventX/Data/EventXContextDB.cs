@@ -45,8 +45,12 @@ namespace ProjetoEventX.Data
         public DbSet<NegociacaoHistorico> NegociacaoHistoricos { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<EventLog> EventLogs { get; set; }
-            public DbSet<PublicacaoFeed> PublicacoesFeed { get; set; }
-            public DbSet<ComentarioFeed> ComentariosFeed { get; set; }
+        public DbSet<PublicacaoFeed> PublicacoesFeed { get; set; }
+        public DbSet<ComentarioFeed> ComentariosFeed { get; set; }
+        public DbSet<PerfilSocial> PerfisSociais { get; set; }
+        public DbSet<SocialPost> SocialPosts { get; set; }
+        public DbSet<SocialCurtida> SocialCurtidas { get; set; }
+        public DbSet<SocialComentario> SocialComentarios { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -287,6 +291,63 @@ namespace ProjetoEventX.Data
             builder.Entity<Notification>()
                 .Property(n => n.IsRead)
                 .HasDefaultValue(false);
+
+            // EventX Social
+            builder.Entity<PerfilSocial>()
+                .HasOne(p => p.User)
+                .WithOne()
+                .HasForeignKey<PerfilSocial>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<PerfilSocial>()
+                .HasIndex(p => p.UserId)
+                .IsUnique();
+
+            builder.Entity<SocialPost>()
+                .HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<SocialPost>()
+                .HasOne(p => p.PerfilSocial)
+                .WithMany(perfil => perfil.Posts)
+                .HasForeignKey(p => p.PerfilSocialId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<SocialPost>()
+                .HasOne(p => p.Evento)
+                .WithMany()
+                .HasForeignKey(p => p.EventoId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<SocialCurtida>()
+                .HasOne(c => c.Post)
+                .WithMany(p => p.Curtidas)
+                .HasForeignKey(c => c.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<SocialCurtida>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<SocialCurtida>()
+                .HasIndex(c => new { c.PostId, c.UserId })
+                .IsUnique();
+
+            builder.Entity<SocialComentario>()
+                .HasOne(c => c.Post)
+                .WithMany(p => p.Comentarios)
+                .HasForeignKey(c => c.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<SocialComentario>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Restrições para status
             builder.Entity<Evento>().Property(e => e.StatusEvento).HasDefaultValue("Planejado");

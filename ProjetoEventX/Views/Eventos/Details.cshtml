@@ -354,6 +354,14 @@
                             <small style="color: #999; font-weight: 400;">Ajuda com IA</small>
                         </div>
                     </a>
+
+                    <a asp-controller="Social" asp-action="Evento" asp-route-eventoId="@Model.Id" class="acao-link">
+                        <div class="acao-icon chat"><i class="fas fa-images"></i></div>
+                        <div>
+                            <div>EventX Social</div>
+                            <small style="color: #999; font-weight: 400;">Ver galeria social do evento</small>
+                        </div>
+                    </a>
                 </div>
 
                 @if (!string.IsNullOrWhiteSpace(Model.Slug))

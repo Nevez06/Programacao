@@ -1,0 +1,48 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.FeedPostViewModel>
+@{
+    ViewData["Title"] = "EventX Social - Feed";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page">
+    <header class="social-header">
+        <h1>eventx social</h1>
+        <p>acompanhe os melhores momentos dos eventos.</p>
+    </header>
+
+    <div class="social-grid">
+        @foreach (var post in Model)
+        {
+            <article class="social-card">
+                <div class="social-card-header">
+                    <img src="@post.FotoPerfilUrl" alt="perfil" class="social-avatar" />
+                    <div>
+                        <a asp-action="Perfil" asp-route-id="@post.PerfilId" class="social-author">@post.NomeAutor</a>
+                        <small>@post.DataCriacao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                    </div>
+                </div>
+
+                <a asp-action="Post" asp-route-id="@post.PostId">
+                    <img src="@post.ImagemUrl" alt="imagem do post" class="social-post-image" />
+                </a>
+
+                <div class="social-card-body">
+                    @if (!string.IsNullOrWhiteSpace(post.Categoria))
+                    {
+                        <span class="badge bg-secondary">@post.Categoria</span>
+                    }
+                    @if (post.EventoId.HasValue)
+                    {
+                        <a asp-action="Evento" asp-route-eventoId="@post.EventoId" class="badge bg-primary social-event-badge">@post.NomeEvento</a>
+                    }
+                    <p>@post.Legenda</p>
+                    <div class="social-actions">
+                        <span>❤️ @post.TotalCurtidas</span>
+                        <span>💬 @post.TotalComentarios</span>
+                        <a asp-action="Post" asp-route-id="@post.PostId" class="btn btn-sm btn-outline-primary">abrir</a>
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+</section>

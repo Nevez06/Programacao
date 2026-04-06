@@ -1,0 +1,36 @@
+@model ProjetoEventX.ViewModels.Social.CriarPostViewModel
+@{
+    ViewData["Title"] = "EventX Social - Editar post";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page narrow">
+    <h1>editar post</h1>
+    <form asp-action="EditarPost" asp-route-id="@ViewBag.PostId" method="post" class="social-form">
+        @Html.AntiForgeryToken()
+        <div class="mb-3">
+            <label asp-for="Titulo" class="form-label"></label>
+            <input asp-for="Titulo" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Legenda" class="form-label"></label>
+            <textarea asp-for="Legenda" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Legenda" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Categoria" class="form-label"></label>
+            <input asp-for="Categoria" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="EventoId" class="form-label">evento vinculado</label>
+            <select asp-for="EventoId" asp-items="Model.EventosDisponiveis" class="form-select">
+                <option value="">sem vínculo</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">salvar alterações</button>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
