@@ -28,6 +28,7 @@ namespace ProjetoEventX.Data
         public DbSet<Local> Locais { get; set; }
         public DbSet<ListaConvidado> ListasConvidados { get; set; }
         public DbSet<TemplateConvite> TemplatesConvites { get; set; }
+        public DbSet<ConviteRascunho> ConvitesRascunhos { get; set; }
         public DbSet<Notificacao> Notificacoes { get; set; }
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<MensagemChat> MensagemChats { get; set; }
@@ -216,6 +217,21 @@ namespace ProjetoEventX.Data
 
             builder.Entity<Quote>()
                 .HasIndex(q => q.EventId);
+
+            builder.Entity<ConviteRascunho>()
+                .HasOne(r => r.Evento)
+                .WithMany()
+                .HasForeignKey(r => r.EventoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ConviteRascunho>()
+                .HasOne(r => r.Template)
+                .WithMany()
+                .HasForeignKey(r => r.TemplateId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<ConviteRascunho>()
+                .HasIndex(r => new { r.EventoId, r.UpdatedAt });
 
             builder.Entity<Quote>()
                 .HasIndex(q => q.SupplierId);
