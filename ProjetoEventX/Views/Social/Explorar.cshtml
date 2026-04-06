@@ -1,0 +1,32 @@
+@model ProjetoEventX.ViewModels.Social.ExplorarViewModel
+@{
+    ViewData["Title"] = "EventX Social - Explorar";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page">
+    <header class="social-header">
+        <h1>explorar</h1>
+        <p>descubra conteúdos, profissionais e eventos em destaque.</p>
+    </header>
+
+    <h2>posts recentes</h2>
+    <div class="social-grid compact">
+        @foreach (var post in Model.PostsRecentes)
+        {
+            <a asp-action="Post" asp-route-id="@post.PostId" class="social-thumb">
+                <img src="@post.ImagemUrl" alt="post recente" />
+            </a>
+        }
+    </div>
+
+    <h2>posts populares</h2>
+    <div class="social-grid compact">
+        @foreach (var post in Model.PostsPopulares)
+        {
+            <a asp-action="Post" asp-route-id="@post.PostId" class="social-thumb">
+                <img src="@post.ImagemUrl" alt="post popular" />
+            </a>
+        }
+    </div>
+</section>

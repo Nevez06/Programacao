@@ -139,3 +139,17 @@ Se encontrar problemas, verifique:
 - Documentação do Supabase: https://supabase.com/docs
 
 
+
+## Atualização do módulo EventX Social
+
+Após baixar este branch, aplique a migration do módulo social para criar as tabelas `PerfisSociais`, `SocialPosts`, `SocialCurtidas` e `SocialComentarios`.
+
+```bash
+dotnet ef database update 20260406202000_AddEventXSocialInitial
+```
+
+Se quiser aplicar todas as migrations pendentes:
+
+```bash
+dotnet ef database update
+```

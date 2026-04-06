@@ -1,0 +1,31 @@
+@model ProjetoEventX.ViewModels.Social.PerfilSocialViewModel
+@{
+    ViewData["Title"] = "EventX Social - Perfil";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page">
+    <header class="profile-header-card">
+        <img src="@Model.FotoPerfilUrl" alt="foto de perfil" class="social-avatar lg" />
+        <div>
+            <h1>@Model.NomeExibicao</h1>
+            <p>@Model.Bio</p>
+            <div class="social-meta">
+                <span>@Model.TipoPerfil</span>
+                <span>@Model.Cidade</span>
+                <span>@Model.TotalPosts posts</span>
+                <span>@Model.TotalCurtidasRecebidas curtidas</span>
+            </div>
+            <a asp-action="EditarPerfil" class="btn btn-sm btn-outline-primary">editar perfil</a>
+        </div>
+    </header>
+
+    <div class="social-grid compact">
+        @foreach (var post in Model.ListaPosts)
+        {
+            <a asp-action="Post" asp-route-id="@post.Id" class="social-thumb">
+                <img src="@post.ImagemUrl" alt="post do perfil" />
+            </a>
+        }
+    </div>
+</section>

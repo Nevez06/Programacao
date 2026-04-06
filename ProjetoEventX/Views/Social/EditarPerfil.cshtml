@@ -1,0 +1,44 @@
+@model ProjetoEventX.ViewModels.Social.PerfilSocialViewModel
+@{
+    ViewData["Title"] = "EventX Social - Editar perfil";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page narrow">
+    <h1>editar perfil</h1>
+    <form asp-action="EditarPerfil" method="post" enctype="multipart/form-data" class="social-form">
+        @Html.AntiForgeryToken()
+        <input asp-for="Id" type="hidden" />
+        <div class="mb-3">
+            <label asp-for="NomeExibicao" class="form-label"></label>
+            <input asp-for="NomeExibicao" class="form-control" />
+            <span asp-validation-for="NomeExibicao" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Bio" class="form-label"></label>
+            <textarea asp-for="Bio" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Cidade" class="form-label"></label>
+            <input asp-for="Cidade" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Instagram" class="form-label"></label>
+            <input asp-for="Instagram" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Site" class="form-label"></label>
+            <input asp-for="Site" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="NovaFotoPerfil" class="form-label">foto de perfil</label>
+            <input asp-for="NovaFotoPerfil" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp" />
+            <span asp-validation-for="NovaFotoPerfil" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">salvar</button>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

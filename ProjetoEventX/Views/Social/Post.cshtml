@@ -1,0 +1,59 @@
+@model ProjetoEventX.ViewModels.Social.PostDetalheViewModel
+@{
+    ViewData["Title"] = "EventX Social - Post";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page narrow">
+    <article class="social-card">
+        <div class="social-card-header">
+            <img src="@Model.Perfil.FotoPerfilUrl" alt="perfil" class="social-avatar" />
+            <div>
+                <a asp-action="Perfil" asp-route-id="@Model.Perfil.Id" class="social-author">@Model.Perfil.NomeExibicao</a>
+                <small>@Model.Post.CriadoEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+            </div>
+        </div>
+
+        <img src="@Model.Post.ImagemUrl" alt="imagem post" class="social-post-image" />
+
+        <div class="social-card-body">
+            <p>@Model.Post.Legenda</p>
+            @if (Model.EventoRelacionado != null)
+            {
+                <a asp-action="Evento" asp-route-eventoId="@Model.EventoRelacionado.Id" class="badge bg-primary">@Model.EventoRelacionado.NomeEvento</a>
+            }
+            <div class="social-actions">
+                <form asp-action="Curtir" asp-route-id="@Model.Post.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <button class="btn btn-sm btn-outline-danger" type="submit">curtir (@Model.TotalCurtidas)</button>
+                </form>
+                <form asp-action="Descurtir" asp-route-id="@Model.Post.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <button class="btn btn-sm btn-outline-secondary" type="submit">descurtir</button>
+                </form>
+            </div>
+        </div>
+    </article>
+
+    <section class="comments-box">
+        <h3>comentários</h3>
+        <form asp-action="Comentar" asp-route-id="@Model.Post.Id" method="post" class="mb-3">
+            @Html.AntiForgeryToken()
+            <textarea name="texto" class="form-control" rows="2" placeholder="escreva seu comentário"></textarea>
+            <button class="btn btn-primary mt-2" type="submit">comentar</button>
+        </form>
+
+        @foreach (var comentario in Model.ListaComentarios)
+        {
+            <article class="comment-item">
+                <strong>@(comentario.User?.UserName ?? "usuário")</strong>
+                <p>@comentario.Texto</p>
+                <small>@comentario.CriadoEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                <form asp-action="ExcluirComentario" asp-route-id="@comentario.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-link text-danger">excluir</button>
+                </form>
+            </article>
+        }
+    </section>
+</section>

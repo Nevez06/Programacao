@@ -1,0 +1,31 @@
+@model IEnumerable<ProjetoEventX.Models.SocialPost>
+@{
+    ViewData["Title"] = "EventX Social - Meus posts";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page">
+    <header class="social-header">
+        <h1>meus posts</h1>
+    </header>
+
+    <div class="social-grid">
+        @foreach (var post in Model)
+        {
+            <article class="social-card">
+                <img src="@post.ImagemUrl" alt="post" class="social-post-image" />
+                <div class="social-card-body">
+                    <p>@post.Legenda</p>
+                    <div class="social-actions">
+                        <a asp-action="Post" asp-route-id="@post.Id" class="btn btn-sm btn-outline-primary">detalhes</a>
+                        <a asp-action="EditarPost" asp-route-id="@post.Id" class="btn btn-sm btn-outline-secondary">editar</a>
+                        <form asp-action="ExcluirPost" asp-route-id="@post.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger">excluir</button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+</section>

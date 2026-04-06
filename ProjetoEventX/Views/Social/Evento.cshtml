@@ -1,0 +1,22 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.FeedPostViewModel>
+@{
+    var evento = ViewBag.Evento as ProjetoEventX.Models.Evento;
+    ViewData["Title"] = "EventX Social - Evento";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page">
+    <header class="social-header">
+        <h1>galeria social</h1>
+        <p>@evento?.NomeEvento</p>
+    </header>
+
+    <div class="social-grid compact">
+        @foreach (var post in Model)
+        {
+            <a asp-action="Post" asp-route-id="@post.PostId" class="social-thumb">
+                <img src="@post.ImagemUrl" alt="post do evento" />
+            </a>
+        }
+    </div>
+</section>
