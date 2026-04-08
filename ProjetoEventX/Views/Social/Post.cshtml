@@ -9,8 +9,8 @@
         <div class="social-card-header">
             <img src="@Model.Perfil.FotoPerfilUrl" alt="perfil" class="social-avatar" />
             <div>
-                <a asp-action="Perfil" asp-route-id="@Model.Perfil.Id" class="social-author">@Model.Perfil.NomeExibicao</a>
-                <small>@Model.Post.CriadoEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                <a asp-action="Perfil" asp-route-id="@Model.Perfil.Id" class="social-author">@Model.NomeAutor</a>
+                <small>@Model.TipoPerfil @(!string.IsNullOrWhiteSpace(Model.Cidade) ? $"· {Model.Cidade}" : "") · @Model.Post.CriadoEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
             </div>
         </div>
 
@@ -18,6 +18,14 @@
 
         <div class="social-card-body">
             <p>@Model.Post.Legenda</p>
+            @if (!string.IsNullOrWhiteSpace(Model.Post.TipoConteudo))
+            {
+                <span class="badge social-pill social-pill-alt">@Model.Post.TipoConteudo</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Post.Localizacao))
+            {
+                <span class="social-location"><i class="fas fa-location-dot"></i> @Model.Post.Localizacao</span>
+            }
             @if (Model.EventoRelacionado != null)
             {
                 <a asp-action="Evento" asp-route-eventoId="@Model.EventoRelacionado.Id" class="badge bg-primary">@Model.EventoRelacionado.NomeEvento</a>
@@ -31,6 +39,20 @@
                     @Html.AntiForgeryToken()
                     <button class="btn btn-sm btn-outline-secondary" type="submit">descurtir</button>
                 </form>
+                @if (Model.UsuarioSalvou)
+                {
+                    <form asp-action="RemoverSalvo" asp-route-id="@Model.Post.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-sm btn-warning" type="submit">remover salvo</button>
+                    </form>
+                }
+                else
+                {
+                    <form asp-action="SalvarPost" asp-route-id="@Model.Post.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-sm btn-outline-warning" type="submit">salvar</button>
+                    </form>
+                }
             </div>
         </div>
     </article>
@@ -46,7 +68,7 @@
         @foreach (var comentario in Model.ListaComentarios)
         {
             <article class="comment-item">
-                <strong>@(comentario.User?.UserName ?? "usuário")</strong>
+                <strong>@(!string.IsNullOrWhiteSpace(comentario.PerfilSocial?.NomeExibicao) ? comentario.PerfilSocial.NomeExibicao : (!string.IsNullOrWhiteSpace(comentario.User?.UserName) ? comentario.User.UserName : (comentario.User?.Email ?? "participante")))</strong>
                 <p>@comentario.Texto</p>
                 <small>@comentario.CriadoEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
                 <form asp-action="ExcluirComentario" asp-route-id="@comentario.Id" method="post">

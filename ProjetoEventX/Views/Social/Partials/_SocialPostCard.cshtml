@@ -1,0 +1,74 @@
+@model ProjetoEventX.ViewModels.Social.FeedPostViewModel
+
+<article class="social-card social-post-card">
+    <div class="social-card-header">
+        <img src="@Model.FotoPerfilUrl" alt="perfil" class="social-avatar" />
+        <div class="social-author-meta">
+            <a asp-controller="Social" asp-action="Perfil" asp-route-id="@Model.PerfilId" class="social-author">@Model.NomeAutor</a>
+            <small>@Model.TipoPerfil @(!string.IsNullOrWhiteSpace(Model.Cidade) ? $"· {Model.Cidade}" : "") · @Model.DataCriacao.ToLocalTime().ToString("dd/MM HH:mm")</small>
+        </div>
+    </div>
+
+    <a asp-controller="Social" asp-action="Post" asp-route-id="@Model.PostId">
+        <img src="@Model.ImagemUrl" alt="imagem do post" class="social-post-image social-post-image-lg" />
+    </a>
+
+    <div class="social-card-body">
+        <div class="social-tags">
+            @if (!string.IsNullOrWhiteSpace(Model.Categoria))
+            {
+                <span class="badge social-pill">@Model.Categoria</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.TipoConteudo))
+            {
+                <span class="badge social-pill social-pill-alt">@Model.TipoConteudo</span>
+            }
+            @if (Model.EventoId.HasValue)
+            {
+                <a asp-controller="Social" asp-action="Evento" asp-route-eventoId="@Model.EventoId" class="badge social-pill social-pill-event">@Model.NomeEvento</a>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Localizacao))
+            {
+                <span class="social-location"><i class="fas fa-location-dot"></i> @Model.Localizacao</span>
+            }
+        </div>
+
+        <p class="social-caption">@Model.Legenda</p>
+
+        <div class="social-actions social-actions-strong">
+            <form asp-controller="Social" asp-action="Curtir" asp-route-id="@Model.PostId" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-sm @(Model.UsuarioCurtiu ? "btn-danger" : "btn-outline-danger")">
+                    <i class="fas fa-heart"></i> @Model.TotalCurtidas
+                </button>
+            </form>
+
+            <a asp-controller="Social" asp-action="Post" asp-route-id="@Model.PostId" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-comment"></i> @Model.TotalComentarios
+            </a>
+
+            @if (Model.UsuarioSalvou)
+            {
+                <form asp-controller="Social" asp-action="RemoverSalvo" asp-route-id="@Model.PostId" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-warning">
+                        <i class="fas fa-bookmark"></i> salvo
+                    </button>
+                </form>
+            }
+            else
+            {
+                <form asp-controller="Social" asp-action="SalvarPost" asp-route-id="@Model.PostId" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                        <i class="far fa-bookmark"></i> salvar
+                    </button>
+                </form>
+            }
+
+            <a asp-controller="Social" asp-action="Post" asp-route-id="@Model.PostId" class="btn btn-sm btn-dark">
+                abrir
+            </a>
+        </div>
+    </div>
+</article>

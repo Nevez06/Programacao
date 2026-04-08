@@ -1,0 +1,25 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.SocialStatusItemViewModel>
+
+<section class="stories-bar">
+    <div class="stories-header">
+        <h3>Status do evento</h3>
+        <a asp-controller="Social" asp-action="CriarStatus">publicar</a>
+    </div>
+
+    <div class="stories-list">
+        <a asp-controller="Social" asp-action="CriarStatus" class="story-item story-item-create">
+            <span class="story-ring"><i class="fas fa-plus"></i></span>
+            <small>seu status</small>
+        </a>
+
+        @foreach (var story in Model)
+        {
+            <a asp-controller="Social" asp-action="VisualizarStory" asp-route-id="@story.Id" class="story-item @(story.Visualizado ? "seen" : "new")">
+                <span class="story-ring">
+                    <img src="@story.FotoPerfilUrl" alt="@story.NomePerfil" />
+                </span>
+                <small>@story.NomePerfil</small>
+            </a>
+        }
+    </div>
+</section>

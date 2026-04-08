@@ -5,22 +5,44 @@
 <link rel="stylesheet" href="~/css/social.css" />
 
 <section class="social-page">
-    <header class="profile-header-card">
-        <img src="@Model.FotoPerfilUrl" alt="foto de perfil" class="social-avatar lg" />
-        <div>
+    <header class="profile-header-card profile-header-premium">
+        <img src="@Model.FotoPerfilUrl" alt="foto de perfil" class="social-avatar xl" />
+        <div class="profile-main">
             <h1>@Model.NomeExibicao</h1>
-            <p>@Model.Bio</p>
-            <div class="social-meta">
-                <span>@Model.TipoPerfil</span>
-                <span>@Model.Cidade</span>
-                <span>@Model.TotalPosts posts</span>
-                <span>@Model.TotalCurtidasRecebidas curtidas</span>
+            <p>@(string.IsNullOrWhiteSpace(Model.Bio) ? "Perfil de eventos no EventX Social." : Model.Bio)</p>
+            <div class="social-meta social-meta-highlight">
+                <span><i class="fas fa-user-tag"></i> @Model.TipoPerfil</span>
+                @if (!string.IsNullOrWhiteSpace(Model.Cidade))
+                {
+                    <span><i class="fas fa-location-dot"></i> @Model.Cidade</span>
+                }
+                <span><i class="fas fa-image"></i> @Model.TotalPosts posts</span>
+                <span><i class="fas fa-heart"></i> @Model.TotalCurtidasRecebidas curtidas</span>
+                <span><i class="fas fa-circle-play"></i> @Model.ListaPosts.Count status ativos</span>
             </div>
-            <a asp-action="EditarPerfil" class="btn btn-sm btn-outline-primary">editar perfil</a>
+            <div class="social-actions">
+                <a asp-action="EditarPerfil" class="btn btn-outline-primary">Editar perfil</a>
+                <a asp-action="Stories" class="btn btn-outline-light">Ver status</a>
+            </div>
         </div>
     </header>
 
-    <div class="social-grid compact">
+    <section class="social-side-card mb-3">
+        <h3>Links e presença</h3>
+        <div class="social-meta">
+            @if (!string.IsNullOrWhiteSpace(Model.Instagram))
+            {
+                <span><i class="fab fa-instagram"></i> @Model.Instagram</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Site))
+            {
+                <span><i class="fas fa-link"></i> @Model.Site</span>
+            }
+        </div>
+    </section>
+
+    <h2>Publicações</h2>
+    <div class="social-grid compact social-profile-grid">
         @foreach (var post in Model.ListaPosts)
         {
             <a asp-action="Post" asp-route-id="@post.Id" class="social-thumb">
@@ -28,4 +50,18 @@
             </a>
         }
     </div>
+
+    @if (Model.EventosVinculados.Any())
+    {
+        <section class="social-side-card mt-3">
+            <h3>Eventos vinculados</h3>
+            @foreach (var evento in Model.EventosVinculados)
+            {
+                <a asp-action="Evento" asp-route-eventoId="@evento.Id" class="social-event-line">
+                    <span>@evento.NomeEvento</span>
+                    <small>@evento.DataEvento.ToLocalTime().ToString("dd/MM/yyyy")</small>
+                </a>
+            }
+        </section>
+    }
 </section>

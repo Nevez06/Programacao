@@ -9,5 +9,6 @@ namespace ProjetoEventX.ViewModels.Social
         public List<PerfilSocial> PerfisOrganizadores { get; set; } = new();
         public List<PerfilSocial> PerfisFornecedores { get; set; } = new();
         public List<Evento> EventosDestaque { get; set; } = new();
+        public List<string> CategoriasDestaque { get; set; } = new();
     }
 }

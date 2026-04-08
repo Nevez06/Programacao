@@ -1,0 +1,30 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.FeedPostViewModel>
+@{
+    ViewData["Title"] = "EventX Social - Salvos";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page">
+    <header class="social-header">
+        <h1>Salvos</h1>
+        <p>seus posts favoritos para revisitar quando quiser.</p>
+    </header>
+
+    @if (Model.Any())
+    {
+        <div class="social-feed-stack">
+            @foreach (var post in Model)
+            {
+                <partial name="Partials/_SocialPostCard" model="post" />
+            }
+        </div>
+    }
+    else
+    {
+        <div class="social-empty">
+            <h3>Nenhum post salvo ainda</h3>
+            <p>Ao salvar posts no feed, eles aparecerão aqui.</p>
+            <a asp-action="Feed" class="btn btn-primary">Ir para o feed</a>
+        </div>
+    }
+</section>

@@ -15,5 +15,10 @@ namespace ProjetoEventX.ViewModels.Social
         public int? EventoId { get; set; }
         public string? NomeEvento { get; set; }
         public int PerfilId { get; set; }
+        public string TipoPerfil { get; set; } = "Convidado";
+        public string? Cidade { get; set; }
+        public string? Localizacao { get; set; }
+        public string? TipoConteudo { get; set; }
+        public bool UsuarioSalvou { get; set; }
     }
 }

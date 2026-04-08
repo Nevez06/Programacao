@@ -1,0 +1,34 @@
+@{
+    ViewData["Title"] = "EventX Social - Criar status";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page narrow">
+    <header class="social-header">
+        <h1>Novo status</h1>
+        <p>publique um status com duração de 24 horas.</p>
+    </header>
+
+    <form asp-action="CriarStatus" method="post" enctype="multipart/form-data" class="social-form social-form-premium">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label class="form-label">Imagem</label>
+            <input type="file" name="imagem" class="form-control" accept=".jpg,.jpeg,.png,.webp" data-social-preview-input />
+            @Html.ValidationMessage("imagem", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Texto sobre imagem (opcional)</label>
+            <input type="text" name="textoOverlay" maxlength="180" class="form-control" placeholder="Ex.: Bastidores da montagem" />
+        </div>
+
+        <img src="" alt="preview status" class="social-preview d-none" data-social-preview-target />
+
+        <button type="submit" class="btn btn-primary btn-social-publish">Publicar status</button>
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/social.js" asp-append-version="true"></script>
+}

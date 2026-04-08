@@ -21,8 +21,14 @@ namespace ProjetoEventX.Controllers
 
         private const string PastaUploadPosts = "uploads/social/posts";
         private const string PastaUploadPerfis = "uploads/social/perfis";
+        private const string PastaUploadStatus = "uploads/social/status";
         private const string FotoPerfilPadrao = "/uploads/social/defaults/default-profile.svg";
         private const string ImagemPostPadrao = "/uploads/social/defaults/default-post.svg";
+        private static readonly string[] CategoriasExplorar =
+        [
+            "casamento", "aniversário", "corporativo", "formatura", "show", "infantil",
+            "decoração", "buffet", "fotografia"
+        ];
 
         public SocialController(EventXContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment environment)
         {
@@ -59,6 +65,52 @@ namespace ProjetoEventX.Controllers
             return perfil;
         }
 
+        private static string ResolverNomeExibicao(PerfilSocial? perfil, ApplicationUser? user)
+        {
+            if (!string.IsNullOrWhiteSpace(perfil?.NomeExibicao))
+            {
+                return perfil.NomeExibicao;
+            }
+
+            if (!string.IsNullOrWhiteSpace(user?.UserName))
+            {
+                return user.UserName;
+            }
+
+            return string.IsNullOrWhiteSpace(user?.Email) ? "Participante" : user.Email;
+        }
+
+        private static string ResolverFotoPerfil(PerfilSocial? perfil)
+        {
+            return string.IsNullOrWhiteSpace(perfil?.FotoPerfilUrl) ? FotoPerfilPadrao : perfil.FotoPerfilUrl;
+        }
+
+        private async Task<List<SocialStatusItemViewModel>> ObterStoriesAtivosAsync(int? usuarioAtualId)
+        {
+            var agora = DateTime.UtcNow;
+            return await _context.SocialStatus
+                .AsNoTracking()
+                .Where(s => s.Ativo && s.ExpiraEm > agora)
+                .OrderByDescending(s => s.CriadoEm)
+                .Select(s => new SocialStatusItemViewModel
+                {
+                    Id = s.Id,
+                    PerfilId = s.PerfilSocialId,
+                    NomePerfil = !string.IsNullOrWhiteSpace(s.PerfilSocial != null ? s.PerfilSocial.NomeExibicao : null)
+                        ? s.PerfilSocial!.NomeExibicao
+                        : (!string.IsNullOrWhiteSpace(s.User != null ? s.User.UserName : null) ? s.User!.UserName! : (s.User != null ? s.User.Email ?? "Participante" : "Participante")),
+                    FotoPerfilUrl = s.PerfilSocial != null && !string.IsNullOrWhiteSpace(s.PerfilSocial.FotoPerfilUrl)
+                        ? s.PerfilSocial.FotoPerfilUrl
+                        : FotoPerfilPadrao,
+                    ImagemUrl = s.ImagemUrl,
+                    TextoOverlay = s.TextoOverlay,
+                    CriadoEm = s.CriadoEm,
+                    Visualizado = usuarioAtualId.HasValue && s.Visualizacoes.Any(v => v.UserId == usuarioAtualId.Value)
+                })
+                .Take(32)
+                .ToListAsync();
+        }
+
         private async Task<List<SelectListItem>> ObterEventosSelectListAsync()
         {
             return await _context.Eventos
@@ -77,6 +129,10 @@ namespace ProjetoEventX.Controllers
         {
             var usuarioAtual = await ObterUsuarioAtualAsync();
             var usuarioId = usuarioAtual?.Id;
+            if (usuarioAtual != null)
+            {
+                await GarantirPerfilSocialAsync(usuarioAtual);
+            }
 
             var posts = await _context.SocialPosts
                 .AsNoTracking()
@@ -85,28 +141,46 @@ namespace ProjetoEventX.Controllers
                 .Select(p => new FeedPostViewModel
                 {
                     PostId = p.Id,
-                    NomeAutor = p.PerfilSocial != null ? p.PerfilSocial.NomeExibicao : (p.User != null ? p.User.UserName ?? "Usuário" : "Usuário"),
-                    FotoPerfilUrl = p.PerfilSocial != null ? p.PerfilSocial.FotoPerfilUrl : FotoPerfilPadrao,
+                    NomeAutor = !string.IsNullOrWhiteSpace(p.PerfilSocial != null ? p.PerfilSocial.NomeExibicao : null)
+                        ? p.PerfilSocial!.NomeExibicao
+                        : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : (p.User != null ? p.User.Email ?? "Participante" : "Participante")),
+                    FotoPerfilUrl = p.PerfilSocial != null && !string.IsNullOrWhiteSpace(p.PerfilSocial.FotoPerfilUrl)
+                        ? p.PerfilSocial.FotoPerfilUrl
+                        : FotoPerfilPadrao,
                     Legenda = p.Legenda,
                     ImagemUrl = string.IsNullOrWhiteSpace(p.ImagemUrl) ? ImagemPostPadrao : p.ImagemUrl,
                     Categoria = p.Categoria,
+                    TipoConteudo = p.TipoConteudo,
+                    Localizacao = p.Localizacao,
                     DataCriacao = p.CriadoEm,
                     TotalCurtidas = p.Curtidas.Count,
                     TotalComentarios = p.Comentarios.Count(c => c.Ativo),
                     UsuarioCurtiu = usuarioId.HasValue && p.Curtidas.Any(c => c.UserId == usuarioId.Value),
+                    UsuarioSalvou = usuarioId.HasValue && p.Salvos.Any(s => s.UserId == usuarioId.Value),
                     EventoId = p.EventoId,
                     NomeEvento = p.Evento != null ? p.Evento.NomeEvento : null,
-                    PerfilId = p.PerfilSocialId
+                    PerfilId = p.PerfilSocialId,
+                    TipoPerfil = p.PerfilSocial != null ? p.PerfilSocial.TipoPerfil : (p.User != null ? p.User.TipoUsuario ?? "Convidado" : "Convidado"),
+                    Cidade = p.PerfilSocial != null ? p.PerfilSocial.Cidade : null
                 })
                 .ToListAsync();
 
-            return View(posts);
+            var model = new FeedSocialViewModel
+            {
+                Posts = posts,
+                Stories = await ObterStoriesAtivosAsync(usuarioId),
+                PerfisDestaque = await _context.PerfisSociais.AsNoTracking().OrderByDescending(p => p.Posts.Count).Take(8).ToListAsync(),
+                EventosEmAlta = await _context.Eventos.AsNoTracking().OrderByDescending(e => e.DataEvento).Take(6).ToListAsync()
+            };
+
+            return View(model);
         }
 
         [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> Explorar()
         {
+            var usuarioAtual = await ObterUsuarioAtualAsync();
             var recentes = await _context.SocialPosts
                 .AsNoTracking()
                 .Where(p => p.Ativo)
@@ -115,17 +189,26 @@ namespace ProjetoEventX.Controllers
                 .Select(p => new FeedPostViewModel
                 {
                     PostId = p.Id,
-                    NomeAutor = p.PerfilSocial != null ? p.PerfilSocial.NomeExibicao : (p.User != null ? p.User.UserName ?? "Usuário" : "Usuário"),
-                    FotoPerfilUrl = p.PerfilSocial != null ? p.PerfilSocial.FotoPerfilUrl : FotoPerfilPadrao,
+                    NomeAutor = !string.IsNullOrWhiteSpace(p.PerfilSocial != null ? p.PerfilSocial.NomeExibicao : null)
+                        ? p.PerfilSocial!.NomeExibicao
+                        : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : (p.User != null ? p.User.Email ?? "Participante" : "Participante")),
+                    FotoPerfilUrl = p.PerfilSocial != null && !string.IsNullOrWhiteSpace(p.PerfilSocial.FotoPerfilUrl)
+                        ? p.PerfilSocial.FotoPerfilUrl
+                        : FotoPerfilPadrao,
                     Legenda = p.Legenda,
                     ImagemUrl = string.IsNullOrWhiteSpace(p.ImagemUrl) ? ImagemPostPadrao : p.ImagemUrl,
                     Categoria = p.Categoria,
+                    TipoConteudo = p.TipoConteudo,
+                    Localizacao = p.Localizacao,
                     DataCriacao = p.CriadoEm,
                     TotalCurtidas = p.Curtidas.Count,
                     TotalComentarios = p.Comentarios.Count(c => c.Ativo),
+                    UsuarioSalvou = usuarioAtual != null && p.Salvos.Any(s => s.UserId == usuarioAtual.Id),
                     EventoId = p.EventoId,
                     NomeEvento = p.Evento != null ? p.Evento.NomeEvento : null,
-                    PerfilId = p.PerfilSocialId
+                    PerfilId = p.PerfilSocialId,
+                    TipoPerfil = p.PerfilSocial != null ? p.PerfilSocial.TipoPerfil : (p.User != null ? p.User.TipoUsuario ?? "Convidado" : "Convidado"),
+                    Cidade = p.PerfilSocial != null ? p.PerfilSocial.Cidade : null
                 })
                 .ToListAsync();
 
@@ -138,17 +221,26 @@ namespace ProjetoEventX.Controllers
                 .Select(p => new FeedPostViewModel
                 {
                     PostId = p.Id,
-                    NomeAutor = p.PerfilSocial != null ? p.PerfilSocial.NomeExibicao : (p.User != null ? p.User.UserName ?? "Usuário" : "Usuário"),
-                    FotoPerfilUrl = p.PerfilSocial != null ? p.PerfilSocial.FotoPerfilUrl : FotoPerfilPadrao,
+                    NomeAutor = !string.IsNullOrWhiteSpace(p.PerfilSocial != null ? p.PerfilSocial.NomeExibicao : null)
+                        ? p.PerfilSocial!.NomeExibicao
+                        : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : (p.User != null ? p.User.Email ?? "Participante" : "Participante")),
+                    FotoPerfilUrl = p.PerfilSocial != null && !string.IsNullOrWhiteSpace(p.PerfilSocial.FotoPerfilUrl)
+                        ? p.PerfilSocial.FotoPerfilUrl
+                        : FotoPerfilPadrao,
                     Legenda = p.Legenda,
                     ImagemUrl = string.IsNullOrWhiteSpace(p.ImagemUrl) ? ImagemPostPadrao : p.ImagemUrl,
                     Categoria = p.Categoria,
+                    TipoConteudo = p.TipoConteudo,
+                    Localizacao = p.Localizacao,
                     DataCriacao = p.CriadoEm,
                     TotalCurtidas = p.Curtidas.Count,
                     TotalComentarios = p.Comentarios.Count(c => c.Ativo),
+                    UsuarioSalvou = usuarioAtual != null && p.Salvos.Any(s => s.UserId == usuarioAtual.Id),
                     EventoId = p.EventoId,
                     NomeEvento = p.Evento != null ? p.Evento.NomeEvento : null,
-                    PerfilId = p.PerfilSocialId
+                    PerfilId = p.PerfilSocialId,
+                    TipoPerfil = p.PerfilSocial != null ? p.PerfilSocial.TipoPerfil : (p.User != null ? p.User.TipoUsuario ?? "Convidado" : "Convidado"),
+                    Cidade = p.PerfilSocial != null ? p.PerfilSocial.Cidade : null
                 })
                 .ToListAsync();
 
@@ -158,7 +250,8 @@ namespace ProjetoEventX.Controllers
                 PostsPopulares = populares,
                 PerfisOrganizadores = await _context.PerfisSociais.AsNoTracking().Where(p => p.TipoPerfil == "Organizador").Take(8).ToListAsync(),
                 PerfisFornecedores = await _context.PerfisSociais.AsNoTracking().Where(p => p.TipoPerfil == "Fornecedor").Take(8).ToListAsync(),
-                EventosDestaque = await _context.Eventos.AsNoTracking().OrderByDescending(e => e.DataEvento).Take(6).ToListAsync()
+                EventosDestaque = await _context.Eventos.AsNoTracking().OrderByDescending(e => e.DataEvento).Take(6).ToListAsync(),
+                CategoriasDestaque = CategoriasExplorar.ToList()
             };
 
             return View(model);
@@ -347,6 +440,8 @@ namespace ProjetoEventX.Controllers
                 Titulo = model.Titulo,
                 Legenda = model.Legenda,
                 Categoria = model.Categoria,
+                TipoConteudo = model.TipoConteudo,
+                Localizacao = model.Localizacao,
                 ImagemUrl = imagemUrl,
                 CriadoEm = DateTime.UtcNow,
                 AtualizadoEm = DateTime.UtcNow,
@@ -378,6 +473,7 @@ namespace ProjetoEventX.Controllers
             var comentarios = await _context.SocialComentarios
                 .AsNoTracking()
                 .Include(c => c.User)
+                .Include(c => c.PerfilSocial)
                 .Where(c => c.PostId == id && c.Ativo)
                 .OrderByDescending(c => c.CriadoEm)
                 .ToListAsync();
@@ -385,12 +481,35 @@ namespace ProjetoEventX.Controllers
             var model = new PostDetalheViewModel
             {
                 Post = post,
-                Autor = post.User,
                 Perfil = post.PerfilSocial,
                 ListaComentarios = comentarios,
                 TotalCurtidas = await _context.SocialCurtidas.CountAsync(c => c.PostId == id),
                 UsuarioCurtiu = usuarioAtual != null && await _context.SocialCurtidas.AnyAsync(c => c.PostId == id && c.UserId == usuarioAtual.Id),
-                EventoRelacionado = post.Evento
+                UsuarioSalvou = usuarioAtual != null && await _context.SocialPostsSalvos.AnyAsync(c => c.PostId == id && c.UserId == usuarioAtual.Id),
+                EventoRelacionado = post.Evento,
+                NomeAutor = ResolverNomeExibicao(post.PerfilSocial, post.User),
+                TipoPerfil = string.IsNullOrWhiteSpace(post.PerfilSocial.TipoPerfil) ? (post.User.TipoUsuario ?? "Convidado") : post.PerfilSocial.TipoPerfil,
+                Cidade = post.PerfilSocial.Cidade,
+                StatusAutorAtivos = await _context.SocialStatus
+                    .AsNoTracking()
+                    .Where(s => s.Ativo && s.PerfilSocialId == post.PerfilSocialId && s.ExpiraEm > DateTime.UtcNow)
+                    .OrderByDescending(s => s.CriadoEm)
+                    .Select(s => new SocialStatusItemViewModel
+                    {
+                        Id = s.Id,
+                        PerfilId = s.PerfilSocialId,
+                        NomePerfil = !string.IsNullOrWhiteSpace(s.PerfilSocial != null ? s.PerfilSocial.NomeExibicao : null)
+                            ? s.PerfilSocial!.NomeExibicao
+                            : (!string.IsNullOrWhiteSpace(s.User != null ? s.User.UserName : null) ? s.User!.UserName! : (s.User != null ? s.User.Email ?? "Participante" : "Participante")),
+                        FotoPerfilUrl = s.PerfilSocial != null && !string.IsNullOrWhiteSpace(s.PerfilSocial.FotoPerfilUrl)
+                            ? s.PerfilSocial.FotoPerfilUrl
+                            : FotoPerfilPadrao,
+                        ImagemUrl = s.ImagemUrl,
+                        TextoOverlay = s.TextoOverlay,
+                        CriadoEm = s.CriadoEm,
+                        Visualizado = usuarioAtual != null && s.Visualizacoes.Any(v => v.UserId == usuarioAtual.Id)
+                    })
+                    .ToListAsync()
             };
 
             return View(model);
@@ -456,6 +575,8 @@ namespace ProjetoEventX.Controllers
                 Titulo = post.Titulo,
                 Legenda = post.Legenda,
                 Categoria = post.Categoria,
+                TipoConteudo = post.TipoConteudo,
+                Localizacao = post.Localizacao,
                 EventoId = post.EventoId,
                 EventosDisponiveis = await ObterEventosSelectListAsync()
             };
@@ -491,6 +612,8 @@ namespace ProjetoEventX.Controllers
             post.Titulo = model.Titulo;
             post.Legenda = model.Legenda;
             post.Categoria = model.Categoria;
+            post.TipoConteudo = model.TipoConteudo;
+            post.Localizacao = model.Localizacao;
             post.EventoId = model.EventoId;
             post.AtualizadoEm = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -576,6 +699,7 @@ namespace ProjetoEventX.Controllers
             {
                 PostId = id,
                 UserId = usuario.Id,
+                PerfilSocialId = (await GarantirPerfilSocialAsync(usuario)).Id,
                 Texto = texto.Trim(),
                 CriadoEm = DateTime.UtcNow,
                 Ativo = true
@@ -628,22 +752,238 @@ namespace ProjetoEventX.Controllers
                 .Select(p => new FeedPostViewModel
                 {
                     PostId = p.Id,
-                    NomeAutor = p.PerfilSocial != null ? p.PerfilSocial.NomeExibicao : (p.User != null ? p.User.UserName ?? "Usuário" : "Usuário"),
-                    FotoPerfilUrl = p.PerfilSocial != null ? p.PerfilSocial.FotoPerfilUrl : FotoPerfilPadrao,
+                    NomeAutor = !string.IsNullOrWhiteSpace(p.PerfilSocial != null ? p.PerfilSocial.NomeExibicao : null)
+                        ? p.PerfilSocial!.NomeExibicao
+                        : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : (p.User != null ? p.User.Email ?? "Participante" : "Participante")),
+                    FotoPerfilUrl = p.PerfilSocial != null && !string.IsNullOrWhiteSpace(p.PerfilSocial.FotoPerfilUrl)
+                        ? p.PerfilSocial.FotoPerfilUrl
+                        : FotoPerfilPadrao,
                     Legenda = p.Legenda,
                     ImagemUrl = string.IsNullOrWhiteSpace(p.ImagemUrl) ? ImagemPostPadrao : p.ImagemUrl,
                     Categoria = p.Categoria,
+                    TipoConteudo = p.TipoConteudo,
+                    Localizacao = p.Localizacao,
                     DataCriacao = p.CriadoEm,
                     TotalCurtidas = p.Curtidas.Count,
                     TotalComentarios = p.Comentarios.Count(c => c.Ativo),
                     EventoId = p.EventoId,
                     NomeEvento = p.Evento != null ? p.Evento.NomeEvento : null,
-                    PerfilId = p.PerfilSocialId
+                    PerfilId = p.PerfilSocialId,
+                    TipoPerfil = p.PerfilSocial != null ? p.PerfilSocial.TipoPerfil : (p.User != null ? p.User.TipoUsuario ?? "Convidado" : "Convidado"),
+                    Cidade = p.PerfilSocial != null ? p.PerfilSocial.Cidade : null
                 })
                 .ToListAsync();
 
             ViewBag.Evento = evento;
             return View(posts);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SalvarPost(int id)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var postExiste = await _context.SocialPosts.AnyAsync(p => p.Id == id && p.Ativo);
+            if (!postExiste)
+            {
+                return NotFound();
+            }
+
+            var jaSalvo = await _context.SocialPostsSalvos.AnyAsync(s => s.PostId == id && s.UserId == usuario.Id);
+            if (!jaSalvo)
+            {
+                _context.SocialPostsSalvos.Add(new SocialPostSalvo
+                {
+                    PostId = id,
+                    UserId = usuario.Id,
+                    CriadoEm = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync();
+            }
+
+            var referer = Request.Headers.Referer.ToString();
+            return string.IsNullOrWhiteSpace(referer) ? RedirectToAction(nameof(Post), new { id }) : Redirect(referer);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoverSalvo(int id)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var salvo = await _context.SocialPostsSalvos.FirstOrDefaultAsync(s => s.PostId == id && s.UserId == usuario.Id);
+            if (salvo != null)
+            {
+                _context.SocialPostsSalvos.Remove(salvo);
+                await _context.SaveChangesAsync();
+            }
+
+            var referer = Request.Headers.Referer.ToString();
+            return string.IsNullOrWhiteSpace(referer) ? RedirectToAction(nameof(Post), new { id }) : Redirect(referer);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Salvos()
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var salvos = await _context.SocialPostsSalvos
+                .AsNoTracking()
+                .Where(s => s.UserId == usuario.Id && s.Post != null && s.Post.Ativo)
+                .OrderByDescending(s => s.CriadoEm)
+                .Select(s => new FeedPostViewModel
+                {
+                    PostId = s.PostId,
+                    NomeAutor = !string.IsNullOrWhiteSpace(s.Post != null && s.Post.PerfilSocial != null ? s.Post.PerfilSocial.NomeExibicao : null)
+                        ? s.Post!.PerfilSocial!.NomeExibicao
+                        : (!string.IsNullOrWhiteSpace(s.Post != null && s.Post.User != null ? s.Post.User.UserName : null)
+                            ? s.Post!.User!.UserName!
+                            : (s.Post != null && s.Post.User != null ? s.Post.User.Email ?? "Participante" : "Participante")),
+                    FotoPerfilUrl = s.Post != null && s.Post.PerfilSocial != null && !string.IsNullOrWhiteSpace(s.Post.PerfilSocial.FotoPerfilUrl)
+                        ? s.Post.PerfilSocial.FotoPerfilUrl
+                        : FotoPerfilPadrao,
+                    Legenda = s.Post != null ? s.Post.Legenda : string.Empty,
+                    ImagemUrl = s.Post == null || string.IsNullOrWhiteSpace(s.Post.ImagemUrl) ? ImagemPostPadrao : s.Post.ImagemUrl,
+                    Categoria = s.Post != null ? s.Post.Categoria : null,
+                    TipoConteudo = s.Post != null ? s.Post.TipoConteudo : null,
+                    Localizacao = s.Post != null ? s.Post.Localizacao : null,
+                    DataCriacao = s.Post != null ? s.Post.CriadoEm : DateTime.UtcNow,
+                    TotalCurtidas = s.Post != null ? s.Post.Curtidas.Count : 0,
+                    TotalComentarios = s.Post != null ? s.Post.Comentarios.Count(c => c.Ativo) : 0,
+                    UsuarioCurtiu = s.Post != null && s.Post.Curtidas.Any(c => c.UserId == usuario.Id),
+                    UsuarioSalvou = true,
+                    EventoId = s.Post != null ? s.Post.EventoId : null,
+                    NomeEvento = s.Post != null && s.Post.Evento != null ? s.Post.Evento.NomeEvento : null,
+                    PerfilId = s.Post != null ? s.Post.PerfilSocialId : 0,
+                    TipoPerfil = s.Post != null && s.Post.PerfilSocial != null ? s.Post.PerfilSocial.TipoPerfil : (s.Post != null && s.Post.User != null ? s.Post.User.TipoUsuario ?? "Convidado" : "Convidado"),
+                    Cidade = s.Post != null && s.Post.PerfilSocial != null ? s.Post.PerfilSocial.Cidade : null
+                })
+                .ToListAsync();
+
+            return View(salvos);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Stories()
+        {
+            var usuarioAtual = await ObterUsuarioAtualAsync();
+            if (usuarioAtual != null)
+            {
+                await GarantirPerfilSocialAsync(usuarioAtual);
+            }
+            var stories = await ObterStoriesAtivosAsync(usuarioAtual?.Id);
+            return View(stories);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> VisualizarStory(int id)
+        {
+            var status = await _context.SocialStatus
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == id && s.Ativo && s.ExpiraEm > DateTime.UtcNow);
+            if (status == null)
+            {
+                return NotFound();
+            }
+
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario != null)
+            {
+                var jaViu = await _context.SocialStatusVisualizacoes.AnyAsync(v => v.SocialStatusId == id && v.UserId == usuario.Id);
+                if (!jaViu)
+                {
+                    _context.SocialStatusVisualizacoes.Add(new SocialStatusVisualizacao
+                    {
+                        SocialStatusId = id,
+                        UserId = usuario.Id,
+                        VisualizadoEm = DateTime.UtcNow
+                    });
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return RedirectToAction(nameof(Stories));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CriarStatus()
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            await GarantirPerfilSocialAsync(usuario);
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CriarStatus(IFormFile imagem, string? textoOverlay)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            if (imagem == null)
+            {
+                ModelState.AddModelError("imagem", "A imagem do status é obrigatória.");
+                return View();
+            }
+
+            string imagemUrl;
+            try
+            {
+                imagemUrl = await SalvarArquivoSocialAsync(imagem, PastaUploadStatus);
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError("imagem", ex.Message);
+                return View();
+            }
+
+            var perfil = await GarantirPerfilSocialAsync(usuario);
+            _context.SocialStatus.Add(new SocialStatus
+            {
+                UserId = usuario.Id,
+                PerfilSocialId = perfil.Id,
+                ImagemUrl = imagemUrl,
+                TextoOverlay = string.IsNullOrWhiteSpace(textoOverlay) ? null : textoOverlay.Trim(),
+                CriadoEm = DateTime.UtcNow,
+                ExpiraEm = DateTime.UtcNow.AddHours(24),
+                Ativo = true
+            });
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Feed));
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> EventosEmAlta()
+        {
+            var eventos = await _context.Eventos
+                .AsNoTracking()
+                .OrderByDescending(e => e.DataEvento)
+                .Take(24)
+                .ToListAsync();
+            return View(eventos);
         }
 
         private async Task<string> SalvarArquivoSocialAsync(IFormFile arquivo, string pastaRelativa)

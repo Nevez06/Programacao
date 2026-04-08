@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProjetoEventX.Models
 {
-    public class SocialComentario
+    public class SocialPostSalvo
     {
         [Key]
         public int Id { get; set; }
@@ -20,16 +20,6 @@ namespace ProjetoEventX.Models
         [ForeignKey(nameof(UserId))]
         public ApplicationUser? User { get; set; }
 
-        public int? PerfilSocialId { get; set; }
-
-        [ForeignKey(nameof(PerfilSocialId))]
-        public PerfilSocial? PerfilSocial { get; set; }
-
-        [Required]
-        [StringLength(600)]
-        public string Texto { get; set; } = string.Empty;
-
         public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
-        public bool Ativo { get; set; } = true;
     }
 }

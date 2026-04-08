@@ -7,16 +7,14 @@
 
 <section class="social-page">
     <header class="social-header">
-        <h1>galeria social</h1>
+        <h1>Galeria social do evento</h1>
         <p>@evento?.NomeEvento</p>
     </header>
 
-    <div class="social-grid compact">
+    <div class="social-feed-stack">
         @foreach (var post in Model)
         {
-            <a asp-action="Post" asp-route-id="@post.PostId" class="social-thumb">
-                <img src="@post.ImagemUrl" alt="post do evento" />
-            </a>
+            <partial name="Partials/_SocialPostCard" model="post" />
         }
     </div>
 </section>

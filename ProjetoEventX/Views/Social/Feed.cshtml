@@ -1,48 +1,65 @@
-@model IEnumerable<ProjetoEventX.ViewModels.Social.FeedPostViewModel>
+@model ProjetoEventX.ViewModels.Social.FeedSocialViewModel
 @{
     ViewData["Title"] = "EventX Social - Feed";
 }
 <link rel="stylesheet" href="~/css/social.css" />
 
-<section class="social-page">
-    <header class="social-header">
-        <h1>eventx social</h1>
-        <p>acompanhe os melhores momentos dos eventos.</p>
-    </header>
+<section class="social-page social-feed-layout">
+    <div class="social-main-column">
+        <header class="social-header social-header-premium">
+            <h1>EventX Social</h1>
+            <p>o feed principal dos seus eventos, bastidores e momentos em destaque.</p>
+            <div class="social-header-actions">
+                <a asp-action="CriarPost" class="btn btn-primary">Criar post</a>
+                <a asp-action="CriarStatus" class="btn btn-outline-light">Novo status</a>
+            </div>
+        </header>
 
-    <div class="social-grid">
-        @foreach (var post in Model)
-        {
-            <article class="social-card">
-                <div class="social-card-header">
-                    <img src="@post.FotoPerfilUrl" alt="perfil" class="social-avatar" />
-                    <div>
-                        <a asp-action="Perfil" asp-route-id="@post.PerfilId" class="social-author">@post.NomeAutor</a>
-                        <small>@post.DataCriacao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
-                    </div>
-                </div>
+        <partial name="Partials/_StoriesBar" model="Model.Stories" />
 
-                <a asp-action="Post" asp-route-id="@post.PostId">
-                    <img src="@post.ImagemUrl" alt="imagem do post" class="social-post-image" />
-                </a>
-
-                <div class="social-card-body">
-                    @if (!string.IsNullOrWhiteSpace(post.Categoria))
-                    {
-                        <span class="badge bg-secondary">@post.Categoria</span>
-                    }
-                    @if (post.EventoId.HasValue)
-                    {
-                        <a asp-action="Evento" asp-route-eventoId="@post.EventoId" class="badge bg-primary social-event-badge">@post.NomeEvento</a>
-                    }
-                    <p>@post.Legenda</p>
-                    <div class="social-actions">
-                        <span>❤️ @post.TotalCurtidas</span>
-                        <span>💬 @post.TotalComentarios</span>
-                        <a asp-action="Post" asp-route-id="@post.PostId" class="btn btn-sm btn-outline-primary">abrir</a>
-                    </div>
-                </div>
-            </article>
-        }
+        <div class="social-feed-stack">
+            @foreach (var post in Model.Posts)
+            {
+                <partial name="Partials/_SocialPostCard" model="post" />
+            }
+        </div>
     </div>
+
+    <aside class="social-side-column">
+        <section class="social-side-card">
+            <h3>Perfis em destaque</h3>
+            @foreach (var perfil in Model.PerfisDestaque)
+            {
+                <a asp-action="Perfil" asp-route-id="@perfil.Id" class="social-side-profile">
+                    <img src="@(string.IsNullOrWhiteSpace(perfil.FotoPerfilUrl) ? "/uploads/social/defaults/default-profile.svg" : perfil.FotoPerfilUrl)" alt="perfil" />
+                    <div>
+                        <strong>@perfil.NomeExibicao</strong>
+                        <small>@perfil.TipoPerfil @(!string.IsNullOrWhiteSpace(perfil.Cidade) ? $"· {perfil.Cidade}" : "")</small>
+                    </div>
+                </a>
+            }
+        </section>
+
+        <section class="social-side-card">
+            <h3>Eventos em alta</h3>
+            @foreach (var evento in Model.EventosEmAlta)
+            {
+                <a asp-action="Evento" asp-route-eventoId="@evento.Id" class="social-event-line">
+                    <span>@evento.NomeEvento</span>
+                    <small>@evento.DataEvento.ToLocalTime().ToString("dd/MM")</small>
+                </a>
+            }
+        </section>
+    </aside>
 </section>
+
+@if (!Model.Posts.Any())
+{
+    <section class="social-page">
+        <div class="social-empty">
+            <h3>Seu feed ainda está começando</h3>
+            <p>Publique seu primeiro momento e comece a movimentar o EventX Social.</p>
+            <a asp-action="CriarPost" class="btn btn-primary">Publicar primeiro post</a>
+        </div>
+    </section>
+}

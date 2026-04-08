@@ -5,29 +5,49 @@
 <link rel="stylesheet" href="~/css/social.css" />
 
 <section class="social-page narrow">
-    <h1>editar post</h1>
-    <form asp-action="EditarPost" asp-route-id="@ViewBag.PostId" method="post" class="social-form">
+    <h1>Editar post</h1>
+    <form asp-action="EditarPost" asp-route-id="@ViewBag.PostId" method="post" class="social-form social-form-premium">
         @Html.AntiForgeryToken()
         <div class="mb-3">
-            <label asp-for="Titulo" class="form-label"></label>
+            <label asp-for="Titulo" class="form-label">Título</label>
             <input asp-for="Titulo" class="form-control" />
         </div>
         <div class="mb-3">
-            <label asp-for="Legenda" class="form-label"></label>
+            <label asp-for="Legenda" class="form-label">Legenda</label>
             <textarea asp-for="Legenda" class="form-control" rows="3"></textarea>
             <span asp-validation-for="Legenda" class="text-danger"></span>
         </div>
         <div class="mb-3">
-            <label asp-for="Categoria" class="form-label"></label>
+            <label asp-for="TipoConteudo" class="form-label">Tipo de conteúdo</label>
+            <select asp-for="TipoConteudo" class="form-select">
+                <option value="">selecione</option>
+                <option>bastidor</option>
+                <option>decoração</option>
+                <option>teaser</option>
+                <option>cerimônia</option>
+                <option>recepção</option>
+                <option>show</option>
+                <option>fornecedor</option>
+                <option>making of</option>
+                <option>aftermovie</option>
+                <option>promoção</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Categoria" class="form-label">Categoria</label>
             <input asp-for="Categoria" class="form-control" />
         </div>
         <div class="mb-3">
-            <label asp-for="EventoId" class="form-label">evento vinculado</label>
+            <label asp-for="Localizacao" class="form-label">Localização</label>
+            <input asp-for="Localizacao" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="EventoId" class="form-label">Evento vinculado</label>
             <select asp-for="EventoId" asp-items="Model.EventosDisponiveis" class="form-select">
                 <option value="">sem vínculo</option>
             </select>
         </div>
-        <button type="submit" class="btn btn-primary">salvar alterações</button>
+        <button type="submit" class="btn btn-primary btn-social-publish">Salvar alterações</button>
     </form>
 </section>
 

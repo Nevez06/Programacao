@@ -39,11 +39,18 @@ namespace ProjetoEventX.Models
         [StringLength(80)]
         public string? Categoria { get; set; }
 
+        [StringLength(80)]
+        public string? TipoConteudo { get; set; }
+
+        [StringLength(140)]
+        public string? Localizacao { get; set; }
+
         public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
         public DateTime AtualizadoEm { get; set; } = DateTime.UtcNow;
         public bool Ativo { get; set; } = true;
 
         public ICollection<SocialCurtida> Curtidas { get; set; } = new List<SocialCurtida>();
         public ICollection<SocialComentario> Comentarios { get; set; } = new List<SocialComentario>();
+        public ICollection<SocialPostSalvo> Salvos { get; set; } = new List<SocialPostSalvo>();
     }
 }

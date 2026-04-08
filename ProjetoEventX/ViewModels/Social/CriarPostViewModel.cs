@@ -16,6 +16,12 @@ namespace ProjetoEventX.ViewModels.Social
         [StringLength(80)]
         public string? Categoria { get; set; }
 
+        [StringLength(80)]
+        public string? TipoConteudo { get; set; }
+
+        [StringLength(140)]
+        public string? Localizacao { get; set; }
+
         public int? EventoId { get; set; }
 
         [Required(ErrorMessage = "a imagem é obrigatória")]

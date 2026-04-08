@@ -6,12 +6,24 @@
 
 <section class="social-page">
     <header class="social-header">
-        <h1>explorar</h1>
-        <p>descubra conteúdos, profissionais e eventos em destaque.</p>
+        <h1>Explorar</h1>
+        <p>descubra conteúdos visuais, perfis e eventos em alta.</p>
     </header>
 
-    <h2>posts recentes</h2>
-    <div class="social-grid compact">
+    <div class="social-search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="buscar por categoria, perfil ou evento..." />
+    </div>
+
+    <div class="social-category-chips">
+        @foreach (var categoria in Model.CategoriasDestaque)
+        {
+            <span class="chip">@categoria</span>
+        }
+    </div>
+
+    <h2>Mosaico em destaque</h2>
+    <div class="social-grid compact social-explore-mosaic">
         @foreach (var post in Model.PostsRecentes)
         {
             <a asp-action="Post" asp-route-id="@post.PostId" class="social-thumb">
@@ -20,13 +32,56 @@
         }
     </div>
 
-    <h2>posts populares</h2>
-    <div class="social-grid compact">
-        @foreach (var post in Model.PostsPopulares)
+    <h2>Posts populares</h2>
+    <div class="social-feed-stack">
+        @foreach (var post in Model.PostsPopulares.Take(6))
         {
-            <a asp-action="Post" asp-route-id="@post.PostId" class="social-thumb">
-                <img src="@post.ImagemUrl" alt="post popular" />
-            </a>
+            <partial name="Partials/_SocialPostCard" model="post" />
         }
     </div>
+
+    <section class="social-explore-panels">
+        <div class="social-side-card">
+            <h3>Organizadores em destaque</h3>
+            @foreach (var perfil in Model.PerfisOrganizadores)
+            {
+                <a asp-action="Perfil" asp-route-id="@perfil.Id" class="social-side-profile">
+                    <img src="@(string.IsNullOrWhiteSpace(perfil.FotoPerfilUrl) ? "/uploads/social/defaults/default-profile.svg" : perfil.FotoPerfilUrl)" alt="perfil" />
+                    <div>
+                        <strong>@perfil.NomeExibicao</strong>
+                        <small>@perfil.TipoPerfil @(!string.IsNullOrWhiteSpace(perfil.Cidade) ? $"· {perfil.Cidade}" : "")</small>
+                    </div>
+                </a>
+            }
+        </div>
+
+        <div class="social-side-card">
+            <h3>Fornecedores em destaque</h3>
+            @foreach (var perfil in Model.PerfisFornecedores)
+            {
+                <a asp-action="Perfil" asp-route-id="@perfil.Id" class="social-side-profile">
+                    <img src="@(string.IsNullOrWhiteSpace(perfil.FotoPerfilUrl) ? "/uploads/social/defaults/default-profile.svg" : perfil.FotoPerfilUrl)" alt="perfil" />
+                    <div>
+                        <strong>@perfil.NomeExibicao</strong>
+                        <small>@perfil.TipoPerfil @(!string.IsNullOrWhiteSpace(perfil.Cidade) ? $"· {perfil.Cidade}" : "")</small>
+                    </div>
+                </a>
+            }
+        </div>
+
+        <div class="social-side-card">
+            <h3>Eventos em alta</h3>
+            @foreach (var evento in Model.EventosDestaque)
+            {
+                <a asp-action="Evento" asp-route-eventoId="@evento.Id" class="social-event-line">
+                    <span>@evento.NomeEvento</span>
+                    <small>@evento.DataEvento.ToLocalTime().ToString("dd/MM")</small>
+                </a>
+            }
+        </div>
+    </section>
 </section>
+
+@section Scripts {
+    <script src="~/js/social.js" asp-append-version="true"></script>
+}

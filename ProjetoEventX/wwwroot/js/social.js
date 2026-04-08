@@ -22,3 +22,15 @@
         reader.readAsDataURL(file);
     });
 })();
+
+(function () {
+    const chips = document.querySelectorAll('.social-category-chips .chip');
+    if (!chips.length) return;
+
+    chips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+            chips.forEach((c) => c.classList.remove('active'));
+            chip.classList.add('active');
+        });
+    });
+})();

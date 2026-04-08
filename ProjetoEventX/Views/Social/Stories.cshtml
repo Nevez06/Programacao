@@ -1,0 +1,37 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.SocialStatusItemViewModel>
+@{
+    ViewData["Title"] = "EventX Social - Stories";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page">
+    <header class="social-header">
+        <h1>Stories</h1>
+        <p>status ativos das últimas 24 horas.</p>
+        <a asp-action="CriarStatus" class="btn btn-primary">Novo status</a>
+    </header>
+
+    @if (Model.Any())
+    {
+        <div class="stories-grid">
+            @foreach (var story in Model)
+            {
+                <a asp-action="VisualizarStory" asp-route-id="@story.Id" class="story-card @(story.Visualizado ? "seen" : "new")">
+                    <img src="@story.ImagemUrl" alt="@story.NomePerfil" />
+                    <div class="story-card-overlay">
+                        <strong>@story.NomePerfil</strong>
+                        <small>@story.CriadoEm.ToLocalTime().ToString("HH:mm")</small>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="social-empty">
+            <h3>Sem stories ativos</h3>
+            <p>Publique um status para aparecer nesta aba por 24 horas.</p>
+            <a asp-action="CriarStatus" class="btn btn-primary">Publicar status</a>
+        </div>
+    }
+</section>

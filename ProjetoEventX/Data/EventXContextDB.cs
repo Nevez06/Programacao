@@ -51,6 +51,9 @@ namespace ProjetoEventX.Data
         public DbSet<SocialPost> SocialPosts { get; set; }
         public DbSet<SocialCurtida> SocialCurtidas { get; set; }
         public DbSet<SocialComentario> SocialComentarios { get; set; }
+        public DbSet<SocialStatus> SocialStatus { get; set; }
+        public DbSet<SocialStatusVisualizacao> SocialStatusVisualizacoes { get; set; }
+        public DbSet<SocialPostSalvo> SocialPostsSalvos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -348,6 +351,59 @@ namespace ProjetoEventX.Data
                 .WithMany()
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<SocialComentario>()
+                .HasOne(c => c.PerfilSocial)
+                .WithMany()
+                .HasForeignKey(c => c.PerfilSocialId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<SocialStatus>()
+                .HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<SocialStatus>()
+                .HasOne(s => s.PerfilSocial)
+                .WithMany()
+                .HasForeignKey(s => s.PerfilSocialId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<SocialStatus>()
+                .HasIndex(s => new { s.PerfilSocialId, s.ExpiraEm, s.Ativo });
+
+            builder.Entity<SocialStatusVisualizacao>()
+                .HasOne(v => v.SocialStatus)
+                .WithMany(s => s.Visualizacoes)
+                .HasForeignKey(v => v.SocialStatusId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<SocialStatusVisualizacao>()
+                .HasOne(v => v.User)
+                .WithMany()
+                .HasForeignKey(v => v.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<SocialStatusVisualizacao>()
+                .HasIndex(v => new { v.SocialStatusId, v.UserId })
+                .IsUnique();
+
+            builder.Entity<SocialPostSalvo>()
+                .HasOne(s => s.Post)
+                .WithMany(p => p.Salvos)
+                .HasForeignKey(s => s.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<SocialPostSalvo>()
+                .HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<SocialPostSalvo>()
+                .HasIndex(s => new { s.PostId, s.UserId })
+                .IsUnique();
 
             // Restrições para status
             builder.Entity<Evento>().Property(e => e.StatusEvento).HasDefaultValue("Planejado");

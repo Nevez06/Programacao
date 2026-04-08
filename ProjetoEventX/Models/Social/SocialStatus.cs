@@ -3,16 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProjetoEventX.Models
 {
-    public class SocialComentario
+    public class SocialStatus
     {
         [Key]
         public int Id { get; set; }
-
-        [Required]
-        public int PostId { get; set; }
-
-        [ForeignKey(nameof(PostId))]
-        public SocialPost? Post { get; set; }
 
         [Required]
         public int UserId { get; set; }
@@ -20,16 +14,23 @@ namespace ProjetoEventX.Models
         [ForeignKey(nameof(UserId))]
         public ApplicationUser? User { get; set; }
 
-        public int? PerfilSocialId { get; set; }
+        [Required]
+        public int PerfilSocialId { get; set; }
 
         [ForeignKey(nameof(PerfilSocialId))]
         public PerfilSocial? PerfilSocial { get; set; }
 
         [Required]
-        [StringLength(600)]
-        public string Texto { get; set; } = string.Empty;
+        [StringLength(300)]
+        public string ImagemUrl { get; set; } = string.Empty;
+
+        [StringLength(180)]
+        public string? TextoOverlay { get; set; }
 
         public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
+        public DateTime ExpiraEm { get; set; } = DateTime.UtcNow.AddHours(24);
         public bool Ativo { get; set; } = true;
+
+        public ICollection<SocialStatusVisualizacao> Visualizacoes { get; set; } = new List<SocialStatusVisualizacao>();
     }
 }

@@ -6,15 +6,26 @@
 
 <section class="social-page">
     <header class="social-header">
-        <h1>meus posts</h1>
+        <h1>Meus posts</h1>
+        <p>organize e destaque seus momentos publicados.</p>
     </header>
 
-    <div class="social-grid">
+    <div class="social-grid social-my-posts-grid">
         @foreach (var post in Model)
         {
             <article class="social-card">
                 <img src="@post.ImagemUrl" alt="post" class="social-post-image" />
                 <div class="social-card-body">
+                    <div class="social-tags mb-2">
+                        @if (!string.IsNullOrWhiteSpace(post.Categoria))
+                        {
+                            <span class="badge social-pill">@post.Categoria</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(post.TipoConteudo))
+                        {
+                            <span class="badge social-pill social-pill-alt">@post.TipoConteudo</span>
+                        }
+                    </div>
                     <p>@post.Legenda</p>
                     <div class="social-actions">
                         <a asp-action="Post" asp-route-id="@post.Id" class="btn btn-sm btn-outline-primary">detalhes</a>
