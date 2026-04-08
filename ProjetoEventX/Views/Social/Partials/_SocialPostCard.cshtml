@@ -7,9 +7,12 @@
             <a asp-controller="Social" asp-action="Perfil" asp-route-id="@Model.PerfilId" class="social-author">@Model.NomeAutor</a>
             <small>@Model.TipoPerfil @(!string.IsNullOrWhiteSpace(Model.Cidade) ? $"· {Model.Cidade}" : "") · @Model.DataCriacao.ToLocalTime().ToString("dd/MM HH:mm")</small>
         </div>
+        <button type="button" class="social-post-more" aria-label="Mais opções">
+            <i class="fas fa-ellipsis-h"></i>
+        </button>
     </div>
 
-    <a asp-controller="Social" asp-action="Post" asp-route-id="@Model.PostId">
+    <a asp-controller="Social" asp-action="Post" asp-route-id="@Model.PostId" class="social-post-image-link">
         <img src="@Model.ImagemUrl" alt="imagem do post" class="social-post-image social-post-image-lg" />
     </a>
 
@@ -35,17 +38,28 @@
 
         <p class="social-caption">@Model.Legenda</p>
 
+        <div class="social-post-stats">
+            <strong><span data-like-count="@Model.PostId">@Model.TotalCurtidas</span> curtidas</strong>
+            <small><span data-comment-count="@Model.PostId">@Model.TotalComentarios</span> comentários</small>
+        </div>
+
         <div class="social-actions social-actions-strong">
-            <form asp-controller="Social" asp-action="Curtir" asp-route-id="@Model.PostId" method="post">
+            <form asp-controller="Social" asp-action="AlternarCurtida" asp-route-id="@Model.PostId" method="post" class="js-like-form">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-sm @(Model.UsuarioCurtiu ? "btn-danger" : "btn-outline-danger")">
-                    <i class="fas fa-heart"></i> @Model.TotalCurtidas
+                <button type="submit"
+                        class="btn btn-sm @(Model.UsuarioCurtiu ? "btn-danger is-liked" : "btn-outline-danger") js-like-btn"
+                        data-post-id="@Model.PostId">
+                    <i class="fas fa-heart"></i> <span class="js-like-btn-text">curtir</span>
                 </button>
             </form>
 
-            <a asp-controller="Social" asp-action="Post" asp-route-id="@Model.PostId" class="btn btn-sm btn-outline-secondary">
+            <a asp-controller="Social" asp-action="Post" asp-route-id="@Model.PostId" class="btn btn-sm btn-outline-secondary js-open-post">
                 <i class="fas fa-comment"></i> @Model.TotalComentarios
             </a>
+
+            <button type="button" class="btn btn-sm btn-outline-info js-share-btn" data-share-url="@Url.Action("Post", "Social", new { id = Model.PostId }, Context.Request.Scheme)">
+                <i class="fas fa-share"></i> compartilhar
+            </button>
 
             @if (Model.UsuarioSalvou)
             {
@@ -70,5 +84,30 @@
                 abrir
             </a>
         </div>
+
+        @if (Model.ComentariosPreview.Any())
+        {
+            <div class="social-comment-preview-list">
+                @foreach (var comentario in Model.ComentariosPreview)
+                {
+                    <p><strong>@comentario.NomeAutor</strong> @comentario.Texto</p>
+                }
+                <a asp-controller="Social" asp-action="Post" asp-route-id="@Model.PostId" class="social-view-comments-link">Ver todos os comentários</a>
+            </div>
+        }
+
+        <form asp-controller="Social"
+              asp-action="ComentarRapido"
+              asp-route-id="@Model.PostId"
+              method="post"
+              class="social-inline-comment-form js-inline-comment-form">
+            @Html.AntiForgeryToken()
+            <input type="text"
+                   name="texto"
+                   maxlength="600"
+                   class="form-control"
+                   placeholder="Adicione um comentário..." />
+            <button type="submit" class="btn btn-sm btn-outline-light">Enviar</button>
+        </form>
     </div>
 </article>

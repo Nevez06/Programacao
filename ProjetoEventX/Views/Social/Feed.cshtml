@@ -1,15 +1,21 @@
 @model ProjetoEventX.ViewModels.Social.FeedSocialViewModel
 @{
     ViewData["Title"] = "EventX Social - Feed";
+    var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 }
 <link rel="stylesheet" href="~/css/social.css" />
+<script>window.__eventxUserId = @(string.IsNullOrWhiteSpace(userIdClaim) ? "null" : userIdClaim);</script>
 
 <section class="social-page social-feed-layout">
     <div class="social-main-column">
         <header class="social-header social-header-premium">
             <h1>EventX Social</h1>
-            <p>o feed principal dos seus eventos, bastidores e momentos em destaque.</p>
-            <div class="social-header-actions">
+            <p>o feed principal de bastidores, momentos e histórias dos seus eventos.</p>
+            <div class="social-header-actions social-header-actions-wrap">
+                <div class="social-segmented">
+                    <a asp-action="Feed" asp-route-ordem="recentes" class="@(Model.OrdenacaoAtual == "recentes" ? "active" : "")">Mais recentes</a>
+                    <a asp-action="Feed" asp-route-ordem="populares" class="@(Model.OrdenacaoAtual == "populares" ? "active" : "")">Mais curtidos</a>
+                </div>
                 <a asp-action="CriarPost" class="btn btn-primary">Criar post</a>
                 <a asp-action="CriarStatus" class="btn btn-outline-light">Novo status</a>
             </div>
@@ -17,15 +23,48 @@
 
         <partial name="Partials/_StoriesBar" model="Model.Stories" />
 
-        <div class="social-feed-stack">
+        <div id="socialFeedSkeleton" class="social-skeleton-stack @(Model.Posts.Any() ? "" : "d-none")" aria-hidden="true">
+            <div class="social-skeleton-card"></div>
+            <div class="social-skeleton-card"></div>
+        </div>
+
+        <div id="socialFeedStack" class="social-feed-stack @(Model.Posts.Any() ? "d-none" : "")">
             @foreach (var post in Model.Posts)
             {
                 <partial name="Partials/_SocialPostCard" model="post" />
             }
         </div>
+
+        @if (!Model.Posts.Any())
+        {
+            <section class="social-page">
+                <div class="social-empty social-empty-strong">
+                    <h3>Seu feed ainda está começando</h3>
+                    <p>Publique seu primeiro momento e movimente o EventX Social com seus eventos.</p>
+                    <div class="social-empty-actions">
+                        <a asp-action="CriarPost" class="btn btn-primary">Criar primeiro post</a>
+                        <a asp-action="Explorar" class="btn btn-outline-light">Explorar conteúdos</a>
+                    </div>
+                </div>
+            </section>
+        }
     </div>
 
     <aside class="social-side-column">
+        @if (Model.PerfilAtual != null)
+        {
+            <section class="social-side-card social-side-card-user">
+                <div class="social-side-user">
+                    <img src="@(string.IsNullOrWhiteSpace(Model.PerfilAtual.FotoPerfilUrl) ? "/uploads/social/defaults/default-profile.svg" : Model.PerfilAtual.FotoPerfilUrl)" alt="perfil atual" />
+                    <div>
+                        <strong>@Model.PerfilAtual.NomeExibicao</strong>
+                        <small>@Model.PerfilAtual.TipoPerfil @(!string.IsNullOrWhiteSpace(Model.PerfilAtual.Cidade) ? $"· {Model.PerfilAtual.Cidade}" : "")</small>
+                    </div>
+                </div>
+                <a asp-action="Perfil" asp-route-id="@Model.PerfilAtual.Id" class="btn btn-sm btn-outline-light w-100">Ver meu perfil</a>
+            </section>
+        }
+
         <section class="social-side-card">
             <h3>Perfis em destaque</h3>
             @foreach (var perfil in Model.PerfisDestaque)
@@ -50,16 +89,41 @@
                 </a>
             }
         </section>
+
+        <section class="social-side-card">
+            <h3>Fornecedores em alta</h3>
+            @if (Model.FornecedoresEmAlta.Any())
+            {
+                @foreach (var fornecedor in Model.FornecedoresEmAlta)
+                {
+                    <a asp-action="Perfil" asp-route-id="@fornecedor.Id" class="social-side-profile">
+                        <img src="@(string.IsNullOrWhiteSpace(fornecedor.FotoPerfilUrl) ? "/uploads/social/defaults/default-profile.svg" : fornecedor.FotoPerfilUrl)" alt="fornecedor" />
+                        <div>
+                            <strong>@fornecedor.NomeExibicao</strong>
+                            <small>@(!string.IsNullOrWhiteSpace(fornecedor.Cidade) ? fornecedor.Cidade : "Fornecedor em destaque")</small>
+                        </div>
+                    </a>
+                }
+            }
+            else
+            {
+                <p class="social-side-muted">Novos fornecedores aparecerão aqui conforme o feed crescer.</p>
+            }
+        </section>
+
+        <section class="social-side-card">
+            <h3>Tendências</h3>
+            <p class="social-side-muted">@Model.InsightSemana</p>
+            <div class="social-trend-chips">
+                @foreach (var categoria in Model.CategoriasTendencia)
+                {
+                    <span>#@categoria</span>
+                }
+            </div>
+        </section>
     </aside>
 </section>
 
-@if (!Model.Posts.Any())
-{
-    <section class="social-page">
-        <div class="social-empty">
-            <h3>Seu feed ainda está começando</h3>
-            <p>Publique seu primeiro momento e comece a movimentar o EventX Social.</p>
-            <a asp-action="CriarPost" class="btn btn-primary">Publicar primeiro post</a>
-        </div>
-    </section>
+@section Scripts {
+    <script src="~/js/social.js" asp-append-version="true"></script>
 }

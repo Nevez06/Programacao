@@ -3,6 +3,7 @@ namespace ProjetoEventX.ViewModels.Social
     public class FeedPostViewModel
     {
         public int PostId { get; set; }
+        public int AutorUserId { get; set; }
         public string NomeAutor { get; set; } = string.Empty;
         public string? FotoPerfilUrl { get; set; }
         public string Legenda { get; set; } = string.Empty;
@@ -20,5 +21,7 @@ namespace ProjetoEventX.ViewModels.Social
         public string? Localizacao { get; set; }
         public string? TipoConteudo { get; set; }
         public bool UsuarioSalvou { get; set; }
+        public bool PostRelacionadoAoUsuario { get; set; }
+        public List<FeedComentarioPreviewViewModel> ComentariosPreview { get; set; } = new();
     }
 }
