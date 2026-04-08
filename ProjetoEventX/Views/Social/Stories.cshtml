@@ -1,8 +1,11 @@
 @model IEnumerable<ProjetoEventX.ViewModels.Social.SocialStatusItemViewModel>
 @{
     ViewData["Title"] = "EventX Social - Stories";
+    var agrupados = Model.GroupBy(s => s.PerfilId).Select(g => g.OrderByDescending(x => x.CriadoEm).First()).OrderBy(s => s.Visualizado).ThenByDescending(s => s.CriadoEm).ToList();
+    var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 }
 <link rel="stylesheet" href="~/css/social.css" />
+<script>window.__eventxUserId = @(string.IsNullOrWhiteSpace(userIdClaim) ? "null" : userIdClaim);</script>
 
 <section class="social-page">
     <header class="social-header">
@@ -11,12 +14,14 @@
         <a asp-action="CriarStatus" class="btn btn-primary">Novo status</a>
     </header>
 
-    @if (Model.Any())
+    @if (agrupados.Any())
     {
         <div class="stories-grid">
-            @foreach (var story in Model)
+            @foreach (var story in agrupados)
             {
-                <a asp-action="VisualizarStory" asp-route-id="@story.Id" class="story-card @(story.Visualizado ? "seen" : "new")">
+                <a href="#" class="story-card @(story.Visualizado ? "seen" : "new") js-story-open"
+                   data-story-id="@story.Id"
+                   data-perfil-id="@story.PerfilId">
                     <img src="@story.ImagemUrl" alt="@story.NomePerfil" />
                     <div class="story-card-overlay">
                         <strong>@story.NomePerfil</strong>
@@ -35,3 +40,9 @@
         </div>
     }
 </section>
+
+<partial name="Partials/_StoryViewer" />
+
+@section Scripts {
+    <script src="~/js/social.js" asp-append-version="true"></script>
+}

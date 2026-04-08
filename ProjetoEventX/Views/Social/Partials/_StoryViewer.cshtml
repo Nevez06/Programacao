@@ -1,0 +1,25 @@
+<div class="story-viewer-overlay d-none" id="storyViewerOverlay" aria-hidden="true">
+    <div class="story-viewer">
+        <div class="story-viewer-progress" id="storyViewerProgress"></div>
+        <button type="button" class="story-viewer-close" id="storyViewerClose" aria-label="Fechar">×</button>
+        <button type="button" class="story-viewer-nav prev" id="storyViewerPrev" aria-label="Anterior">‹</button>
+        <button type="button" class="story-viewer-nav next" id="storyViewerNext" aria-label="Próximo">›</button>
+
+        <img src="" alt="story" id="storyViewerImage" />
+        <div class="story-viewer-content">
+            <div class="story-viewer-header">
+                <img src="" alt="perfil" id="storyViewerAvatar" />
+                <div>
+                    <strong id="storyViewerName"></strong>
+                    <small id="storyViewerTime"></small>
+                </div>
+            </div>
+            <p id="storyViewerText"></p>
+            <form asp-controller="Social" asp-action="ExcluirStatus" method="post" id="storyViewerDeleteForm" class="d-none">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="storyViewerDeleteId" />
+                <button type="submit" class="btn btn-sm btn-outline-danger">Excluir status</button>
+            </form>
+        </div>
+    </div>
+</div>

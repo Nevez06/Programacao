@@ -6,9 +6,11 @@ namespace ProjetoEventX.ViewModels.Social
     {
         public List<FeedPostViewModel> PostsRecentes { get; set; } = new();
         public List<FeedPostViewModel> PostsPopulares { get; set; } = new();
-        public List<PerfilSocial> PerfisOrganizadores { get; set; } = new();
-        public List<PerfilSocial> PerfisFornecedores { get; set; } = new();
-        public List<Evento> EventosDestaque { get; set; } = new();
+        public List<ExplorarPerfilCardViewModel> PerfisOrganizadores { get; set; } = new();
+        public List<ExplorarPerfilCardViewModel> PerfisFornecedores { get; set; } = new();
+        public List<ExplorarEventoCardViewModel> EventosDestaque { get; set; } = new();
         public List<string> CategoriasDestaque { get; set; } = new();
+        public int TotalPostsRecentes { get; set; }
+        public int TotalPostsPopulares { get; set; }
     }
 }

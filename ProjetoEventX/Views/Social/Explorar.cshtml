@@ -8,6 +8,10 @@
     <header class="social-header">
         <h1>Explorar</h1>
         <p>descubra conteúdos visuais, perfis e eventos em alta.</p>
+        <div class="social-meta">
+            <span><i class="fas fa-image"></i> @Model.TotalPostsRecentes recentes</span>
+            <span><i class="fas fa-fire"></i> @Model.TotalPostsPopulares populares</span>
+        </div>
     </header>
 
     <div class="social-search-box">
@@ -23,14 +27,24 @@
     </div>
 
     <h2>Mosaico em destaque</h2>
-    <div class="social-grid compact social-explore-mosaic">
-        @foreach (var post in Model.PostsRecentes)
-        {
-            <a asp-action="Post" asp-route-id="@post.PostId" class="social-thumb">
-                <img src="@post.ImagemUrl" alt="post recente" />
-            </a>
-        }
-    </div>
+    @if (Model.PostsRecentes.Any())
+    {
+        <div class="social-grid compact social-explore-mosaic">
+            @foreach (var post in Model.PostsRecentes)
+            {
+                <a asp-action="Post" asp-route-id="@post.PostId" class="social-thumb">
+                    <img src="@post.ImagemUrl" alt="post recente" />
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="social-empty">
+            <h3>Sem posts recentes por enquanto</h3>
+            <p>Assim que novos momentos forem publicados, eles aparecerão aqui.</p>
+        </div>
+    }
 
     <h2>Posts populares</h2>
     <div class="social-feed-stack">
@@ -45,11 +59,11 @@
             <h3>Organizadores em destaque</h3>
             @foreach (var perfil in Model.PerfisOrganizadores)
             {
-                <a asp-action="Perfil" asp-route-id="@perfil.Id" class="social-side-profile">
+                <a asp-action="Perfil" asp-route-id="@perfil.PerfilId" class="social-side-profile">
                     <img src="@(string.IsNullOrWhiteSpace(perfil.FotoPerfilUrl) ? "/uploads/social/defaults/default-profile.svg" : perfil.FotoPerfilUrl)" alt="perfil" />
                     <div>
                         <strong>@perfil.NomeExibicao</strong>
-                        <small>@perfil.TipoPerfil @(!string.IsNullOrWhiteSpace(perfil.Cidade) ? $"· {perfil.Cidade}" : "")</small>
+                        <small>@perfil.TipoPerfil @(!string.IsNullOrWhiteSpace(perfil.Cidade) ? $"· {perfil.Cidade}" : "") · @perfil.TotalPosts posts</small>
                     </div>
                 </a>
             }
@@ -59,11 +73,11 @@
             <h3>Fornecedores em destaque</h3>
             @foreach (var perfil in Model.PerfisFornecedores)
             {
-                <a asp-action="Perfil" asp-route-id="@perfil.Id" class="social-side-profile">
+                <a asp-action="Perfil" asp-route-id="@perfil.PerfilId" class="social-side-profile">
                     <img src="@(string.IsNullOrWhiteSpace(perfil.FotoPerfilUrl) ? "/uploads/social/defaults/default-profile.svg" : perfil.FotoPerfilUrl)" alt="perfil" />
                     <div>
                         <strong>@perfil.NomeExibicao</strong>
-                        <small>@perfil.TipoPerfil @(!string.IsNullOrWhiteSpace(perfil.Cidade) ? $"· {perfil.Cidade}" : "")</small>
+                        <small>@perfil.TipoPerfil @(!string.IsNullOrWhiteSpace(perfil.Cidade) ? $"· {perfil.Cidade}" : "") · @perfil.TotalPosts posts</small>
                     </div>
                 </a>
             }
@@ -73,9 +87,9 @@
             <h3>Eventos em alta</h3>
             @foreach (var evento in Model.EventosDestaque)
             {
-                <a asp-action="Evento" asp-route-eventoId="@evento.Id" class="social-event-line">
-                    <span>@evento.NomeEvento</span>
-                    <small>@evento.DataEvento.ToLocalTime().ToString("dd/MM")</small>
+                <a asp-action="Evento" asp-route-eventoId="@evento.EventoId" class="social-event-line">
+                    <span>@evento.NomeEvento <small class="d-block">@evento.TipoEvento</small></span>
+                    <small>@evento.TotalPostsRelacionados posts · @evento.DataEvento.ToLocalTime().ToString("dd/MM")</small>
                 </a>
             }
         </div>

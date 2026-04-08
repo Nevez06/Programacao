@@ -1,14 +1,20 @@
 @model ProjetoEventX.ViewModels.Social.PerfilSocialViewModel
 @{
     ViewData["Title"] = "EventX Social - Perfil";
+    var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 }
 <link rel="stylesheet" href="~/css/social.css" />
+<script>window.__eventxUserId = @(string.IsNullOrWhiteSpace(userIdClaim) ? "null" : userIdClaim);</script>
 
 <section class="social-page">
     <header class="profile-header-card profile-header-premium">
         <img src="@Model.FotoPerfilUrl" alt="foto de perfil" class="social-avatar xl" />
         <div class="profile-main">
             <h1>@Model.NomeExibicao</h1>
+            @if (!string.IsNullOrWhiteSpace(Model.UsernamePublico))
+            {
+                <small class="text-light">@Model.UsernamePublico</small>
+            }
             <p>@(string.IsNullOrWhiteSpace(Model.Bio) ? "Perfil de eventos no EventX Social." : Model.Bio)</p>
             <div class="social-meta social-meta-highlight">
                 <span><i class="fas fa-user-tag"></i> @Model.TipoPerfil</span>
@@ -18,14 +24,28 @@
                 }
                 <span><i class="fas fa-image"></i> @Model.TotalPosts posts</span>
                 <span><i class="fas fa-heart"></i> @Model.TotalCurtidasRecebidas curtidas</span>
-                <span><i class="fas fa-circle-play"></i> @Model.ListaPosts.Count status ativos</span>
+                <span><i class="fas fa-circle-play"></i> @Model.TotalStoriesAtivos status ativos</span>
+                <span><i class="fas fa-calendar"></i> @Model.TotalEventosRelacionados eventos</span>
             </div>
             <div class="social-actions">
-                <a asp-action="EditarPerfil" class="btn btn-outline-primary">Editar perfil</a>
+                @if (Model.EhPerfilDoUsuarioLogado)
+                {
+                    <a asp-action="EditarPerfil" class="btn btn-outline-primary">Editar perfil</a>
+                }
                 <a asp-action="Stories" class="btn btn-outline-light">Ver status</a>
             </div>
         </div>
     </header>
+
+    <div class="social-profile-tabs">
+        <a href="#sec-publicacoes" class="active">Publicações</a>
+        <a href="#sec-stories">Stories ativos</a>
+        <a href="#sec-eventos">Eventos relacionados</a>
+        @if (Model.EhPerfilDoUsuarioLogado)
+        {
+            <a href="#sec-salvos">Salvos</a>
+        }
+    </div>
 
     <section class="social-side-card mb-3">
         <h3>Links e presença</h3>
@@ -41,7 +61,7 @@
         </div>
     </section>
 
-    <h2>Publicações</h2>
+    <h2 id="sec-publicacoes">Publicações</h2>
     <div class="social-grid compact social-profile-grid">
         @foreach (var post in Model.ListaPosts)
         {
@@ -51,9 +71,35 @@
         }
     </div>
 
+    <h2 id="sec-stories" class="mt-4">Stories ativos</h2>
+    @if (Model.StoriesAtivos.Any())
+    {
+        <div class="stories-grid">
+            @foreach (var story in Model.StoriesAtivos)
+            {
+                <a href="#" class="story-card @(story.Visualizado ? "seen" : "new") js-story-open"
+                   data-story-id="@story.Id"
+                   data-perfil-id="@story.PerfilId">
+                    <img src="@story.ImagemUrl" alt="@story.NomePerfil" />
+                    <div class="story-card-overlay">
+                        <strong>@story.NomePerfil</strong>
+                        <small>@story.CriadoEm.ToLocalTime().ToString("HH:mm")</small>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="social-empty">
+            <h3>Sem stories ativos</h3>
+            <p>Este perfil não possui status ativos no momento.</p>
+        </div>
+    }
+
     @if (Model.EventosVinculados.Any())
     {
-        <section class="social-side-card mt-3">
+        <section id="sec-eventos" class="social-side-card mt-3">
             <h3>Eventos vinculados</h3>
             @foreach (var evento in Model.EventosVinculados)
             {
@@ -64,4 +110,31 @@
             }
         </section>
     }
+
+    @if (Model.EhPerfilDoUsuarioLogado)
+    {
+        <h2 id="sec-salvos" class="mt-4">Salvos</h2>
+        @if (Model.PostsSalvos.Any())
+        {
+            <div class="social-feed-stack">
+                @foreach (var post in Model.PostsSalvos)
+                {
+                    <partial name="Partials/_SocialPostCard" model="post" />
+                }
+            </div>
+        }
+        else
+        {
+            <div class="social-empty">
+                <h3>Nenhum post salvo ainda</h3>
+                <p>Quando você salvar posts, eles aparecerão aqui.</p>
+            </div>
+        }
+    }
 </section>
+
+<partial name="Partials/_StoryViewer" />
+
+@section Scripts {
+    <script src="~/js/social.js" asp-append-version="true"></script>
+}

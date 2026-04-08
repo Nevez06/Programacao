@@ -31,8 +31,14 @@ namespace ProjetoEventX.ViewModels.Social
 
         public int TotalPosts { get; set; }
         public int TotalCurtidasRecebidas { get; set; }
+        public int TotalStoriesAtivos { get; set; }
+        public int TotalEventosRelacionados { get; set; }
+        public bool EhPerfilDoUsuarioLogado { get; set; }
+        public string? UsernamePublico { get; set; }
         public List<SocialPost> ListaPosts { get; set; } = new();
         public List<Evento> EventosVinculados { get; set; } = new();
+        public List<SocialStatusItemViewModel> StoriesAtivos { get; set; } = new();
+        public List<FeedPostViewModel> PostsSalvos { get; set; } = new();
         public IFormFile? NovaFotoPerfil { get; set; }
     }
 }
