@@ -103,6 +103,12 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<EventXContext>();
+    dbContext.Database.Migrate();
+}
+
 // ================================
 // 🔹 Configuração de ambiente
 // ================================
