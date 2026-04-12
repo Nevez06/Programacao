@@ -16,9 +16,10 @@
                          alt="@evento.NomeEvento"
                          loading="lazy"
                          onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                    <span class="explore-event-badge">evento</span>
                     <div class="explore-event-overlay">
                         <strong>@evento.NomeEvento</strong>
-                        <small>@evento.TipoEvento · @evento.DataEvento.ToLocalTime().ToString("dd/MM")</small>
+                        <small>@evento.TipoEvento · @evento.DataEvento.ToLocalTime().ToString("dd/MM") · @evento.TotalPostsRelacionados posts</small>
                     </div>
                 </a>
             }

@@ -1,0 +1,41 @@
+@model ProjetoEventX.ViewModels.Social.ExplorarViewModel
+@{
+    var heroPrincipal = Model.DescobertaVisual.FirstOrDefault();
+    var heroSecundarios = Model.DescobertaVisual.Skip(1).Take(3).ToList();
+}
+
+@if (heroPrincipal != null)
+{
+    <section class="explore-hero" aria-label="Hero de descoberta">
+        <a href="@heroPrincipal.Link" class="explore-hero-main-card">
+            <img src="@heroPrincipal.ImagemUrl"
+                 alt="@heroPrincipal.Titulo"
+                 loading="eager"
+                 onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+            <div class="explore-hero-main-overlay">
+                <span class="explore-hero-pill">@heroPrincipal.Badge</span>
+                <h2>@heroPrincipal.Titulo</h2>
+                @if (!string.IsNullOrWhiteSpace(heroPrincipal.Subtitulo))
+                {
+                    <p>@heroPrincipal.Subtitulo</p>
+                }
+            </div>
+        </a>
+
+        <div class="explore-hero-side-stack">
+            @foreach (var item in heroSecundarios)
+            {
+                <a href="@item.Link" class="explore-hero-side-card">
+                    <img src="@item.ImagemUrl"
+                         alt="@item.Titulo"
+                         loading="lazy"
+                         onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                    <div class="explore-hero-side-overlay">
+                        <small>@item.Badge</small>
+                        <strong>@item.Titulo</strong>
+                    </div>
+                </a>
+            }
+        </div>
+    </section>
+}

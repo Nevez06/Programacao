@@ -45,6 +45,13 @@
             chip.classList.add('is-active');
         });
     });
+
+    document.querySelectorAll('.explore-visual-card, .explore-event-card, .explore-template-card, .explore-supplier-card')
+        .forEach((card) => {
+            card.addEventListener('pointerdown', () => card.classList.add('is-pressed'));
+            card.addEventListener('pointerup', () => card.classList.remove('is-pressed'));
+            card.addEventListener('pointerleave', () => card.classList.remove('is-pressed'));
+        });
 })();
 
 (function () {

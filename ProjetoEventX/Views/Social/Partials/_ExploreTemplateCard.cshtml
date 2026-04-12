@@ -16,9 +16,10 @@
                          alt="@template.NomeTemplate"
                          loading="lazy"
                          onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                    <span class="explore-template-pill">@template.Categoria</span>
                     <div>
                         <strong>@template.NomeTemplate</strong>
-                        <small>@template.Estilo</small>
+                        <small>@template.Estilo · atualizado @template.AtualizadoEm.ToLocalTime().ToString("dd/MM")</small>
                     </div>
                 </a>
             }
