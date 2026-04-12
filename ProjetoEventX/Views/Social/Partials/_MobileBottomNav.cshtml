@@ -1,0 +1,31 @@
+@{
+    var current = (ViewData["SocialCurrent"] as string ?? string.Empty).ToLowerInvariant();
+    var isFeed = current == "feed";
+    var isExplorar = current == "explorar";
+    var isCriar = current == "criar";
+    var isNotificacoes = current == "notificacoes";
+    var isPerfil = current == "perfil";
+}
+
+<nav class="profile-mobile-bottom-nav" aria-label="Navegação principal mobile">
+    <a asp-controller="Social" asp-action="Feed" class="@(isFeed ? "is-active" : string.Empty)">
+        <i class="fas fa-house"></i>
+        <span>Feed</span>
+    </a>
+    <a asp-controller="Social" asp-action="Explorar" class="@(isExplorar ? "is-active" : string.Empty)">
+        <i class="fas fa-compass"></i>
+        <span>Explorar</span>
+    </a>
+    <a asp-controller="Social" asp-action="CriarPost" class="@(isCriar ? "is-active" : string.Empty)">
+        <i class="fas fa-circle-plus"></i>
+        <span>Criar</span>
+    </a>
+    <a asp-controller="Notificacao" asp-action="Index" class="@(isNotificacoes ? "is-active" : string.Empty)">
+        <i class="fas fa-bell"></i>
+        <span>Notificações</span>
+    </a>
+    <a asp-controller="Social" asp-action="MeuPerfil" class="@(isPerfil ? "is-active" : string.Empty)" aria-current="@(isPerfil ? "page" : null)">
+        <i class="fas fa-user"></i>
+        <span>Perfil</span>
+    </a>
+</nav>

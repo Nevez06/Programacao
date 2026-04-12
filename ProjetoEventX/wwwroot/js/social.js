@@ -30,6 +30,97 @@
 })();
 
 (function () {
+    const tabsRoot = document.querySelector('.js-profile-tabs');
+    if (tabsRoot) {
+        const tabs = Array.from(tabsRoot.querySelectorAll('.profile-tab'));
+        const indicator = tabsRoot.querySelector('.profile-tab-indicator');
+        const panels = Array.from(document.querySelectorAll('.profile-tab-panel'));
+        const stage = document.querySelector('.profile-grid-stage');
+
+        const moveIndicator = (index) => {
+            if (!indicator) return;
+            indicator.style.transform = `translateX(${index * 100}%)`;
+        };
+
+        const activate = (tabName) => {
+            let activeIndex = 0;
+            tabs.forEach((tab, index) => {
+                const active = tab.dataset.tab === tabName;
+                tab.classList.toggle('is-active', active);
+                if (active) activeIndex = index;
+            });
+            panels.forEach((panel) => {
+                panel.classList.toggle('is-active', panel.dataset.panel === tabName);
+            });
+            moveIndicator(activeIndex);
+        };
+
+        tabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                activate(tab.dataset.tab);
+            });
+        });
+
+        if (stage) {
+            stage.classList.add('is-loading');
+            window.setTimeout(() => stage.classList.remove('is-loading'), 280);
+        }
+
+        const active = tabs.find((t) => t.classList.contains('is-active')) || tabs[0];
+        if (active?.dataset.tab) activate(active.dataset.tab);
+    }
+})();
+
+(function () {
+    const followBtn = document.querySelector('.js-profile-follow');
+    if (!followBtn) return;
+
+    const token = document.querySelector('input[name="__RequestVerificationToken"]');
+    followBtn.addEventListener('click', async () => {
+        if (followBtn.dataset.busy === '1') return;
+        followBtn.dataset.busy = '1';
+
+        const perfilId = followBtn.dataset.perfilId;
+        if (!perfilId) {
+            followBtn.dataset.busy = '0';
+            return;
+        }
+
+        try {
+            const body = new URLSearchParams();
+            body.append('perfilId', perfilId);
+
+            const response = await fetch('/Social/Perfil/AlternarFollow', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    ...(token ? { 'RequestVerificationToken': token.value } : {})
+                },
+                body
+            });
+
+            if (!response.ok) return;
+            const data = await response.json();
+            if (!data?.ok) return;
+
+            const seguindo = !!data.seguindo;
+            followBtn.dataset.following = seguindo ? '1' : '0';
+            followBtn.textContent = seguindo ? 'Seguindo' : 'Seguir';
+            followBtn.classList.toggle('secondary', seguindo);
+            followBtn.classList.toggle('is-following', seguindo);
+            followBtn.classList.toggle('primary', !seguindo);
+
+            const countTarget = document.querySelector('[data-seguidores-count]');
+            if (countTarget && Number.isFinite(Number(data.totalSeguidores))) {
+                countTarget.textContent = String(data.totalSeguidores);
+            }
+        } finally {
+            followBtn.dataset.busy = '0';
+        }
+    });
+})();
+
+(function () {
     const feedSkeleton = document.getElementById('socialFeedSkeleton');
     const feedStack = document.getElementById('socialFeedStack');
     if (feedSkeleton && feedStack && !feedSkeleton.classList.contains('d-none')) {
