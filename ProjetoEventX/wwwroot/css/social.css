@@ -55,6 +55,14 @@
 .post-actions-item { width: 100%; border: 0; border-radius: 12px; text-align: left; background: rgba(30,41,59,.56); color: #e2e8f0; padding: .72rem .8rem; display: grid; grid-template-columns: 20px 1fr; gap: .6rem; align-items: center; font-weight: 600; }
 .post-actions-item:hover { background: rgba(51,65,85,.85); }
 .post-actions-item.is-destructive { color: #fda4af; background: rgba(127,29,29,.34); }
+.post-confirm-overlay { position: fixed; inset: 0; z-index: 1260; background: rgba(2,6,23,.72); display: grid; place-items: center; padding: 1rem; }
+.post-confirm-card { width: min(420px, 100%); background: #0b1220; border: 1px solid rgba(148,163,184,.28); border-radius: 18px; box-shadow: 0 20px 52px rgba(0,0,0,.5); padding: 1rem; }
+.post-confirm-title { margin: 0; color: #f8fafc; font-size: 1.05rem; }
+.post-confirm-text { margin: .55rem 0 .95rem; color: #cbd5e1; }
+.post-confirm-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+.post-confirm-btn { min-height: 40px; border-radius: 12px; border: 1px solid rgba(148,163,184,.3); background: #111827; color: #f8fafc; font-weight: 700; }
+.post-confirm-btn-cancel:hover { border-color: rgba(148,163,184,.55); }
+.post-confirm-btn-danger { background: linear-gradient(135deg, #991b1b, #be123c); border-color: rgba(244,63,94,.65); }
 .social-toast { position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%) translateY(14px); background: #111827; color: #fff; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: .55rem .95rem; font-size: .84rem; z-index: 1250; opacity: 0; pointer-events: none; transition: .18s ease; }
 .social-toast.is-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 @keyframes postSheetUp { from { transform: translateY(22px); opacity: .4; } to { transform: translateY(0); opacity: 1; } }
@@ -489,9 +497,9 @@
 }
 
 .profile-social-shell {
-    max-width: 900px;
+    max-width: 980px;
     margin: 0 auto;
-    padding: .35rem .7rem 1.1rem;
+    padding: .35rem .85rem 1.1rem;
 }
 
 .profile-mobile-topbar {
@@ -844,12 +852,13 @@
 
 @media (min-width: 992px) {
     .profile-social-shell {
-        padding-top: .85rem;
+        max-width: 980px;
+        padding: 1rem 1.25rem 1.2rem;
     }
 
     .profile-mobile-topbar {
         border-radius: 16px;
-        padding: .5rem .55rem;
+        padding: .55rem .75rem;
     }
 
     .profile-mobile-bottom-nav {
@@ -858,5 +867,31 @@
 
     .profile-social-page {
         padding-bottom: 1rem;
+    }
+
+    .profile-grid-stage,
+    .profile-tabs,
+    .profile-section {
+        max-width: 940px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .profile-grid {
+        gap: 6px;
+    }
+}
+
+@media (min-width: 1280px) {
+    .profile-social-shell {
+        max-width: 1040px;
+        padding-left: 1.6rem;
+        padding-right: 1.6rem;
+    }
+
+    .profile-grid-stage,
+    .profile-tabs,
+    .profile-section {
+        max-width: 980px;
     }
 }

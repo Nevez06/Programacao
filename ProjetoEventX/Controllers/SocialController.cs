@@ -1511,9 +1511,17 @@ namespace ProjetoEventX.Controllers
 
             var posts = await _context.SocialPosts
                 .AsNoTracking()
-                .Where(p => p.PerfilSocialId == id && p.Ativo)
+                .Where(p => p.PerfilSocialId == id
+                    && p.Ativo
+                    && !p.IsDeleted
+                    && !p.IsArchived
+                    && !string.IsNullOrWhiteSpace(p.ImagemUrl))
                 .OrderByDescending(p => p.CriadoEm)
                 .ToListAsync();
+
+            posts = posts
+                .Where(p => IsImagemExploravel(p.ImagemUrl))
+                .ToList();
 
             var videos = posts
                 .Where(p => !string.IsNullOrWhiteSpace(p.TipoConteudo)
@@ -1590,7 +1598,12 @@ namespace ProjetoEventX.Controllers
             {
                 postsSalvos = await _context.SocialPostsSalvos
                     .AsNoTracking()
-                    .Where(s => s.UserId == perfil.UserId && s.Post != null && s.Post.Ativo)
+                    .Where(s => s.UserId == perfil.UserId
+                        && s.Post != null
+                        && s.Post.Ativo
+                        && !s.Post.IsDeleted
+                        && !s.Post.IsArchived
+                        && !string.IsNullOrWhiteSpace(s.Post.ImagemUrl))
                     .OrderByDescending(s => s.CriadoEm)
                     .Take(6)
                     .Select(s => new FeedPostViewModel
@@ -1619,6 +1632,10 @@ namespace ProjetoEventX.Controllers
                         Cidade = s.Post != null && s.Post.PerfilSocial != null ? s.Post.PerfilSocial.Cidade : null
                     })
                     .ToListAsync();
+
+                postsSalvos = postsSalvos
+                    .Where(p => IsImagemExploravel(p.ImagemUrl))
+                    .ToList();
             }
 
             var highlights = await _context.StoryHighlights

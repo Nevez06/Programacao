@@ -1,4 +1,28 @@
 @model ProjetoEventX.ViewModels.Social.PerfilSocialViewModel
+@{
+    static bool MidiaValida(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return false;
+        var value = url.Trim().ToLowerInvariant();
+        if (value.Contains("default-post") || value.Contains("default-profile") || value.Contains("placeholder")) return false;
+        if (value.Contains("uploads/social/defaults")) return false;
+        if (value.Contains("login") || value.Contains("signin") || value.Contains("auth")) return false;
+        if (value.Contains("admin") || value.Contains("dashboard") || value.Contains("painel")) return false;
+        if (value.Contains("settings") || value.Contains("config") || value.Contains("swagger")) return false;
+        if (value.Contains("sistema") || value.Contains("interno") || value.Contains("interface")) return false;
+        if (value.Contains("form") || value.Contains("formulario")) return false;
+        if (value.Contains("screen") || value.Contains("screenshot") || value.Contains("captura") || value.Contains("print")) return false;
+        return true;
+    }
+
+    var postsValidos = Model.ListaPosts.Where(p => MidiaValida(p.ImagemUrl)).ToList();
+    var videosValidos = Model.ListaVideos.Where(p => MidiaValida(p.ImagemUrl)).ToList();
+    var marcadosValidos = Model.ListaMarcados.Where(p => MidiaValida(p.ImagemUrl)).ToList();
+    var eventosValidos = Model.ListaEventos
+        .Where(e => MidiaValida(e.ImagemCapa))
+        .ToList();
+    var salvosValidos = Model.ListaSalvos.Where(p => MidiaValida(p.ImagemUrl)).ToList();
+}
 
 <section class="profile-section profile-grid-stage">
     <div class="profile-grid-skeleton js-profile-grid-skeleton">
@@ -9,10 +33,10 @@
     </div>
 
     <div class="profile-tab-panel is-active" data-panel="posts">
-        @if (Model.ListaPosts.Any())
+        @if (postsValidos.Any())
         {
             <div class="profile-grid">
-                @foreach (var post in Model.ListaPosts)
+                @foreach (var post in postsValidos)
                 {
                     var isVideo = !string.IsNullOrWhiteSpace(post.TipoConteudo) && post.TipoConteudo.Contains("video", StringComparison.OrdinalIgnoreCase);
                     var isCarrossel = !string.IsNullOrWhiteSpace(post.Categoria) && post.Categoria.Contains("carrossel", StringComparison.OrdinalIgnoreCase);
@@ -43,10 +67,10 @@
     </div>
 
     <div class="profile-tab-panel" data-panel="videos">
-        @if (Model.ListaVideos.Any())
+        @if (videosValidos.Any())
         {
             <div class="profile-grid">
-                @foreach (var post in Model.ListaVideos)
+                @foreach (var post in videosValidos)
                 {
                     <a asp-action="Post" asp-route-id="@post.Id" class="profile-grid-item js-open-post">
                         <img src="@post.ImagemUrl"
@@ -68,10 +92,10 @@
     </div>
 
     <div class="profile-tab-panel" data-panel="marcados">
-        @if (Model.ListaMarcados.Any())
+        @if (marcadosValidos.Any())
         {
             <div class="profile-grid">
-                @foreach (var post in Model.ListaMarcados)
+                @foreach (var post in marcadosValidos)
                 {
                     <a asp-action="Post" asp-route-id="@post.Id" class="profile-grid-item js-open-post">
                         <img src="@post.ImagemUrl"
@@ -92,13 +116,13 @@
     </div>
 
     <div class="profile-tab-panel" data-panel="eventos">
-        @if (Model.ListaEventos.Any())
+        @if (eventosValidos.Any())
         {
             <div class="profile-grid">
-                @foreach (var evento in Model.ListaEventos)
+                @foreach (var evento in eventosValidos)
                 {
                     <a asp-action="Evento" asp-route-eventoId="@evento.Id" class="profile-grid-item js-open-post">
-                        <img src="@(string.IsNullOrWhiteSpace(evento.ImagemCapa) ? "/uploads/social/defaults/default-post.svg" : evento.ImagemCapa)"
+                        <img src="@evento.ImagemCapa"
                              alt="@evento.NomeEvento"
                              loading="lazy"
                              onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
@@ -119,10 +143,10 @@
     @if (Model.EhPerfilDoUsuarioLogado)
     {
         <div class="profile-tab-panel" data-panel="salvos">
-            @if (Model.ListaSalvos.Any())
+            @if (salvosValidos.Any())
             {
                 <div class="profile-grid">
-                    @foreach (var post in Model.ListaSalvos)
+                    @foreach (var post in salvosValidos)
                     {
                         var isVideo = !string.IsNullOrWhiteSpace(post.TipoConteudo) && post.TipoConteudo.Contains("video", StringComparison.OrdinalIgnoreCase);
                         <a asp-action="Post" asp-route-id="@post.PostId" class="profile-grid-item js-open-post">

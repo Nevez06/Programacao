@@ -3,6 +3,12 @@
     const overlay = document.querySelector('.js-post-actions-overlay');
     const sheet = overlay ? overlay.querySelector('.js-post-actions-sheet') : null;
     const list = overlay ? overlay.querySelector('.js-post-actions-list') : null;
+    const confirmOverlay = document.querySelector('.js-post-confirm-overlay');
+    const confirmTitle = confirmOverlay ? confirmOverlay.querySelector('.js-post-confirm-title') : null;
+    const confirmText = confirmOverlay ? confirmOverlay.querySelector('.js-post-confirm-text') : null;
+    const confirmBtn = confirmOverlay ? confirmOverlay.querySelector('.js-post-confirm-confirm') : null;
+    const cancelBtn = confirmOverlay ? confirmOverlay.querySelector('.js-post-confirm-cancel') : null;
+    let confirmCallback = null;
 
     const toast = (message) => {
         let el = document.querySelector('.social-toast');
@@ -21,6 +27,25 @@
         overlay.classList.add('d-none');
         overlay.setAttribute('aria-hidden', 'true');
         list && (list.innerHTML = '');
+    };
+
+    const closeConfirm = () => {
+        if (!confirmOverlay) return;
+        confirmOverlay.classList.add('d-none');
+        confirmOverlay.setAttribute('aria-hidden', 'true');
+        confirmCallback = null;
+    };
+
+    const askConfirm = (title, text, onConfirm) => {
+        if (!confirmOverlay || !confirmTitle || !confirmText || !confirmBtn) {
+            onConfirm();
+            return;
+        }
+        confirmTitle.textContent = title;
+        confirmText.textContent = text;
+        confirmCallback = onConfirm;
+        confirmOverlay.classList.remove('d-none');
+        confirmOverlay.setAttribute('aria-hidden', 'false');
     };
 
     const csrfHeaders = () => tokenInput ? { 'RequestVerificationToken': tokenInput.value } : {};
@@ -73,7 +98,20 @@
                 { icon: 'fas fa-share-from-square', label: 'Ocultar compartilhamentos', onClick: async () => { const r = await postAction(toggleSharesUrl); toast(r.message || 'Estado atualizado.'); closeActions(); } },
                 { icon: 'fas fa-comments-slash', label: 'Desativar comentários', onClick: async () => { const r = await postAction(toggleCommentsUrl); toast(r.message || 'Estado atualizado.'); closeActions(); } },
                 { icon: 'fas fa-box-archive', label: 'Arquivar publicação', onClick: async () => { const r = await postAction(archiveUrl); toast(r.message || 'Publicação arquivada.'); closeActions(); window.location.reload(); } },
-                { icon: 'fas fa-trash', label: 'Excluir publicação', destructive: true, onClick: async () => { const ok = window.confirm('Excluir esta publicação?'); if (!ok) return; const r = await postAction(deleteUrl); toast(r.message || 'Publicação excluída.'); closeActions(); window.location.reload(); } }
+                {
+                    icon: 'fas fa-trash',
+                    label: 'Excluir publicação',
+                    destructive: true,
+                    onClick: () => {
+                        askConfirm('Excluir publicação', 'Essa ação remove a publicação do feed. Deseja continuar?', async () => {
+                            const r = await postAction(deleteUrl);
+                            toast(r.message || 'Publicação excluída.');
+                            closeConfirm();
+                            closeActions();
+                            window.location.reload();
+                        });
+                    }
+                }
             );
         } else {
             base.push(
@@ -99,9 +137,22 @@
     overlay?.addEventListener('click', (e) => {
         if (e.target === overlay) closeActions();
     });
+    confirmOverlay?.addEventListener('click', (e) => {
+        if (e.target === confirmOverlay) closeConfirm();
+    });
     document.querySelectorAll('.js-post-actions-close').forEach((btn) => btn.addEventListener('click', closeActions));
+    cancelBtn?.addEventListener('click', closeConfirm);
+    confirmBtn?.addEventListener('click', () => {
+        const callback = confirmCallback;
+        if (typeof callback === 'function') {
+            callback();
+        }
+    });
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeActions();
+        if (e.key === 'Escape') {
+            closeConfirm();
+            closeActions();
+        }
     });
 })();
 
