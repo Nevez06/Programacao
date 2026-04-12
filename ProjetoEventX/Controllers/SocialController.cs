@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using ProjetoEventX.Data;
+using ProjetoEventX.Helpers;
 using ProjetoEventX.Models;
 using ProjetoEventX.ViewModels.Social;
 
@@ -22,8 +25,14 @@ namespace ProjetoEventX.Controllers
         private const string PastaUploadPosts = "uploads/social/posts";
         private const string PastaUploadPerfis = "uploads/social/perfis";
         private const string PastaUploadStatus = "uploads/social/status";
+        private const string PastaUploadStories = "uploads/stories";
         private const string FotoPerfilPadrao = "/uploads/social/defaults/default-profile.svg";
         private const string ImagemPostPadrao = "/uploads/social/defaults/default-post.svg";
+        private static readonly HashSet<string> TiposReacaoPermitidos = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "like", "fire", "heart", "clap", "wow"
+        };
+        private static readonly Regex MentionRegex = new(@"@([a-zA-Z0-9._-]{2,40})", RegexOptions.Compiled);
         private static readonly string[] CategoriasExplorar =
         [
             "casamento", "aniversário", "corporativo", "formatura", "show", "infantil",
@@ -54,6 +63,7 @@ namespace ProjetoEventX.Controllers
             {
                 UserId = user.Id,
                 NomeExibicao = user.UserName ?? $"Usuário {user.Id}",
+                Username = user.UserName,
                 TipoPerfil = user.TipoUsuario ?? "Convidado",
                 CriadoEm = DateTime.UtcNow,
                 AtualizadoEm = DateTime.UtcNow,
@@ -82,7 +92,111 @@ namespace ProjetoEventX.Controllers
 
         private static string ResolverFotoPerfil(PerfilSocial? perfil)
         {
-            return string.IsNullOrWhiteSpace(perfil?.FotoPerfilUrl) ? FotoPerfilPadrao : perfil.FotoPerfilUrl;
+            return NormalizarUrlImagemPerfil(perfil?.FotoPerfilUrl);
+        }
+
+        private static string NormalizarUrlImagemPost(string? imagemUrl)
+            => SocialImagemHelper.NormalizePublicImageUrl(imagemUrl, ImagemPostPadrao);
+
+        private static string NormalizarUrlImagemPerfil(string? imagemUrl)
+            => SocialImagemHelper.NormalizePublicImageUrl(imagemUrl, FotoPerfilPadrao);
+
+        private static string? NormalizarUsername(string? username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                return null;
+            }
+
+            var limpo = username.Trim().TrimStart('@');
+            return string.IsNullOrWhiteSpace(limpo) ? null : $"@{limpo.ToLowerInvariant()}";
+        }
+
+        private static string ResolverIdentidadePrincipal(PerfilSocial perfil, ApplicationUser? usuario)
+        {
+            if (!string.IsNullOrWhiteSpace(usuario?.UserName))
+            {
+                return usuario.UserName!;
+            }
+
+            if (!string.IsNullOrWhiteSpace(perfil.NomeExibicao))
+            {
+                return perfil.NomeExibicao;
+            }
+
+            if (!string.IsNullOrWhiteSpace(usuario?.Email))
+            {
+                return usuario.Email!;
+            }
+
+            return $"perfil.{perfil.Id}";
+        }
+
+        private static decimal CalcularBonusRecencia(DateTime criadoEmUtc)
+        {
+            var idade = DateTime.UtcNow - criadoEmUtc;
+            if (idade.TotalHours <= 2) return 20m;
+            if (idade.TotalHours <= 6) return 10m;
+            return 0m;
+        }
+
+        private static SocialStatusItemViewModel StoryToStatusItemViewModel(
+            Story story,
+            PerfilSocial perfil,
+            bool visualizado,
+            int totalViews,
+            int totalReactions,
+            Dictionary<string, int> reactionsByType,
+            bool isOwner,
+            string? userReaction,
+            List<StoryMentionItemViewModel>? mentions = null)
+        {
+            var engagementScore = (totalViews * 1) + (totalReactions * 3);
+            var rankingScore = (totalViews * 1m) + (totalReactions * 4m) + CalcularBonusRecencia(story.CreatedAt);
+
+            return new SocialStatusItemViewModel
+            {
+                Id = story.Id,
+                PerfilId = perfil.Id,
+                UserId = int.TryParse(story.UserId, out var uid) ? uid : 0,
+                NomePerfil = string.IsNullOrWhiteSpace(perfil.NomeExibicao) ? "Participante" : perfil.NomeExibicao,
+                FotoPerfilUrl = NormalizarUrlImagemPerfil(perfil.FotoPerfilUrl),
+                ImagemUrl = SocialImagemHelper.NormalizePublicImageUrl(story.MediaUrl, ImagemPostPadrao),
+                TextoOverlay = string.IsNullOrWhiteSpace(story.TextOverlay) ? null : story.TextOverlay,
+                CriadoEm = story.CreatedAt,
+                Visualizado = visualizado,
+                SequenciaNoPerfil = 1,
+                TotalNoPerfil = 1,
+                EventoId = story.EventoId,
+                NomeEvento = story.Evento?.NomeEvento,
+                TotalViews = totalViews,
+                TotalReactions = totalReactions,
+                EngagementScore = engagementScore,
+                RankingScore = rankingScore,
+                SharedPostId = story.SharedPostId,
+                SharedPostImageUrl = story.SharedPost != null ? NormalizarUrlImagemPost(story.SharedPost.ImagemUrl) : null,
+                SharedPostCaption = story.SharedPost?.Legenda,
+                IsOwner = isOwner,
+                UserReaction = userReaction,
+                CanReply = !isOwner,
+                Mentions = mentions ?? new List<StoryMentionItemViewModel>(),
+                ReactionsByType = reactionsByType
+            };
+        }
+
+        private async Task CriarNotificacaoSocialAsync(int userId, string titulo, string mensagem, string tipo, string? link = null)
+        {
+            _context.Notifications.Add(new Notification
+            {
+                UserId = userId,
+                Title = titulo,
+                Message = mensagem,
+                Type = tipo,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+                Link = link
+            });
+            await _context.SaveChangesAsync();
         }
 
         private static string TempoRelativo(DateTime dataUtc)
@@ -97,30 +211,109 @@ namespace ProjetoEventX.Controllers
         private async Task<List<SocialStatusItemViewModel>> ObterStoriesAtivosAsync(int? usuarioAtualId)
         {
             var agora = DateTime.UtcNow;
-            return await _context.SocialStatus
+            var stories = await _context.Stories
                 .AsNoTracking()
-                .Where(s => s.Ativo && s.ExpiraEm > agora)
-                .OrderByDescending(s => s.CriadoEm)
-                .Select(s => new SocialStatusItemViewModel
-                {
-                    Id = s.Id,
-                    PerfilId = s.PerfilSocialId,
-                    UserId = s.UserId,
-                    NomePerfil = !string.IsNullOrWhiteSpace(s.PerfilSocial != null ? s.PerfilSocial.NomeExibicao : null)
-                        ? s.PerfilSocial!.NomeExibicao
-                        : (!string.IsNullOrWhiteSpace(s.User != null ? s.User.UserName : null) ? s.User!.UserName! : (s.User != null ? s.User.Email ?? "Participante" : "Participante")),
-                    FotoPerfilUrl = s.PerfilSocial != null && !string.IsNullOrWhiteSpace(s.PerfilSocial.FotoPerfilUrl)
-                        ? s.PerfilSocial.FotoPerfilUrl
-                        : FotoPerfilPadrao,
-                    ImagemUrl = s.ImagemUrl,
-                    TextoOverlay = s.TextoOverlay,
-                    CriadoEm = s.CriadoEm,
-                    Visualizado = usuarioAtualId.HasValue && s.Visualizacoes.Any(v => v.UserId == usuarioAtualId.Value),
-                    SequenciaNoPerfil = 1,
-                    TotalNoPerfil = 1
-                })
+                .Where(s => s.ExpireAt > agora && s.Ativo)
+                .Include(s => s.Evento)
+                .Include(s => s.SharedPost)
+                .OrderByDescending(s => s.CreatedAt)
                 .Take(32)
                 .ToListAsync();
+
+            if (stories.Count == 0)
+            {
+                return new List<SocialStatusItemViewModel>();
+            }
+
+            var userIds = stories.Select(s => s.UserId).Distinct().ToList();
+            var userIdsInt = userIds
+                .Select(x => int.TryParse(x, out var parsed) ? parsed : (int?)null)
+                .Where(x => x.HasValue)
+                .Select(x => x!.Value)
+                .Distinct()
+                .ToList();
+            var perfis = await _context.PerfisSociais
+                .AsNoTracking()
+                .Where(p => userIdsInt.Contains(p.UserId))
+                .ToListAsync();
+
+            var perfisPorUser = perfis.ToDictionary(p => p.UserId.ToString(), p => p);
+            var storyIds = stories.Select(s => s.Id).ToList();
+
+            var vistos = usuarioAtualId.HasValue
+                ? await _context.StoryViews
+                    .AsNoTracking()
+                    .Where(v => v.UserId == usuarioAtualId.Value.ToString() && storyIds.Contains(v.StoryId))
+                    .Select(v => v.StoryId)
+                    .ToHashSetAsync()
+                : new HashSet<int>();
+
+            var viewCounts = await _context.StoryViews
+                .AsNoTracking()
+                .Where(v => storyIds.Contains(v.StoryId))
+                .GroupBy(v => v.StoryId)
+                .Select(g => new { StoryId = g.Key, Total = g.Count() })
+                .ToDictionaryAsync(x => x.StoryId, x => x.Total);
+
+            var reactions = await _context.StoryReactions
+                .AsNoTracking()
+                .Where(r => storyIds.Contains(r.StoryId))
+                .ToListAsync();
+
+            var mentionsByStory = await _context.StoryMentions
+                .AsNoTracking()
+                .Where(m => storyIds.Contains(m.StoryId))
+                .GroupBy(m => m.StoryId)
+                .ToDictionaryAsync(
+                    g => g.Key,
+                    g => g.Select(x => new StoryMentionItemViewModel
+                    {
+                        PerfilId = x.MentionedPerfilId,
+                        MentionText = x.MentionText
+                    }).ToList());
+
+            var reactionCounts = reactions
+                .GroupBy(r => r.StoryId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var reactionSummary = reactions
+                .GroupBy(r => r.StoryId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.GroupBy(x => x.ReactionType.ToLowerInvariant())
+                        .ToDictionary(x => x.Key, x => x.Count()));
+
+            var userReactions = usuarioAtualId.HasValue
+                ? reactions
+                    .Where(r => r.UserId == usuarioAtualId.Value.ToString())
+                    .GroupBy(r => r.StoryId)
+                    .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.CreatedAt).First().ReactionType.ToLowerInvariant())
+                : new Dictionary<int, string>();
+
+            var result = new List<SocialStatusItemViewModel>();
+            foreach (var story in stories)
+            {
+                if (!perfisPorUser.TryGetValue(story.UserId, out var perfil))
+                {
+                    continue;
+                }
+                result.Add(StoryToStatusItemViewModel(
+                    story,
+                    perfil,
+                    vistos.Contains(story.Id),
+                    viewCounts.TryGetValue(story.Id, out var totalViews) ? totalViews : 0,
+                    reactionCounts.TryGetValue(story.Id, out var totalReactions) ? totalReactions : 0,
+                    reactionSummary.TryGetValue(story.Id, out var grouped) ? grouped : new Dictionary<string, int>(),
+                    usuarioAtualId.HasValue && int.TryParse(story.UserId, out var ownerId) && ownerId == usuarioAtualId.Value,
+                    userReactions.TryGetValue(story.Id, out var reaction) ? reaction : null,
+                    mentionsByStory.TryGetValue(story.Id, out var mentions) ? mentions : new List<StoryMentionItemViewModel>()));
+            }
+
+            return result
+                .OrderBy(s => s.Visualizado)
+                .ThenByDescending(s => s.RankingScore)
+                .ThenByDescending(s => s.CriadoEm)
+                .ToList();
         }
 
         private async Task<List<SelectListItem>> ObterEventosSelectListAsync()
@@ -161,10 +354,10 @@ namespace ProjetoEventX.Controllers
                         ? p.PerfilSocial!.NomeExibicao
                         : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : (p.User != null ? p.User.Email ?? "Participante" : "Participante")),
                     FotoPerfilUrl = p.PerfilSocial != null && !string.IsNullOrWhiteSpace(p.PerfilSocial.FotoPerfilUrl)
-                        ? p.PerfilSocial.FotoPerfilUrl
+                        ? NormalizarUrlImagemPerfil(p.PerfilSocial.FotoPerfilUrl)
                         : FotoPerfilPadrao,
                     Legenda = p.Legenda,
-                    ImagemUrl = string.IsNullOrWhiteSpace(p.ImagemUrl) ? ImagemPostPadrao : p.ImagemUrl,
+                    ImagemUrl = NormalizarUrlImagemPost(p.ImagemUrl),
                     Categoria = p.Categoria,
                     TipoConteudo = p.TipoConteudo,
                     Localizacao = p.Localizacao,
@@ -250,10 +443,16 @@ namespace ProjetoEventX.Controllers
                 .Select(p => p.Evento != null ? p.Evento.NomeEvento : null)
                 .FirstOrDefaultAsync();
 
+            var storiesAtivos = await ObterStoriesAtivosAsync(usuarioId);
+
             var model = new FeedSocialViewModel
             {
                 Posts = posts,
-                Stories = await ObterStoriesAtivosAsync(usuarioId),
+                Stories = storiesAtivos,
+                StoriesEmAlta = storiesAtivos
+                    .OrderByDescending(s => s.RankingScore)
+                    .Take(10)
+                    .ToList(),
                 PerfisDestaque = await _context.PerfisSociais.AsNoTracking().OrderByDescending(p => p.Posts.Count).Take(8).ToListAsync(),
                 EventosEmAlta = await _context.Eventos.AsNoTracking().OrderByDescending(e => e.DataEvento).Take(6).ToListAsync(),
                 PerfilAtual = perfilAtual,
@@ -265,19 +464,37 @@ namespace ProjetoEventX.Controllers
                     : $"Evento mais curtido da semana: {eventoMaisCurtidoSemana}"
             };
 
+            if (model.PerfilAtual != null)
+            {
+                model.PerfilAtual.FotoPerfilUrl = NormalizarUrlImagemPerfil(model.PerfilAtual.FotoPerfilUrl);
+            }
+
+            foreach (var perfil in model.PerfisDestaque)
+            {
+                perfil.FotoPerfilUrl = NormalizarUrlImagemPerfil(perfil.FotoPerfilUrl);
+            }
+
+            foreach (var perfil in model.FornecedoresEmAlta)
+            {
+                perfil.FotoPerfilUrl = NormalizarUrlImagemPerfil(perfil.FotoPerfilUrl);
+            }
+
             return View(model);
         }
 
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> Explorar()
+        public async Task<IActionResult> Explorar(string? busca = null, string? categoria = null)
         {
             var usuarioAtual = await ObterUsuarioAtualAsync();
+            var buscaNormalizada = string.IsNullOrWhiteSpace(busca) ? null : busca.Trim();
+            var categoriaNormalizada = string.IsNullOrWhiteSpace(categoria) ? null : categoria.Trim().ToLowerInvariant();
+
             var recentes = await _context.SocialPosts
                 .AsNoTracking()
                 .Where(p => p.Ativo)
                 .OrderByDescending(p => p.CriadoEm)
-                .Take(12)
+                .Take(24)
                 .Select(p => new FeedPostViewModel
                 {
                     PostId = p.Id,
@@ -285,10 +502,10 @@ namespace ProjetoEventX.Controllers
                         ? p.PerfilSocial!.NomeExibicao
                         : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : (p.User != null ? p.User.Email ?? "Participante" : "Participante")),
                     FotoPerfilUrl = p.PerfilSocial != null && !string.IsNullOrWhiteSpace(p.PerfilSocial.FotoPerfilUrl)
-                        ? p.PerfilSocial.FotoPerfilUrl
+                        ? NormalizarUrlImagemPerfil(p.PerfilSocial.FotoPerfilUrl)
                         : FotoPerfilPadrao,
                     Legenda = p.Legenda,
-                    ImagemUrl = string.IsNullOrWhiteSpace(p.ImagemUrl) ? ImagemPostPadrao : p.ImagemUrl,
+                    ImagemUrl = NormalizarUrlImagemPost(p.ImagemUrl),
                     Categoria = p.Categoria,
                     TipoConteudo = p.TipoConteudo,
                     Localizacao = p.Localizacao,
@@ -309,7 +526,8 @@ namespace ProjetoEventX.Controllers
                 .Where(p => p.Ativo)
                 .OrderByDescending(p => p.Curtidas.Count)
                 .ThenByDescending(p => p.Comentarios.Count(c => c.Ativo))
-                .Take(12)
+                .ThenByDescending(p => p.CriadoEm)
+                .Take(24)
                 .Select(p => new FeedPostViewModel
                 {
                     PostId = p.Id,
@@ -317,10 +535,10 @@ namespace ProjetoEventX.Controllers
                         ? p.PerfilSocial!.NomeExibicao
                         : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : (p.User != null ? p.User.Email ?? "Participante" : "Participante")),
                     FotoPerfilUrl = p.PerfilSocial != null && !string.IsNullOrWhiteSpace(p.PerfilSocial.FotoPerfilUrl)
-                        ? p.PerfilSocial.FotoPerfilUrl
+                        ? NormalizarUrlImagemPerfil(p.PerfilSocial.FotoPerfilUrl)
                         : FotoPerfilPadrao,
                     Legenda = p.Legenda,
-                    ImagemUrl = string.IsNullOrWhiteSpace(p.ImagemUrl) ? ImagemPostPadrao : p.ImagemUrl,
+                    ImagemUrl = NormalizarUrlImagemPost(p.ImagemUrl),
                     Categoria = p.Categoria,
                     TipoConteudo = p.TipoConteudo,
                     Localizacao = p.Localizacao,
@@ -336,63 +554,325 @@ namespace ProjetoEventX.Controllers
                 })
                 .ToListAsync();
 
+            var eventosDestaque = await _context.Eventos
+                .AsNoTracking()
+                .OrderByDescending(e => _context.SocialPosts.Count(p => p.Ativo && p.EventoId == e.Id))
+                .ThenByDescending(e => e.DataEvento)
+                .Take(10)
+                .Select(e => new ExplorarEventoCardViewModel
+                {
+                    EventoId = e.Id,
+                    NomeEvento = e.NomeEvento,
+                    TipoEvento = e.TipoEvento,
+                    DataEvento = e.DataEvento,
+                    ImagemCapa = string.IsNullOrWhiteSpace(e.ImagemCapa) ? ImagemPostPadrao : e.ImagemCapa,
+                    TotalPostsRelacionados = _context.SocialPosts.Count(p => p.Ativo && p.EventoId == e.Id)
+                })
+                .ToListAsync();
+
+            var fornecedoresPopulares = await _context.PerfisSociais
+                .AsNoTracking()
+                .Where(p => p.TipoPerfil == "Fornecedor")
+                .OrderByDescending(p => p.Posts.Count)
+                .Take(10)
+                .Select(p => new ExplorarPerfilCardViewModel
+                {
+                    PerfilId = p.Id,
+                    NomeExibicao = p.NomeExibicao,
+                    TipoPerfil = p.TipoPerfil,
+                    Cidade = p.Cidade,
+                    Bio = p.Bio,
+                    FotoPerfilUrl = NormalizarUrlImagemPerfil(p.FotoPerfilUrl),
+                    TotalPosts = p.Posts.Count
+                })
+                .ToListAsync();
+
+            var organizadoresDestaque = await _context.PerfisSociais
+                .AsNoTracking()
+                .Where(p => p.TipoPerfil == "Organizador")
+                .OrderByDescending(p => p.Posts.Count)
+                .Take(10)
+                .Select(p => new ExplorarPerfilCardViewModel
+                {
+                    PerfilId = p.Id,
+                    NomeExibicao = p.NomeExibicao,
+                    TipoPerfil = p.TipoPerfil,
+                    Cidade = p.Cidade,
+                    Bio = p.Bio,
+                    FotoPerfilUrl = NormalizarUrlImagemPerfil(p.FotoPerfilUrl),
+                    TotalPosts = p.Posts.Count
+                })
+                .ToListAsync();
+
+            var templatesEmAlta = await _context.TemplatesConvites
+                .AsNoTracking()
+                .Where(t => t.Ativo)
+                .OrderByDescending(t => t.UpdatedAt)
+                .Take(12)
+                .Select(t => new ExplorarTemplateCardViewModel
+                {
+                    TemplateId = t.Id,
+                    EventoId = t.EventoId,
+                    NomeTemplate = t.Nome,
+                    Categoria = string.IsNullOrWhiteSpace(t.Estilo) ? "template" : t.Estilo!,
+                    Estilo = string.IsNullOrWhiteSpace(t.Estilo) ? "editor visual" : t.Estilo!,
+                    ThumbnailUrl = ImagemPostPadrao,
+                    AtualizadoEm = t.UpdatedAt,
+                    LinkEditor = t.EventoId.HasValue
+                        ? Url.Action("Editor", "Convite", new { eventoId = t.EventoId.Value, templateId = t.Id }) ?? "#"
+                        : "#"
+                })
+                .ToListAsync();
+
+            var storiesBase = await _context.Stories
+                .AsNoTracking()
+                .Where(s => s.Ativo && s.ExpireAt > DateTime.UtcNow)
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(20)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.CreatedAt,
+                    s.MediaUrl,
+                    s.UserId,
+                    PerfilId = s.PerfilSocialId
+                })
+                .ToListAsync();
+
+            var storiesIds = storiesBase.Select(s => s.Id).ToList();
+            var storiesViews = await _context.StoryViews
+                .AsNoTracking()
+                .Where(v => storiesIds.Contains(v.StoryId))
+                .GroupBy(v => v.StoryId)
+                .Select(g => new { StoryId = g.Key, Total = g.Count() })
+                .ToDictionaryAsync(x => x.StoryId, x => x.Total);
+            var storiesReactions = await _context.StoryReactions
+                .AsNoTracking()
+                .Where(r => storiesIds.Contains(r.StoryId))
+                .GroupBy(r => r.StoryId)
+                .Select(g => new { StoryId = g.Key, Total = g.Count() })
+                .ToDictionaryAsync(x => x.StoryId, x => x.Total);
+
+            var perfisStoriesIds = storiesBase
+                .Select(s => int.TryParse(s.UserId, out var uid) ? uid : (int?)null)
+                .Where(x => x.HasValue)
+                .Select(x => x!.Value)
+                .Distinct()
+                .ToList();
+            var perfisStories = await _context.PerfisSociais
+                .AsNoTracking()
+                .Where(p => perfisStoriesIds.Contains(p.UserId))
+                .ToListAsync();
+            var perfilByUserId = perfisStories.ToDictionary(p => p.UserId, p => p);
+
+            var storiesDestaque = storiesBase
+                .Select(s =>
+                {
+                    perfilByUserId.TryGetValue(int.TryParse(s.UserId, out var uid) ? uid : -1, out var perfilStory);
+                    var views = storiesViews.TryGetValue(s.Id, out var totalViews) ? totalViews : 0;
+                    var reacoes = storiesReactions.TryGetValue(s.Id, out var totalReacoes) ? totalReacoes : 0;
+                    var perfilId = s.PerfilId ?? perfilStory?.Id ?? 0;
+                    return new ExplorarStoryCardViewModel
+                    {
+                        StoryId = s.Id,
+                        PerfilId = perfilId,
+                        NomePerfil = perfilStory?.NomeExibicao ?? "Perfil",
+                        FotoPerfilUrl = NormalizarUrlImagemPerfil(perfilStory?.FotoPerfilUrl),
+                        CapaUrl = SocialImagemHelper.NormalizePublicImageUrl(s.MediaUrl, ImagemPostPadrao),
+                        CriadoEm = s.CreatedAt,
+                        Visualizacoes = views,
+                        Reacoes = reacoes
+                    };
+                })
+                .Where(s => s.PerfilId > 0)
+                .OrderByDescending(s => (s.Visualizacoes * 2) + (s.Reacoes * 3))
+                .ThenByDescending(s => s.CriadoEm)
+                .Take(12)
+                .ToList();
+
+            var categoriasPadrao = new List<string>
+            {
+                "casamento", "aniversário", "corporativo", "formatura", "show", "infantil",
+                "buffet", "decoração", "fotografia", "música", "fornecedores", "templates", "stories"
+            };
+
+            var sugestoesBusca = recentes
+                .SelectMany(p => new[] { p.NomeAutor, p.NomeEvento, p.Categoria, p.Cidade })
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x!.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(10)
+                .ToList();
+
+            IEnumerable<FeedPostViewModel> recentesFiltrados = recentes;
+            IEnumerable<FeedPostViewModel> popularesFiltrados = populares;
+            IEnumerable<ExplorarEventoCardViewModel> eventosFiltrados = eventosDestaque;
+            IEnumerable<ExplorarPerfilCardViewModel> fornecedoresFiltrados = fornecedoresPopulares;
+            IEnumerable<ExplorarPerfilCardViewModel> organizadoresFiltrados = organizadoresDestaque;
+            IEnumerable<ExplorarTemplateCardViewModel> templatesFiltrados = templatesEmAlta;
+            IEnumerable<ExplorarStoryCardViewModel> storiesFiltrados = storiesDestaque;
+
+            if (!string.IsNullOrWhiteSpace(buscaNormalizada))
+            {
+                var termo = buscaNormalizada.ToLowerInvariant();
+                recentesFiltrados = recentesFiltrados.Where(p =>
+                    (!string.IsNullOrWhiteSpace(p.NomeEvento) && p.NomeEvento!.ToLowerInvariant().Contains(termo))
+                    || (!string.IsNullOrWhiteSpace(p.NomeAutor) && p.NomeAutor.ToLowerInvariant().Contains(termo))
+                    || (!string.IsNullOrWhiteSpace(p.Categoria) && p.Categoria!.ToLowerInvariant().Contains(termo))
+                    || (!string.IsNullOrWhiteSpace(p.Cidade) && p.Cidade!.ToLowerInvariant().Contains(termo))
+                    || (!string.IsNullOrWhiteSpace(p.Legenda) && p.Legenda.ToLowerInvariant().Contains(termo)));
+                popularesFiltrados = popularesFiltrados.Where(p =>
+                    (!string.IsNullOrWhiteSpace(p.NomeEvento) && p.NomeEvento!.ToLowerInvariant().Contains(termo))
+                    || (!string.IsNullOrWhiteSpace(p.NomeAutor) && p.NomeAutor.ToLowerInvariant().Contains(termo))
+                    || (!string.IsNullOrWhiteSpace(p.Categoria) && p.Categoria!.ToLowerInvariant().Contains(termo))
+                    || (!string.IsNullOrWhiteSpace(p.Cidade) && p.Cidade!.ToLowerInvariant().Contains(termo))
+                    || (!string.IsNullOrWhiteSpace(p.Legenda) && p.Legenda.ToLowerInvariant().Contains(termo)));
+                eventosFiltrados = eventosFiltrados.Where(e =>
+                    e.NomeEvento.ToLowerInvariant().Contains(termo)
+                    || e.TipoEvento.ToLowerInvariant().Contains(termo));
+                fornecedoresFiltrados = fornecedoresFiltrados.Where(f =>
+                    f.NomeExibicao.ToLowerInvariant().Contains(termo)
+                    || (!string.IsNullOrWhiteSpace(f.Cidade) && f.Cidade!.ToLowerInvariant().Contains(termo))
+                    || (!string.IsNullOrWhiteSpace(f.Bio) && f.Bio!.ToLowerInvariant().Contains(termo)));
+                organizadoresFiltrados = organizadoresFiltrados.Where(f =>
+                    f.NomeExibicao.ToLowerInvariant().Contains(termo)
+                    || (!string.IsNullOrWhiteSpace(f.Cidade) && f.Cidade!.ToLowerInvariant().Contains(termo))
+                    || (!string.IsNullOrWhiteSpace(f.Bio) && f.Bio!.ToLowerInvariant().Contains(termo)));
+                templatesFiltrados = templatesFiltrados.Where(t =>
+                    t.NomeTemplate.ToLowerInvariant().Contains(termo)
+                    || t.Categoria.ToLowerInvariant().Contains(termo)
+                    || t.Estilo.ToLowerInvariant().Contains(termo));
+                storiesFiltrados = storiesFiltrados.Where(s =>
+                    s.NomePerfil.ToLowerInvariant().Contains(termo));
+            }
+
+            if (!string.IsNullOrWhiteSpace(categoriaNormalizada))
+            {
+                if (categoriaNormalizada is "stories")
+                {
+                    recentesFiltrados = Enumerable.Empty<FeedPostViewModel>();
+                    popularesFiltrados = Enumerable.Empty<FeedPostViewModel>();
+                    eventosFiltrados = Enumerable.Empty<ExplorarEventoCardViewModel>();
+                    fornecedoresFiltrados = Enumerable.Empty<ExplorarPerfilCardViewModel>();
+                    organizadoresFiltrados = Enumerable.Empty<ExplorarPerfilCardViewModel>();
+                    templatesFiltrados = Enumerable.Empty<ExplorarTemplateCardViewModel>();
+                }
+                else if (categoriaNormalizada is "fornecedores")
+                {
+                    recentesFiltrados = Enumerable.Empty<FeedPostViewModel>();
+                    popularesFiltrados = Enumerable.Empty<FeedPostViewModel>();
+                    eventosFiltrados = Enumerable.Empty<ExplorarEventoCardViewModel>();
+                    templatesFiltrados = Enumerable.Empty<ExplorarTemplateCardViewModel>();
+                    storiesFiltrados = Enumerable.Empty<ExplorarStoryCardViewModel>();
+                }
+                else if (categoriaNormalizada is "templates")
+                {
+                    recentesFiltrados = Enumerable.Empty<FeedPostViewModel>();
+                    popularesFiltrados = Enumerable.Empty<FeedPostViewModel>();
+                    eventosFiltrados = Enumerable.Empty<ExplorarEventoCardViewModel>();
+                    fornecedoresFiltrados = Enumerable.Empty<ExplorarPerfilCardViewModel>();
+                    organizadoresFiltrados = Enumerable.Empty<ExplorarPerfilCardViewModel>();
+                    storiesFiltrados = Enumerable.Empty<ExplorarStoryCardViewModel>();
+                }
+                else
+                {
+                    recentesFiltrados = recentesFiltrados.Where(p =>
+                        (!string.IsNullOrWhiteSpace(p.Categoria) && p.Categoria!.ToLowerInvariant().Contains(categoriaNormalizada))
+                        || (!string.IsNullOrWhiteSpace(p.Legenda) && p.Legenda.ToLowerInvariant().Contains(categoriaNormalizada)));
+                    popularesFiltrados = popularesFiltrados.Where(p =>
+                        (!string.IsNullOrWhiteSpace(p.Categoria) && p.Categoria!.ToLowerInvariant().Contains(categoriaNormalizada))
+                        || (!string.IsNullOrWhiteSpace(p.Legenda) && p.Legenda.ToLowerInvariant().Contains(categoriaNormalizada)));
+                    eventosFiltrados = eventosFiltrados.Where(e =>
+                        e.TipoEvento.ToLowerInvariant().Contains(categoriaNormalizada)
+                        || e.NomeEvento.ToLowerInvariant().Contains(categoriaNormalizada));
+                    templatesFiltrados = templatesFiltrados.Where(t =>
+                        t.Categoria.ToLowerInvariant().Contains(categoriaNormalizada)
+                        || t.Estilo.ToLowerInvariant().Contains(categoriaNormalizada));
+                }
+            }
+
+            var descobertaVisual = new List<ExplorarVisualItemViewModel>();
+            descobertaVisual.AddRange(popularesFiltrados.Take(12).Select((p, index) => new ExplorarVisualItemViewModel
+            {
+                Tipo = "post",
+                Titulo = string.IsNullOrWhiteSpace(p.NomeEvento) ? p.NomeAutor : p.NomeEvento!,
+                Subtitulo = p.Categoria,
+                ImagemUrl = p.ImagemUrl,
+                Link = Url.Action("Post", "Social", new { id = p.PostId }) ?? "#",
+                Badge = "post",
+                Score = (p.TotalCurtidas * 3) + (p.TotalComentarios * 2),
+                Destaque = index % 5 == 0,
+                IsVideo = !string.IsNullOrWhiteSpace(p.TipoConteudo) && p.TipoConteudo.Contains("video", StringComparison.OrdinalIgnoreCase),
+                IsMulti = !string.IsNullOrWhiteSpace(p.Categoria) && p.Categoria.Contains("carrossel", StringComparison.OrdinalIgnoreCase)
+            }));
+            descobertaVisual.AddRange(eventosFiltrados.Take(6).Select((e, index) => new ExplorarVisualItemViewModel
+            {
+                Tipo = "evento",
+                Titulo = e.NomeEvento,
+                Subtitulo = $"{e.TipoEvento} · {e.DataEvento:dd/MM}",
+                ImagemUrl = string.IsNullOrWhiteSpace(e.ImagemCapa) ? ImagemPostPadrao : e.ImagemCapa!,
+                Link = Url.Action("Evento", "Social", new { eventoId = e.EventoId }) ?? "#",
+                Badge = "evento",
+                Score = (e.TotalPostsRelacionados * 4) + (index == 0 ? 10 : 0),
+                Destaque = index == 0
+            }));
+            descobertaVisual.AddRange(templatesFiltrados.Take(6).Select((t, index) => new ExplorarVisualItemViewModel
+            {
+                Tipo = "template",
+                Titulo = t.NomeTemplate,
+                Subtitulo = t.Estilo,
+                ImagemUrl = t.ThumbnailUrl,
+                Link = t.LinkEditor,
+                Badge = "template",
+                Score = 20 - index,
+                Destaque = index == 0
+            }));
+            descobertaVisual.AddRange(storiesFiltrados.Take(4).Select((s, index) => new ExplorarVisualItemViewModel
+            {
+                Tipo = "story",
+                Titulo = s.NomePerfil,
+                Subtitulo = $"{s.Visualizacoes} views",
+                ImagemUrl = s.CapaUrl,
+                Link = Url.Action("Perfil", "Social", new { id = s.PerfilId }) ?? "#",
+                Badge = "story",
+                Score = (s.Visualizacoes * 2) + (s.Reacoes * 3),
+                Destaque = index == 0
+            }));
+            descobertaVisual = descobertaVisual
+                .OrderByDescending(x => x.Score)
+                .ThenByDescending(x => x.Destaque)
+                .Take(36)
+                .ToList();
+
+            var inspiracoes = new List<ExplorarInspiracaoCardViewModel>
+            {
+                new() { Titulo = "Noivas minimalistas", Categoria = "casamento", ImagemUrl = descobertaVisual.FirstOrDefault()?.ImagemUrl ?? ImagemPostPadrao, Link = Url.Action("Explorar", "Social", new { categoria = "casamento" }) ?? "#" },
+                new() { Titulo = "Decoração quente", Categoria = "decoração", ImagemUrl = descobertaVisual.Skip(1).FirstOrDefault()?.ImagemUrl ?? ImagemPostPadrao, Link = Url.Action("Explorar", "Social", new { categoria = "decoração" }) ?? "#" },
+                new() { Titulo = "Corporativo premium", Categoria = "corporativo", ImagemUrl = descobertaVisual.Skip(2).FirstOrDefault()?.ImagemUrl ?? ImagemPostPadrao, Link = Url.Action("Explorar", "Social", new { categoria = "corporativo" }) ?? "#" },
+                new() { Titulo = "Convites criativos", Categoria = "templates", ImagemUrl = descobertaVisual.Skip(3).FirstOrDefault()?.ImagemUrl ?? ImagemPostPadrao, Link = Url.Action("Explorar", "Social", new { categoria = "templates" }) ?? "#" }
+            };
+
             var model = new ExplorarViewModel
             {
-                PostsRecentes = recentes,
-                PostsPopulares = populares,
-                PerfisOrganizadores = await _context.PerfisSociais
-                    .AsNoTracking()
-                    .Where(p => p.TipoPerfil == "Organizador")
-                    .OrderByDescending(p => p.Posts.Count)
-                    .Take(8)
-                    .Select(p => new ExplorarPerfilCardViewModel
-                    {
-                        PerfilId = p.Id,
-                        NomeExibicao = p.NomeExibicao,
-                        TipoPerfil = p.TipoPerfil,
-                        Cidade = p.Cidade,
-                        Bio = p.Bio,
-                        FotoPerfilUrl = p.FotoPerfilUrl,
-                        TotalPosts = p.Posts.Count
-                    })
-                    .ToListAsync(),
-                PerfisFornecedores = await _context.PerfisSociais
-                    .AsNoTracking()
-                    .Where(p => p.TipoPerfil == "Fornecedor")
-                    .OrderByDescending(p => p.Posts.Count)
-                    .Take(8)
-                    .Select(p => new ExplorarPerfilCardViewModel
-                    {
-                        PerfilId = p.Id,
-                        NomeExibicao = p.NomeExibicao,
-                        TipoPerfil = p.TipoPerfil,
-                        Cidade = p.Cidade,
-                        Bio = p.Bio,
-                        FotoPerfilUrl = p.FotoPerfilUrl,
-                        TotalPosts = p.Posts.Count
-                    })
-                    .ToListAsync(),
-                EventosDestaque = await _context.Eventos
-                    .AsNoTracking()
-                    .OrderByDescending(e => _context.SocialPosts.Count(p => p.Ativo && p.EventoId == e.Id))
-                    .ThenByDescending(e => e.DataEvento)
-                    .Take(8)
-                    .Select(e => new ExplorarEventoCardViewModel
-                    {
-                        EventoId = e.Id,
-                        NomeEvento = e.NomeEvento,
-                        TipoEvento = e.TipoEvento,
-                        DataEvento = e.DataEvento,
-                        ImagemCapa = e.ImagemCapa,
-                        TotalPostsRelacionados = _context.SocialPosts.Count(p => p.Ativo && p.EventoId == e.Id)
-                    })
-                    .ToListAsync(),
-                CategoriasDestaque = new List<string>(CategoriasExplorar)
-                {
-                    "música", "making of", "bastidores"
-                },
-                TotalPostsRecentes = recentes.Count,
-                TotalPostsPopulares = populares.Count
+                Busca = buscaNormalizada,
+                CategoriaAtiva = categoriaNormalizada,
+                PostsRecentes = recentesFiltrados.Take(18).ToList(),
+                PostsPopulares = popularesFiltrados.Take(18).ToList(),
+                OrganizadoresDestaque = organizadoresFiltrados.Take(8).ToList(),
+                FornecedoresPopulares = fornecedoresFiltrados.Take(8).ToList(),
+                EventosEmAlta = eventosFiltrados.Take(8).ToList(),
+                TemplatesEmAlta = templatesFiltrados.Take(8).ToList(),
+                StoriesDestaque = storiesFiltrados.Take(10).ToList(),
+                Inspiracoes = inspiracoes,
+                DescobertaVisual = descobertaVisual,
+                CategoriasDestaque = categoriasPadrao,
+                SugestoesBusca = sugestoesBusca,
+                TotalPostsRecentes = recentesFiltrados.Count(),
+                TotalPostsPopulares = popularesFiltrados.Count(),
+                TotalEventosEmAlta = eventosFiltrados.Count(),
+                TotalFornecedoresPopulares = fornecedoresFiltrados.Count(),
+                TotalTemplatesEmAlta = templatesFiltrados.Count(),
+                TotalStoriesDestaque = storiesFiltrados.Count()
             };
 
             return View(model);
@@ -403,7 +883,6 @@ namespace ProjetoEventX.Controllers
         public async Task<IActionResult> Perfil(int id)
         {
             var perfil = await _context.PerfisSociais
-                .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (perfil == null)
@@ -416,6 +895,11 @@ namespace ProjetoEventX.Controllers
                 .Where(p => p.PerfilSocialId == id && p.Ativo)
                 .OrderByDescending(p => p.CriadoEm)
                 .ToListAsync();
+
+            var videos = posts
+                .Where(p => !string.IsNullOrWhiteSpace(p.TipoConteudo)
+                    && p.TipoConteudo!.Contains("video", StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
             var totalCurtidas = await _context.SocialCurtidas
                 .AsNoTracking()
@@ -430,32 +914,57 @@ namespace ProjetoEventX.Controllers
                 .Take(8)
                 .ToListAsync();
 
-            var storiesAtivos = await _context.SocialStatus
+            var storiesAtivosRaw = await _context.Stories
                 .AsNoTracking()
-                .Where(s => s.Ativo && s.PerfilSocialId == id && s.ExpiraEm > DateTime.UtcNow)
-                .OrderByDescending(s => s.CriadoEm)
-                .Select(s => new SocialStatusItemViewModel
-                {
-                    Id = s.Id,
-                    PerfilId = s.PerfilSocialId,
-                    UserId = s.UserId,
-                    NomePerfil = !string.IsNullOrWhiteSpace(s.PerfilSocial != null ? s.PerfilSocial.NomeExibicao : null)
-                        ? s.PerfilSocial!.NomeExibicao
-                        : (!string.IsNullOrWhiteSpace(s.User != null ? s.User.UserName : null) ? s.User!.UserName! : (s.User != null ? s.User.Email ?? "Participante" : "Participante")),
-                    FotoPerfilUrl = s.PerfilSocial != null && !string.IsNullOrWhiteSpace(s.PerfilSocial.FotoPerfilUrl)
-                        ? s.PerfilSocial.FotoPerfilUrl
-                        : FotoPerfilPadrao,
-                    ImagemUrl = s.ImagemUrl,
-                    TextoOverlay = s.TextoOverlay,
-                    CriadoEm = s.CriadoEm,
-                    Visualizado = false,
-                    SequenciaNoPerfil = 1,
-                    TotalNoPerfil = 1
-                })
+                .Where(s => s.UserId == perfil.UserId.ToString() && s.ExpireAt > DateTime.UtcNow && s.Ativo)
+                .Include(s => s.Evento)
+                .Include(s => s.SharedPost)
+                .OrderByDescending(s => s.CreatedAt)
+                .ToListAsync();
+
+            var storyIdsPerfil = storiesAtivosRaw.Select(s => s.Id).ToList();
+            var storyViewsPerfil = await _context.StoryViews
+                .AsNoTracking()
+                .Where(v => storyIdsPerfil.Contains(v.StoryId))
+                .ToListAsync();
+            var storyReactionsPerfil = await _context.StoryReactions
+                .AsNoTracking()
+                .Where(r => storyIdsPerfil.Contains(r.StoryId))
                 .ToListAsync();
 
             var perfilAtual = await ObterUsuarioAtualAsync();
             var ehDono = perfilAtual != null && perfilAtual.Id == perfil.UserId;
+            var usuarioPerfil = perfilAtual != null
+                ? await _context.PerfisSociais.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == perfilAtual.Id)
+                : null;
+
+            var totalSeguidores = await _context.PerfilSocialFollows
+                .AsNoTracking()
+                .CountAsync(f => f.SeguindoPerfilId == perfil.Id);
+            var totalSeguindo = await _context.PerfilSocialFollows
+                .AsNoTracking()
+                .CountAsync(f => f.SeguidorPerfilId == perfil.Id);
+            var usuarioSegue = usuarioPerfil != null && await _context.PerfilSocialFollows
+                .AsNoTracking()
+                .AnyAsync(f => f.SeguidorPerfilId == usuarioPerfil.Id && f.SeguindoPerfilId == perfil.Id);
+
+            var storiesAtivos = storiesAtivosRaw.Select(s =>
+            {
+                var totalViews = storyViewsPerfil.Count(v => v.StoryId == s.Id);
+                var totalReactions = storyReactionsPerfil.Count(r => r.StoryId == s.Id);
+                return StoryToStatusItemViewModel(
+                    s,
+                    perfil,
+                    false,
+                    totalViews,
+                    totalReactions,
+                    storyReactionsPerfil
+                        .Where(r => r.StoryId == s.Id)
+                        .GroupBy(r => r.ReactionType.ToLowerInvariant())
+                        .ToDictionary(g => g.Key, g => g.Count()),
+                    isOwner: ehDono,
+                    userReaction: null);
+            }).ToList();
 
             var postsSalvos = new List<FeedPostViewModel>();
             if (ehDono)
@@ -472,10 +981,10 @@ namespace ProjetoEventX.Controllers
                             ? s.Post.PerfilSocial.NomeExibicao
                             : (s.Post != null && s.Post.User != null && !string.IsNullOrWhiteSpace(s.Post.User.UserName) ? s.Post.User.UserName! : "Participante"),
                         FotoPerfilUrl = s.Post != null && s.Post.PerfilSocial != null && !string.IsNullOrWhiteSpace(s.Post.PerfilSocial.FotoPerfilUrl)
-                            ? s.Post.PerfilSocial.FotoPerfilUrl
+                            ? NormalizarUrlImagemPerfil(s.Post.PerfilSocial.FotoPerfilUrl)
                             : FotoPerfilPadrao,
                         Legenda = s.Post != null ? s.Post.Legenda : string.Empty,
-                        ImagemUrl = s.Post == null || string.IsNullOrWhiteSpace(s.Post.ImagemUrl) ? ImagemPostPadrao : s.Post.ImagemUrl,
+                        ImagemUrl = s.Post == null ? ImagemPostPadrao : NormalizarUrlImagemPost(s.Post.ImagemUrl),
                         Categoria = s.Post != null ? s.Post.Categoria : null,
                         TipoConteudo = s.Post != null ? s.Post.TipoConteudo : null,
                         Localizacao = s.Post != null ? s.Post.Localizacao : null,
@@ -493,29 +1002,155 @@ namespace ProjetoEventX.Controllers
                     .ToListAsync();
             }
 
+            var highlights = await _context.StoryHighlights
+                .AsNoTracking()
+                .Where(h => h.UserId == perfil.UserId.ToString())
+                .Select(h => new StoryHighlightViewModel
+                {
+                    Id = h.Id,
+                    Nome = h.Nome,
+                    CapaUrl = string.IsNullOrWhiteSpace(h.CapaUrl) ? ImagemPostPadrao : h.CapaUrl!,
+                    TotalStories = _context.StoryHighlightItems.Count(i => i.HighlightId == h.Id),
+                    PrimeiroStoryId = _context.StoryHighlightItems
+                        .Where(i => i.HighlightId == h.Id)
+                        .OrderBy(i => i.Ordem)
+                        .Select(i => (int?)i.StoryId)
+                        .FirstOrDefault(),
+                    PerfilId = perfil.Id
+                })
+                .ToListAsync();
+
+            var postsEventosIds = eventosVinculados.Select(e => e.Id).ToHashSet();
+            var listaEventos = eventosVinculados
+                .OrderByDescending(e => e.DataEvento)
+                .ToList();
+            var listaMarcados = posts
+                .Where(p => p.EventoId.HasValue && postsEventosIds.Contains(p.EventoId.Value))
+                .ToList();
+
+            var usuarioPerfilIdentity = perfil.User;
+            if (usuarioPerfilIdentity == null)
+            {
+                usuarioPerfilIdentity = await _userManager.FindByIdAsync(perfil.UserId.ToString());
+            }
+
+            var usernameRaw = !string.IsNullOrWhiteSpace(usuarioPerfilIdentity?.UserName)
+                ? (string.IsNullOrWhiteSpace(perfil.Username) ? usuarioPerfilIdentity.UserName : perfil.Username)
+                : (!string.IsNullOrWhiteSpace(perfil.Username)
+                    ? perfil.Username
+                    : (perfil.NomeExibicao ?? string.Empty).Trim().ToLowerInvariant().Replace(" ", "."));
+            var username = NormalizarUsername(usernameRaw);
+            var nomeReal = string.Empty;
+            if (!string.IsNullOrWhiteSpace(usuarioPerfilIdentity?.Email))
+            {
+                nomeReal = usuarioPerfilIdentity.Email.Split('@')[0].Replace('.', ' ').Replace('_', ' ');
+                nomeReal = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(nomeReal.ToLowerInvariant());
+            }
+            var linkPrincipal = !string.IsNullOrWhiteSpace(perfil.Site) ? perfil.Site : perfil.Instagram;
+            if (!string.IsNullOrWhiteSpace(linkPrincipal)
+                && !linkPrincipal.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                && !linkPrincipal.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                linkPrincipal = $"https://{linkPrincipal}";
+            }
+
             var model = new PerfilSocialViewModel
             {
                 Id = perfil.Id,
                 NomeExibicao = perfil.NomeExibicao,
                 Bio = perfil.Bio,
                 FotoPerfilUrl = string.IsNullOrWhiteSpace(perfil.FotoPerfilUrl) ? FotoPerfilPadrao : perfil.FotoPerfilUrl,
+                AvatarUrl = NormalizarUrlImagemPerfil(perfil.FotoPerfilUrl),
                 TipoPerfil = perfil.TipoPerfil,
+                CategoriaPerfil = perfil.TipoPerfil,
                 Cidade = perfil.Cidade,
                 Instagram = perfil.Instagram,
                 Site = perfil.Site,
+                Link = linkPrincipal,
+                NomeReal = nomeReal,
+                Username = username,
+                NomeUsuario = ResolverIdentidadePrincipal(perfil, usuarioPerfilIdentity),
                 TotalPosts = posts.Count,
                 TotalCurtidasRecebidas = totalCurtidas,
                 TotalStoriesAtivos = storiesAtivos.Count,
+                TotalVisualizacoesStoriesRecentes = storyViewsPerfil.Count,
+                TotalDestaques = highlights.Count,
+                TotalEngajamentoStories = storiesAtivos.Sum(s => s.EngagementScore),
                 TotalEventosRelacionados = eventosVinculados.Count,
+                TotalSeguidores = totalSeguidores,
+                TotalSeguindo = totalSeguindo,
+                UsuarioSegue = usuarioSegue,
                 EhPerfilDoUsuarioLogado = ehDono,
-                UsernamePublico = $"@{(perfil.NomeExibicao ?? string.Empty).Trim().ToLowerInvariant().Replace(" ", ".")}",
+                UsernamePublico = username,
                 ListaPosts = posts,
+                ListaVideos = videos,
+                ListaMarcados = listaMarcados,
+                ListaEventos = listaEventos,
                 EventosVinculados = eventosVinculados,
                 StoriesAtivos = storiesAtivos,
-                PostsSalvos = postsSalvos
+                Highlights = highlights,
+                Destaques = highlights,
+                PostsSalvos = postsSalvos,
+                ListaSalvos = postsSalvos
             };
 
             return View(model);
+        }
+
+        [HttpPost("Social/Perfil/AlternarFollow")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AlternarFollowPerfil([FromForm] int perfilId)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var meuPerfil = await _context.PerfisSociais.FirstOrDefaultAsync(p => p.UserId == usuario.Id);
+            var perfilAlvo = await _context.PerfisSociais.FirstOrDefaultAsync(p => p.Id == perfilId);
+            if (meuPerfil == null || perfilAlvo == null)
+            {
+                return NotFound();
+            }
+
+            if (meuPerfil.Id == perfilAlvo.Id)
+            {
+                return BadRequest(new { ok = false, message = "Você não pode seguir o próprio perfil." });
+            }
+
+            var relacionamento = await _context.PerfilSocialFollows
+                .FirstOrDefaultAsync(f => f.SeguidorPerfilId == meuPerfil.Id && f.SeguindoPerfilId == perfilAlvo.Id);
+
+            bool seguindo;
+            if (relacionamento == null)
+            {
+                _context.PerfilSocialFollows.Add(new PerfilSocialFollow
+                {
+                    SeguidorPerfilId = meuPerfil.Id,
+                    SeguindoPerfilId = perfilAlvo.Id,
+                    CriadoEm = DateTime.UtcNow
+                });
+                seguindo = true;
+            }
+            else
+            {
+                _context.PerfilSocialFollows.Remove(relacionamento);
+                seguindo = false;
+            }
+
+            await _context.SaveChangesAsync();
+
+            var totalSeguidores = await _context.PerfilSocialFollows
+                .AsNoTracking()
+                .CountAsync(f => f.SeguindoPerfilId == perfilAlvo.Id);
+
+            return Json(new
+            {
+                ok = true,
+                seguindo,
+                totalSeguidores
+            });
         }
 
         [HttpGet]
@@ -545,8 +1180,9 @@ namespace ProjetoEventX.Controllers
             {
                 Id = perfil.Id,
                 NomeExibicao = perfil.NomeExibicao,
+                Username = NormalizarUsername(perfil.Username),
                 Bio = perfil.Bio,
-                FotoPerfilUrl = perfil.FotoPerfilUrl,
+                FotoPerfilUrl = NormalizarUrlImagemPerfil(perfil.FotoPerfilUrl),
                 TipoPerfil = perfil.TipoPerfil,
                 Cidade = perfil.Cidade,
                 Instagram = perfil.Instagram,
@@ -578,6 +1214,9 @@ namespace ProjetoEventX.Controllers
             }
 
             perfil.NomeExibicao = model.NomeExibicao;
+            perfil.Username = string.IsNullOrWhiteSpace(model.Username)
+                ? null
+                : model.Username.Trim().TrimStart('@');
             perfil.Bio = model.Bio;
             perfil.Cidade = model.Cidade;
             perfil.Instagram = model.Instagram;
@@ -585,11 +1224,11 @@ namespace ProjetoEventX.Controllers
             perfil.AtualizadoEm = DateTime.UtcNow;
 
             if (model.NovaFotoPerfil != null)
-            {
-                try
                 {
-                    perfil.FotoPerfilUrl = await SalvarArquivoSocialAsync(model.NovaFotoPerfil, PastaUploadPerfis);
-                }
+                    try
+                    {
+                        perfil.FotoPerfilUrl = await SalvarArquivoSocialAsync(model.NovaFotoPerfil, PastaUploadPerfis, FotoPerfilPadrao);
+                    }
                 catch (InvalidOperationException ex)
                 {
                     ModelState.AddModelError(nameof(model.NovaFotoPerfil), ex.Message);
@@ -632,7 +1271,7 @@ namespace ProjetoEventX.Controllers
             try
             {
                 imagemUrl = model.Imagem != null
-                    ? await SalvarArquivoSocialAsync(model.Imagem, PastaUploadPosts)
+                    ? await SalvarArquivoSocialAsync(model.Imagem, PastaUploadPosts, ImagemPostPadrao)
                     : ImagemPostPadrao;
             }
             catch (InvalidOperationException ex)
@@ -711,16 +1350,19 @@ namespace ProjetoEventX.Controllers
                         NomePerfil = !string.IsNullOrWhiteSpace(s.PerfilSocial != null ? s.PerfilSocial.NomeExibicao : null)
                             ? s.PerfilSocial!.NomeExibicao
                             : (!string.IsNullOrWhiteSpace(s.User != null ? s.User.UserName : null) ? s.User!.UserName! : (s.User != null ? s.User.Email ?? "Participante" : "Participante")),
-                        FotoPerfilUrl = s.PerfilSocial != null && !string.IsNullOrWhiteSpace(s.PerfilSocial.FotoPerfilUrl)
-                            ? s.PerfilSocial.FotoPerfilUrl
+                    FotoPerfilUrl = s.PerfilSocial != null && !string.IsNullOrWhiteSpace(s.PerfilSocial.FotoPerfilUrl)
+                            ? NormalizarUrlImagemPerfil(s.PerfilSocial.FotoPerfilUrl)
                             : FotoPerfilPadrao,
-                        ImagemUrl = s.ImagemUrl,
+                        ImagemUrl = NormalizarUrlImagemPost(s.ImagemUrl),
                         TextoOverlay = s.TextoOverlay,
                         CriadoEm = s.CriadoEm,
                         Visualizado = usuarioAtual != null && s.Visualizacoes.Any(v => v.UserId == usuarioAtual.Id)
-                    })
+                })
                     .ToListAsync()
             };
+
+            model.Post.ImagemUrl = NormalizarUrlImagemPost(model.Post.ImagemUrl);
+            model.Perfil.FotoPerfilUrl = NormalizarUrlImagemPerfil(model.Perfil.FotoPerfilUrl);
 
             return View(model);
         }
@@ -739,6 +1381,11 @@ namespace ProjetoEventX.Controllers
                 .Where(p => p.UserId == usuario.Id && p.Ativo)
                 .OrderByDescending(p => p.CriadoEm)
                 .ToListAsync();
+
+            foreach (var post in posts)
+            {
+                post.ImagemUrl = NormalizarUrlImagemPost(post.ImagemUrl);
+            }
 
             return View(posts);
         }
@@ -1068,10 +1715,10 @@ namespace ProjetoEventX.Controllers
                         ? p.PerfilSocial!.NomeExibicao
                         : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : (p.User != null ? p.User.Email ?? "Participante" : "Participante")),
                     FotoPerfilUrl = p.PerfilSocial != null && !string.IsNullOrWhiteSpace(p.PerfilSocial.FotoPerfilUrl)
-                        ? p.PerfilSocial.FotoPerfilUrl
+                        ? NormalizarUrlImagemPerfil(p.PerfilSocial.FotoPerfilUrl)
                         : FotoPerfilPadrao,
                     Legenda = p.Legenda,
-                    ImagemUrl = string.IsNullOrWhiteSpace(p.ImagemUrl) ? ImagemPostPadrao : p.ImagemUrl,
+                    ImagemUrl = NormalizarUrlImagemPost(p.ImagemUrl),
                     Categoria = p.Categoria,
                     TipoConteudo = p.TipoConteudo,
                     Localizacao = p.Localizacao,
@@ -1165,10 +1812,10 @@ namespace ProjetoEventX.Controllers
                             ? s.Post!.User!.UserName!
                             : (s.Post != null && s.Post.User != null ? s.Post.User.Email ?? "Participante" : "Participante")),
                     FotoPerfilUrl = s.Post != null && s.Post.PerfilSocial != null && !string.IsNullOrWhiteSpace(s.Post.PerfilSocial.FotoPerfilUrl)
-                        ? s.Post.PerfilSocial.FotoPerfilUrl
+                        ? NormalizarUrlImagemPerfil(s.Post.PerfilSocial.FotoPerfilUrl)
                         : FotoPerfilPadrao,
                     Legenda = s.Post != null ? s.Post.Legenda : string.Empty,
-                    ImagemUrl = s.Post == null || string.IsNullOrWhiteSpace(s.Post.ImagemUrl) ? ImagemPostPadrao : s.Post.ImagemUrl,
+                    ImagemUrl = s.Post == null ? ImagemPostPadrao : NormalizarUrlImagemPost(s.Post.ImagemUrl),
                     Categoria = s.Post != null ? s.Post.Categoria : null,
                     TipoConteudo = s.Post != null ? s.Post.TipoConteudo : null,
                     Localizacao = s.Post != null ? s.Post.Localizacao : null,
@@ -1198,29 +1845,7 @@ namespace ProjetoEventX.Controllers
                 await GarantirPerfilSocialAsync(usuario);
             }
 
-            var stories = await _context.SocialStatus
-                .AsNoTracking()
-                .Where(s => s.Ativo && s.ExpiraEm > DateTime.UtcNow)
-                .OrderByDescending(s => s.CriadoEm)
-                .Select(s => new SocialStatusItemViewModel
-                {
-                    Id = s.Id,
-                    PerfilId = s.PerfilSocialId,
-                    UserId = s.UserId,
-                    NomePerfil = !string.IsNullOrWhiteSpace(s.PerfilSocial != null ? s.PerfilSocial.NomeExibicao : null)
-                        ? s.PerfilSocial!.NomeExibicao
-                        : (!string.IsNullOrWhiteSpace(s.User != null ? s.User.UserName : null) ? s.User!.UserName! : (s.User != null ? s.User.Email ?? "Participante" : "Participante")),
-                    FotoPerfilUrl = s.PerfilSocial != null && !string.IsNullOrWhiteSpace(s.PerfilSocial.FotoPerfilUrl)
-                        ? s.PerfilSocial.FotoPerfilUrl
-                        : FotoPerfilPadrao,
-                    ImagemUrl = s.ImagemUrl,
-                    TextoOverlay = s.TextoOverlay,
-                    CriadoEm = s.CriadoEm,
-                    Visualizado = usuarioId.HasValue && s.Visualizacoes.Any(v => v.UserId == usuarioId.Value),
-                    SequenciaNoPerfil = 1,
-                    TotalNoPerfil = 1
-                })
-                .ToListAsync();
+            var stories = await ObterStoriesAtivosAsync(usuarioId);
 
             var agrupados = stories
                 .GroupBy(s => s.PerfilId)
@@ -1241,6 +1866,248 @@ namespace ProjetoEventX.Controllers
             return Json(agrupados);
         }
 
+        [HttpGet("Social/Story/Create")]
+        public async Task<IActionResult> StoryCreate()
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var recentes = await _context.SocialPosts
+                .AsNoTracking()
+                .Where(p => p.UserId == usuario.Id && p.Ativo && !string.IsNullOrWhiteSpace(p.ImagemUrl))
+                .OrderByDescending(p => p.CriadoEm)
+                .Select(p => p.ImagemUrl)
+                .Take(18)
+                .ToListAsync();
+
+            var model = new StoryCreateViewModel
+            {
+                MidiasRecentes = recentes
+                    .Select(url => SocialImagemHelper.NormalizePublicImageUrl(url, ImagemPostPadrao))
+                    .ToList()
+            };
+
+            return View("StoryCreate", model);
+        }
+
+        [HttpGet("Social/Story/SharePost/{postId:int}")]
+        public async Task<IActionResult> StorySharePost(int postId)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var post = await _context.SocialPosts
+                .AsNoTracking()
+                .Where(p => p.Id == postId && p.Ativo)
+                .Select(p => new FeedPostViewModel
+                {
+                    PostId = p.Id,
+                    NomeAutor = !string.IsNullOrWhiteSpace(p.PerfilSocial != null ? p.PerfilSocial.NomeExibicao : null)
+                        ? p.PerfilSocial!.NomeExibicao
+                        : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : "Participante"),
+                    FotoPerfilUrl = p.PerfilSocial != null && !string.IsNullOrWhiteSpace(p.PerfilSocial.FotoPerfilUrl)
+                        ? NormalizarUrlImagemPerfil(p.PerfilSocial.FotoPerfilUrl)
+                        : FotoPerfilPadrao,
+                    Legenda = p.Legenda,
+                    ImagemUrl = NormalizarUrlImagemPost(p.ImagemUrl),
+                    DataCriacao = p.CriadoEm,
+                    TipoPerfil = p.PerfilSocial != null ? p.PerfilSocial.TipoPerfil : "Convidado",
+                    PerfilId = p.PerfilSocialId
+                })
+                .FirstOrDefaultAsync();
+
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            var model = new StoryEditorViewModel
+            {
+                MediaUrl = post.ImagemUrl,
+                SharedPostId = post.PostId,
+                SharedPost = post,
+                EventosDisponiveis = await ObterEventosSelectListAsync()
+            };
+
+            return View("StoryEditor", model);
+        }
+
+        [HttpPost("Social/Story/Upload")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> StoryUpload(IFormFile? arquivo)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            if (arquivo == null)
+            {
+                TempData["ErrorMessage"] = "Selecione uma imagem para continuar.";
+                return RedirectToAction(nameof(StoryCreate));
+            }
+
+            string mediaUrl;
+            try
+            {
+                mediaUrl = await SalvarArquivoSocialAsync(arquivo, PastaUploadStories, ImagemPostPadrao);
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                return RedirectToAction(nameof(StoryCreate));
+            }
+
+            return RedirectToAction(nameof(StoryEditor), new { mediaUrl });
+        }
+
+        [HttpGet("Social/Story/Editor")]
+        public async Task<IActionResult> StoryEditor(string mediaUrl)
+        {
+            if (string.IsNullOrWhiteSpace(mediaUrl))
+            {
+                return RedirectToAction(nameof(StoryCreate));
+            }
+
+            var model = new StoryEditorViewModel
+            {
+                MediaUrl = SocialImagemHelper.NormalizePublicImageUrl(mediaUrl, ImagemPostPadrao),
+                EventosDisponiveis = await ObterEventosSelectListAsync()
+            };
+
+            return View("StoryEditor", model);
+        }
+
+        [HttpPost("Social/Story/Publish")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> StoryPublish(StoryEditorViewModel model)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            if (string.IsNullOrWhiteSpace(model.MediaUrl))
+            {
+                TempData["ErrorMessage"] = "Mídia inválida para publicar o story.";
+                return RedirectToAction(nameof(StoryCreate));
+            }
+
+            var perfil = await GarantirPerfilSocialAsync(usuario);
+
+            if (model.EventoId.HasValue)
+            {
+                var eventoExiste = await _context.Eventos.AnyAsync(e => e.Id == model.EventoId.Value);
+                if (!eventoExiste)
+                {
+                    TempData["ErrorMessage"] = "Evento selecionado é inválido.";
+                    return RedirectToAction(nameof(StoryCreate));
+                }
+            }
+
+            var story = new Story
+            {
+                UserId = usuario.Id.ToString(),
+                PerfilSocialId = perfil.Id,
+                MediaUrl = SocialImagemHelper.NormalizePublicImageUrl(model.MediaUrl, ImagemPostPadrao),
+                TextOverlay = string.IsNullOrWhiteSpace(model.TextOverlay) ? string.Empty : model.TextOverlay.Trim(),
+                CreatedAt = DateTime.UtcNow,
+                ExpireAt = DateTime.UtcNow.AddHours(24),
+                EventoId = model.EventoId,
+                SharedPostId = model.SharedPostId,
+                Ativo = true
+            };
+            _context.Stories.Add(story);
+            await _context.SaveChangesAsync();
+
+            var storyId = story.Id;
+
+            if (!string.IsNullOrWhiteSpace(model.TextOverlay))
+            {
+                var normalized = model.TextOverlay!;
+                var explicitMentions = new List<string>();
+                if (!string.IsNullOrWhiteSpace(model.MentionsSerialized))
+                {
+                    try
+                    {
+                        explicitMentions = JsonSerializer.Deserialize<List<string>>(model.MentionsSerialized) ?? new List<string>();
+                    }
+                    catch (JsonException)
+                    {
+                        explicitMentions = new List<string>();
+                    }
+                }
+
+                var allMentionTokens = MentionRegex.Matches(normalized)
+                    .Select(m => m.Groups[1].Value)
+                    .Concat(explicitMentions)
+                    .Select(x => x.Trim().TrimStart('@').ToLowerInvariant())
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct()
+                    .Take(12)
+                    .ToList();
+
+                if (allMentionTokens.Count > 0)
+                {
+                    var mencionados = await _context.PerfisSociais
+                        .Where(p => allMentionTokens.Contains(p.NomeExibicao.ToLower()))
+                        .Take(12)
+                        .ToListAsync();
+
+                    foreach (var perfilMencionado in mencionados)
+                    {
+                        _context.StoryMentions.Add(new StoryMention
+                        {
+                            StoryId = storyId,
+                            MentionedUserId = perfilMencionado.UserId.ToString(),
+                            MentionedPerfilId = perfilMencionado.Id,
+                            MentionText = $"@{perfilMencionado.NomeExibicao}",
+                            CreatedAt = DateTime.UtcNow
+                        });
+
+                        if (perfilMencionado.UserId != usuario.Id)
+                        {
+                            await CriarNotificacaoSocialAsync(
+                                perfilMencionado.UserId,
+                                "Você foi mencionado em um story",
+                                $"{perfil.NomeExibicao} mencionou você em um story.",
+                                "StoryMention",
+                                Url.Action(nameof(Stories), "Social"));
+                        }
+                    }
+                }
+            }
+
+            if (model.SharedPostId.HasValue)
+            {
+                var ownerPostUserId = await _context.SocialPosts
+                    .AsNoTracking()
+                    .Where(p => p.Id == model.SharedPostId.Value)
+                    .Select(p => p.UserId)
+                    .FirstOrDefaultAsync();
+
+                if (ownerPostUserId > 0 && ownerPostUserId != usuario.Id)
+                {
+                    await CriarNotificacaoSocialAsync(
+                        ownerPostUserId,
+                        "Seu post foi compartilhado em um story",
+                        $"{perfil.NomeExibicao} compartilhou seu post em um story.",
+                        "StoryShare",
+                        Url.Action(nameof(Post), "Social", new { id = model.SharedPostId.Value }));
+                }
+            }
+
+            return RedirectToAction(nameof(Feed));
+        }
+
         [HttpGet]
         public async Task<IActionResult> Stories()
         {
@@ -1249,38 +2116,481 @@ namespace ProjetoEventX.Controllers
             {
                 await GarantirPerfilSocialAsync(usuarioAtual);
             }
-            var stories = await _context.SocialStatus
+            var stories = await ObterStoriesAtivosAsync(usuarioAtual?.Id);
+
+            foreach (var story in stories)
+            {
+                story.ImagemUrl = NormalizarUrlImagemPost(story.ImagemUrl);
+                story.FotoPerfilUrl = NormalizarUrlImagemPerfil(story.FotoPerfilUrl);
+            }
+            return View(stories);
+        }
+
+        [HttpGet("Social/Story/Views/{storyId:int}")]
+        public async Task<IActionResult> StoryViews(int storyId)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var storyOwner = await _context.Stories
                 .AsNoTracking()
-                .Where(s => s.Ativo && s.ExpiraEm > DateTime.UtcNow)
-                .OrderByDescending(s => s.CriadoEm)
-                .Select(s => new SocialStatusItemViewModel
+                .Where(s => s.Id == storyId)
+                .Select(s => s.UserId)
+                .FirstOrDefaultAsync();
+
+            if (storyOwner == null)
+            {
+                return NotFound();
+            }
+
+            if (storyOwner != usuario.Id.ToString())
+            {
+                return Forbid();
+            }
+
+            var viewsRaw = await _context.StoryViews
+                .AsNoTracking()
+                .Where(v => v.StoryId == storyId)
+                .OrderByDescending(v => v.ViewedAt)
+                .ToListAsync();
+
+            var viewerIds = viewsRaw
+                .Select(v => int.TryParse(v.UserId, out var parsed) ? parsed : (int?)null)
+                .Where(v => v.HasValue)
+                .Select(v => v!.Value)
+                .Distinct()
+                .ToList();
+            var perfis = await _context.PerfisSociais
+                .AsNoTracking()
+                .Where(p => viewerIds.Contains(p.UserId))
+                .ToListAsync();
+            var perfisPorUserId = perfis.ToDictionary(p => p.UserId.ToString(), p => p);
+
+            var views = viewsRaw.Select(v =>
+            {
+                perfisPorUserId.TryGetValue(v.UserId, out var perfilViewer);
+                return new StoryViewerViewModel
                 {
-                    Id = s.Id,
-                    PerfilId = s.PerfilSocialId,
-                    UserId = s.UserId,
-                    NomePerfil = !string.IsNullOrWhiteSpace(s.PerfilSocial != null ? s.PerfilSocial.NomeExibicao : null)
-                        ? s.PerfilSocial!.NomeExibicao
-                        : (!string.IsNullOrWhiteSpace(s.User != null ? s.User.UserName : null) ? s.User!.UserName! : (s.User != null ? s.User.Email ?? "Participante" : "Participante")),
-                    FotoPerfilUrl = s.PerfilSocial != null && !string.IsNullOrWhiteSpace(s.PerfilSocial.FotoPerfilUrl)
-                        ? s.PerfilSocial.FotoPerfilUrl
-                        : FotoPerfilPadrao,
-                    ImagemUrl = s.ImagemUrl,
-                    TextoOverlay = s.TextoOverlay,
-                    CriadoEm = s.CriadoEm,
-                    Visualizado = usuarioAtual != null && s.Visualizacoes.Any(v => v.UserId == usuarioAtual.Id),
-                    SequenciaNoPerfil = 1,
-                    TotalNoPerfil = 1
+                    NomeExibicao = string.IsNullOrWhiteSpace(perfilViewer?.NomeExibicao) ? "Participante" : perfilViewer.NomeExibicao,
+                    FotoPerfilUrl = NormalizarUrlImagemPerfil(perfilViewer?.FotoPerfilUrl),
+                    TipoPerfil = string.IsNullOrWhiteSpace(perfilViewer?.TipoPerfil) ? "Convidado" : perfilViewer!.TipoPerfil,
+                    ViewedAt = v.ViewedAt
+                };
+            }).ToList();
+
+            return PartialView("Partials/_StoryViewsModal", views);
+        }
+
+        [HttpPost("Social/Story/React/{storyId:int}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> StoryReact(int storyId, [FromForm] string reactionType)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var normalizedReaction = (reactionType ?? string.Empty).Trim().ToLowerInvariant();
+            if (!TiposReacaoPermitidos.Contains(normalizedReaction))
+            {
+                return BadRequest(new { ok = false, message = "Reação inválida." });
+            }
+
+            var story = await _context.Stories
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == storyId && s.ExpireAt > DateTime.UtcNow && s.Ativo);
+            if (story == null)
+            {
+                return NotFound(new { ok = false, message = "Story não encontrado." });
+            }
+
+            var reaction = await _context.StoryReactions
+                .FirstOrDefaultAsync(r => r.StoryId == storyId && r.UserId == usuario.Id.ToString());
+
+            if (reaction == null)
+            {
+                _context.StoryReactions.Add(new StoryReaction
+                {
+                    StoryId = storyId,
+                    UserId = usuario.Id.ToString(),
+                    ReactionType = normalizedReaction,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+            else if (!string.Equals(reaction.ReactionType, normalizedReaction, StringComparison.OrdinalIgnoreCase))
+            {
+                reaction.ReactionType = normalizedReaction;
+                reaction.CreatedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+
+            var grouped = await _context.StoryReactions
+                .AsNoTracking()
+                .Where(r => r.StoryId == storyId)
+                .GroupBy(r => r.ReactionType.ToLower())
+                .Select(g => new { Tipo = g.Key, Total = g.Count() })
+                .ToListAsync();
+
+            return Json(new
+            {
+                ok = true,
+                userReaction = normalizedReaction,
+                totalReactions = grouped.Sum(x => x.Total),
+                byType = grouped.ToDictionary(x => x.Tipo, x => x.Total)
+            });
+        }
+
+        [HttpPost("Social/Story/Reply/{storyId:int}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> StoryReply(int storyId, [FromForm] string message)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var texto = (message ?? string.Empty).Trim();
+            if (texto.Length is < 1 or > 1000)
+            {
+                return BadRequest(new { ok = false, message = "Mensagem inválida." });
+            }
+
+            var story = await _context.Stories
+                .AsNoTracking()
+                .Include(s => s.PerfilSocial)
+                .FirstOrDefaultAsync(s => s.Id == storyId && s.ExpireAt > DateTime.UtcNow && s.Ativo);
+            if (story == null)
+            {
+                return NotFound(new { ok = false, message = "Story não encontrado." });
+            }
+
+            if (story.UserId == usuario.Id.ToString())
+            {
+                return BadRequest(new { ok = false, message = "Não é possível responder seu próprio story." });
+            }
+
+            _context.StoryReplies.Add(new StoryReply
+            {
+                StoryId = storyId,
+                FromUserId = usuario.Id.ToString(),
+                ToUserId = story.UserId,
+                Message = texto,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            });
+            await _context.SaveChangesAsync();
+
+            var perfilRemetente = await GarantirPerfilSocialAsync(usuario);
+            if (int.TryParse(story.UserId, out var ownerUserId))
+            {
+                await CriarNotificacaoSocialAsync(
+                    ownerUserId,
+                    "Responderam seu story",
+                    $"{perfilRemetente.NomeExibicao} respondeu seu story.",
+                    "StoryReply",
+                    Url.Action(nameof(Stories), "Social"));
+            }
+
+            return Json(new { ok = true });
+        }
+
+        [HttpGet("Social/Story/RepliesInbox")]
+        public async Task<IActionResult> StoryRepliesInbox()
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var replies = await _context.StoryReplies
+                .AsNoTracking()
+                .Where(r => r.ToUserId == usuario.Id.ToString())
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(120)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.StoryId,
+                    r.FromUserId,
+                    r.Message,
+                    r.CreatedAt,
+                    r.IsRead
                 })
                 .ToListAsync();
-            return View(stories);
+
+            var fromIds = replies
+                .Select(r => int.TryParse(r.FromUserId, out var parsed) ? parsed : (int?)null)
+                .Where(x => x.HasValue)
+                .Select(x => x!.Value)
+                .Distinct()
+                .ToList();
+
+            var perfis = await _context.PerfisSociais
+                .AsNoTracking()
+                .Where(p => fromIds.Contains(p.UserId))
+                .ToDictionaryAsync(p => p.UserId);
+
+            var payload = replies.Select(r =>
+            {
+                var parsed = int.TryParse(r.FromUserId, out var uid) ? uid : 0;
+                perfis.TryGetValue(parsed, out var perfil);
+                return new
+                {
+                    r.Id,
+                    r.StoryId,
+                    nome = string.IsNullOrWhiteSpace(perfil?.NomeExibicao) ? "Participante" : perfil.NomeExibicao,
+                    foto = NormalizarUrlImagemPerfil(perfil?.FotoPerfilUrl),
+                    tipo = string.IsNullOrWhiteSpace(perfil?.TipoPerfil) ? "Convidado" : perfil!.TipoPerfil,
+                    r.Message,
+                    r.CreatedAt,
+                    r.IsRead
+                };
+            }).ToList();
+
+            return Json(payload);
+        }
+
+        [HttpGet("Social/Story/MentionSearch")]
+        public async Task<IActionResult> StoryMentionSearch([FromQuery] string q)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var termo = (q ?? string.Empty).Trim();
+            if (termo.Length < 1)
+            {
+                return Json(Array.Empty<object>());
+            }
+
+            var results = await _context.PerfisSociais
+                .AsNoTracking()
+                .Where(p => !string.IsNullOrWhiteSpace(p.NomeExibicao) && p.NomeExibicao.ToLower().Contains(termo.ToLower()))
+                .OrderBy(p => p.NomeExibicao)
+                .Take(8)
+                .Select(p => new
+                {
+                    perfilId = p.Id,
+                    userId = p.UserId,
+                    nome = p.NomeExibicao,
+                    tipo = p.TipoPerfil,
+                    foto = NormalizarUrlImagemPerfil(p.FotoPerfilUrl)
+                })
+                .ToListAsync();
+
+            return Json(results);
+        }
+
+        [HttpPost("Social/Story/Highlight/Create")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> StoryHighlightCreate([FromForm] string nome, [FromForm] string? capaUrl)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var nomeLimpo = (nome ?? string.Empty).Trim();
+            if (nomeLimpo.Length is < 2 or > 100)
+            {
+                return BadRequest(new { ok = false, message = "Nome do destaque inválido." });
+            }
+
+            var highlight = new StoryHighlight
+            {
+                UserId = usuario.Id.ToString(),
+                Nome = nomeLimpo,
+                CapaUrl = string.IsNullOrWhiteSpace(capaUrl) ? null : SocialImagemHelper.NormalizePublicImageUrl(capaUrl, ImagemPostPadrao),
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.StoryHighlights.Add(highlight);
+            await _context.SaveChangesAsync();
+            return Json(new { ok = true, highlightId = highlight.Id });
+        }
+
+        [HttpPost("Social/Story/Highlight/Add")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> StoryHighlightAdd([FromForm] int highlightId, [FromForm] int storyId)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var highlight = await _context.StoryHighlights
+                .FirstOrDefaultAsync(h => h.Id == highlightId && h.UserId == usuario.Id.ToString());
+            if (highlight == null)
+            {
+                return Forbid();
+            }
+
+            var story = await _context.Stories
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == storyId && s.UserId == usuario.Id.ToString());
+            if (story == null)
+            {
+                return Forbid();
+            }
+
+            var exists = await _context.StoryHighlightItems
+                .AnyAsync(i => i.HighlightId == highlightId && i.StoryId == storyId);
+            if (exists)
+            {
+                return Json(new { ok = true, alreadyExists = true });
+            }
+
+            var ordem = await _context.StoryHighlightItems
+                .Where(i => i.HighlightId == highlightId)
+                .Select(i => (int?)i.Ordem)
+                .MaxAsync() ?? 0;
+
+            _context.StoryHighlightItems.Add(new StoryHighlightItem
+            {
+                HighlightId = highlightId,
+                StoryId = storyId,
+                Ordem = ordem + 1
+            });
+
+            if (string.IsNullOrWhiteSpace(highlight.CapaUrl))
+            {
+                highlight.CapaUrl = SocialImagemHelper.NormalizePublicImageUrl(story.MediaUrl, ImagemPostPadrao);
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { ok = true });
+        }
+
+        [HttpGet("Social/Story/Analytics")]
+        public async Task<IActionResult> StoryAnalytics()
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var userStories = await _context.Stories
+                .AsNoTracking()
+                .Include(s => s.Evento)
+                .Where(s => s.UserId == usuario.Id.ToString())
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(120)
+                .ToListAsync();
+
+            var storyIds = userStories.Select(s => s.Id).ToList();
+            var allViews = await _context.StoryViews
+                .AsNoTracking()
+                .Where(v => storyIds.Contains(v.StoryId))
+                .ToListAsync();
+
+            var allReactions = await _context.StoryReactions
+                .AsNoTracking()
+                .Where(r => storyIds.Contains(r.StoryId))
+                .ToListAsync();
+
+            var viewCountByStory = allViews
+                .GroupBy(v => v.StoryId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var reactionCountByStory = allReactions
+                .GroupBy(r => r.StoryId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var perfil = await _context.PerfisSociais.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.UserId == usuario.Id);
+
+            var baseCards = userStories.Select(s =>
+            {
+                var totalViews = viewCountByStory.TryGetValue(s.Id, out var tv) ? tv : 0;
+                var totalReactions = reactionCountByStory.TryGetValue(s.Id, out var tr) ? tr : 0;
+                return StoryToStatusItemViewModel(
+                    s,
+                    perfil ?? new PerfilSocial { Id = 0, UserId = usuario.Id, NomeExibicao = usuario.UserName ?? "Participante", TipoPerfil = usuario.TipoUsuario ?? "Convidado", FotoPerfilUrl = FotoPerfilPadrao },
+                    true,
+                    totalViews,
+                    totalReactions,
+                    allReactions.Where(r => r.StoryId == s.Id)
+                        .GroupBy(r => r.ReactionType.ToLowerInvariant())
+                        .ToDictionary(g => g.Key, g => g.Count()),
+                    true,
+                    null);
+            }).ToList();
+
+            var highlights = await _context.StoryHighlights
+                .AsNoTracking()
+                .Where(h => h.UserId == usuario.Id.ToString())
+                .Select(h => new StoryHighlightViewModel
+                {
+                    Id = h.Id,
+                    Nome = h.Nome,
+                    CapaUrl = string.IsNullOrWhiteSpace(h.CapaUrl) ? ImagemPostPadrao : h.CapaUrl!,
+                    TotalStories = _context.StoryHighlightItems.Count(i => i.HighlightId == h.Id)
+                })
+                .ToListAsync();
+
+            var lastViewerRaw = await _context.StoryViews
+                .AsNoTracking()
+                .Where(v => storyIds.Contains(v.StoryId))
+                .OrderByDescending(v => v.ViewedAt)
+                .Take(12)
+                .ToListAsync();
+
+            var lastViewerIds = lastViewerRaw
+                .Select(v => int.TryParse(v.UserId, out var parsed) ? parsed : (int?)null)
+                .Where(v => v.HasValue)
+                .Select(v => v!.Value)
+                .Distinct()
+                .ToList();
+            var viewerPerfis = await _context.PerfisSociais
+                .AsNoTracking()
+                .Where(p => lastViewerIds.Contains(p.UserId))
+                .ToListAsync();
+            var viewerPerfisPorId = viewerPerfis.ToDictionary(p => p.UserId.ToString(), p => p);
+
+            var lastViewers = lastViewerRaw.Select(v =>
+            {
+                viewerPerfisPorId.TryGetValue(v.UserId, out var perfilViewer);
+                return new StoryViewerViewModel
+                {
+                    NomeExibicao = string.IsNullOrWhiteSpace(perfilViewer?.NomeExibicao) ? "Participante" : perfilViewer.NomeExibicao,
+                    FotoPerfilUrl = NormalizarUrlImagemPerfil(perfilViewer?.FotoPerfilUrl),
+                    TipoPerfil = string.IsNullOrWhiteSpace(perfilViewer?.TipoPerfil) ? "Convidado" : perfilViewer!.TipoPerfil,
+                    ViewedAt = v.ViewedAt
+                };
+            }).ToList();
+
+            var model = new StoryAnalyticsViewModel
+            {
+                TotalStoriesPostados = userStories.Count,
+                TotalVisualizacoes = allViews.Count,
+                TotalReacoes = allReactions.Count,
+                StoryMaisVisto = baseCards.OrderByDescending(x => x.TotalViews).FirstOrDefault(),
+                StoryMaisEngajado = baseCards.OrderByDescending(x => x.EngagementScore).FirstOrDefault(),
+                UltimosViewers = lastViewers,
+                Destaques = highlights
+            };
+
+            return View("Analytics", model);
         }
 
         [HttpGet]
         public async Task<IActionResult> VisualizarStory(int id)
         {
-            var status = await _context.SocialStatus
+            var status = await _context.Stories
                 .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.Id == id && s.Ativo && s.ExpiraEm > DateTime.UtcNow);
+                .FirstOrDefaultAsync(s => s.Id == id && s.ExpireAt > DateTime.UtcNow && s.Ativo);
             if (status == null)
             {
                 return NotFound();
@@ -1289,16 +2599,20 @@ namespace ProjetoEventX.Controllers
             var usuario = await ObterUsuarioAtualAsync();
             if (usuario != null)
             {
-                var jaViu = await _context.SocialStatusVisualizacoes.AnyAsync(v => v.SocialStatusId == id && v.UserId == usuario.Id);
-                if (!jaViu)
+                var ownerId = int.TryParse(status.UserId, out var parsedOwnerId) ? parsedOwnerId : 0;
+                if (ownerId != usuario.Id)
                 {
-                    _context.SocialStatusVisualizacoes.Add(new SocialStatusVisualizacao
+                    var jaViu = await _context.StoryViews.AnyAsync(v => v.StoryId == id && v.UserId == usuario.Id.ToString());
+                    if (!jaViu)
                     {
-                        SocialStatusId = id,
-                        UserId = usuario.Id,
-                        VisualizadoEm = DateTime.UtcNow
-                    });
-                    await _context.SaveChangesAsync();
+                        _context.StoryViews.Add(new StoryView
+                        {
+                            StoryId = id,
+                            UserId = usuario.Id.ToString(),
+                            ViewedAt = DateTime.UtcNow
+                        });
+                        await _context.SaveChangesAsync();
+                    }
                 }
             }
 
@@ -1315,20 +2629,36 @@ namespace ProjetoEventX.Controllers
                 return Challenge();
             }
 
-            var statusExiste = await _context.SocialStatus.AnyAsync(s => s.Id == id && s.Ativo && s.ExpiraEm > DateTime.UtcNow);
+            var statusExiste = await _context.Stories.AnyAsync(s => s.Id == id && s.ExpireAt > DateTime.UtcNow && s.Ativo);
             if (!statusExiste)
             {
                 return NotFound();
             }
 
-            var jaViu = await _context.SocialStatusVisualizacoes.AnyAsync(v => v.SocialStatusId == id && v.UserId == usuario.Id);
+            var statusOwner = await _context.Stories
+                .AsNoTracking()
+                .Where(s => s.Id == id)
+                .Select(s => s.UserId)
+                .FirstOrDefaultAsync();
+
+            if (statusOwner == null)
+            {
+                return NotFound();
+            }
+
+            if (statusOwner == usuario.Id.ToString())
+            {
+                return Ok();
+            }
+
+            var jaViu = await _context.StoryViews.AnyAsync(v => v.StoryId == id && v.UserId == usuario.Id.ToString());
             if (!jaViu)
             {
-                _context.SocialStatusVisualizacoes.Add(new SocialStatusVisualizacao
+                _context.StoryViews.Add(new StoryView
                 {
-                    SocialStatusId = id,
-                    UserId = usuario.Id,
-                    VisualizadoEm = DateTime.UtcNow
+                    StoryId = id,
+                    UserId = usuario.Id.ToString(),
+                    ViewedAt = DateTime.UtcNow
                 });
                 await _context.SaveChangesAsync();
             }
@@ -1346,17 +2676,18 @@ namespace ProjetoEventX.Controllers
                 return Challenge();
             }
 
-            var status = await _context.SocialStatus.FirstOrDefaultAsync(s => s.Id == id && s.Ativo);
+            var status = await _context.Stories.FirstOrDefaultAsync(s => s.Id == id && s.ExpireAt > DateTime.UtcNow && s.Ativo);
             if (status == null)
             {
                 return NotFound();
             }
 
-            if (status.UserId != usuario.Id)
+            if (status.UserId != usuario.Id.ToString())
             {
                 return Forbid();
             }
 
+            status.ExpireAt = DateTime.UtcNow;
             status.Ativo = false;
             await _context.SaveChangesAsync();
 
@@ -1366,57 +2697,14 @@ namespace ProjetoEventX.Controllers
         [HttpGet]
         public async Task<IActionResult> CriarStatus()
         {
-            var usuario = await ObterUsuarioAtualAsync();
-            if (usuario == null)
-            {
-                return Challenge();
-            }
-
-            await GarantirPerfilSocialAsync(usuario);
-            return View();
+            return RedirectToAction(nameof(StoryCreate));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CriarStatus(IFormFile imagem, string? textoOverlay)
         {
-            var usuario = await ObterUsuarioAtualAsync();
-            if (usuario == null)
-            {
-                return Challenge();
-            }
-
-            if (imagem == null)
-            {
-                ModelState.AddModelError("imagem", "A imagem do status é obrigatória.");
-                return View();
-            }
-
-            string imagemUrl;
-            try
-            {
-                imagemUrl = await SalvarArquivoSocialAsync(imagem, PastaUploadStatus);
-            }
-            catch (InvalidOperationException ex)
-            {
-                ModelState.AddModelError("imagem", ex.Message);
-                return View();
-            }
-
-            var perfil = await GarantirPerfilSocialAsync(usuario);
-            _context.SocialStatus.Add(new SocialStatus
-            {
-                UserId = usuario.Id,
-                PerfilSocialId = perfil.Id,
-                ImagemUrl = imagemUrl,
-                TextoOverlay = string.IsNullOrWhiteSpace(textoOverlay) ? null : textoOverlay.Trim(),
-                CriadoEm = DateTime.UtcNow,
-                ExpiraEm = DateTime.UtcNow.AddHours(24),
-                Ativo = true
-            });
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Feed));
+            return await StoryUpload(imagem);
         }
 
         [AllowAnonymous]
@@ -1431,7 +2719,7 @@ namespace ProjetoEventX.Controllers
             return View(eventos);
         }
 
-        private async Task<string> SalvarArquivoSocialAsync(IFormFile arquivo, string pastaRelativa)
+        private async Task<string> SalvarArquivoSocialAsync(IFormFile arquivo, string pastaRelativa, string fallbackUrl)
         {
             if (arquivo.Length <= 0)
             {
@@ -1457,7 +2745,8 @@ namespace ProjetoEventX.Controllers
             await using var stream = new FileStream(caminhoFisico, FileMode.Create);
             await arquivo.CopyToAsync(stream);
 
-            return $"/{pastaRelativa.Replace('\\', '/')}/{nomeArquivo}";
+            var relativeUrl = $"/{pastaRelativa.Replace('\\', '/')}/{nomeArquivo}";
+            return SocialImagemHelper.NormalizePublicImageUrl(relativeUrl, fallbackUrl);
         }
     }
 }
