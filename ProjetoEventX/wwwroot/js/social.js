@@ -30,6 +30,24 @@
 })();
 
 (function () {
+    const searchInput = document.querySelector('[data-explore-search-input]');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            searchInput.value = '';
+        });
+    }
+
+    const chips = document.querySelectorAll('[data-explore-chip]');
+    chips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+            chips.forEach((c) => c.classList.remove('is-active'));
+            chip.classList.add('is-active');
+        });
+    });
+})();
+
+(function () {
     const tabsRoot = document.querySelector('.js-profile-tabs');
     if (tabsRoot) {
         const tabs = Array.from(tabsRoot.querySelectorAll('.profile-tab'));
