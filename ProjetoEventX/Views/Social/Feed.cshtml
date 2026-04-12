@@ -9,6 +9,10 @@
 <section class="social-page social-feed-layout">
     <div class="social-main-column">
         <header class="social-header social-header-premium">
+            <div class="social-mobile-topbar">
+                <strong>EventX Social</strong>
+                <a asp-action="MeuPerfil"><i class="fas fa-user-circle"></i></a>
+            </div>
             <h1>EventX Social</h1>
             <p>o feed principal de bastidores, momentos e histórias dos seus eventos.</p>
             <div class="social-header-actions social-header-actions-wrap">
@@ -22,6 +26,20 @@
         </header>
 
         <partial name="Partials/_StoriesBar" model="Model.Stories" />
+        @if (Model.StoriesEmAlta.Any())
+        {
+            <section class="social-side-card mb-3">
+                <h3>Stories em alta</h3>
+                <div class="social-trend-chips">
+                    @foreach (var story in Model.StoriesEmAlta.Take(5))
+                    {
+                        <a href="#" class="js-story-open" data-story-id="@story.Id" data-perfil-id="@story.PerfilId">
+                            @story.NomePerfil · @story.TotalViews views
+                        </a>
+                    }
+                </div>
+            </section>
+        }
 
         <div id="socialFeedSkeleton" class="social-skeleton-stack @(Model.Posts.Any() ? "" : "d-none")" aria-hidden="true">
             <div class="social-skeleton-card"></div>
@@ -34,6 +52,7 @@
                 <partial name="Partials/_SocialPostCard" model="post" />
             }
         </div>
+        <partial name="Partials/_PostActionsSheet" model="null" />
 
         @if (!Model.Posts.Any())
         {

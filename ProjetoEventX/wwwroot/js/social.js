@@ -1,4 +1,111 @@
 (function () {
+    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+    const overlay = document.querySelector('.js-post-actions-overlay');
+    const sheet = overlay ? overlay.querySelector('.js-post-actions-sheet') : null;
+    const list = overlay ? overlay.querySelector('.js-post-actions-list') : null;
+
+    const toast = (message) => {
+        let el = document.querySelector('.social-toast');
+        if (!el) {
+            el = document.createElement('div');
+            el.className = 'social-toast';
+            document.body.appendChild(el);
+        }
+        el.textContent = message;
+        el.classList.add('is-visible');
+        window.setTimeout(() => el.classList.remove('is-visible'), 1800);
+    };
+
+    const closeActions = () => {
+        if (!overlay) return;
+        overlay.classList.add('d-none');
+        overlay.setAttribute('aria-hidden', 'true');
+        list && (list.innerHTML = '');
+    };
+
+    const csrfHeaders = () => tokenInput ? { 'RequestVerificationToken': tokenInput.value } : {};
+
+    const postAction = async (url, method = 'POST') => {
+        const response = await fetch(url, {
+            method,
+            headers: { 'X-Requested-With': 'XMLHttpRequest', ...csrfHeaders() }
+        });
+        return response.ok ? response.json() : { ok: false };
+    };
+
+    const buildActionButton = (cfg) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `post-actions-item ${cfg.destructive ? 'is-destructive' : ''}`;
+        btn.innerHTML = `<i class="${cfg.icon}"></i><span>${cfg.label}</span>`;
+        btn.addEventListener('click', cfg.onClick);
+        return btn;
+    };
+
+    const openActions = (trigger) => {
+        if (!overlay || !sheet || !list) return;
+        const isOwner = trigger.dataset.isOwner === '1';
+        const saveUrl = trigger.dataset.saveUrl;
+        const postUrl = trigger.dataset.postUrl;
+        const editUrl = trigger.dataset.editUrl;
+        const pinUrl = trigger.dataset.pinUrl;
+        const archiveUrl = trigger.dataset.archiveUrl;
+        const deleteUrl = trigger.dataset.deleteUrl;
+        const toggleLikesUrl = trigger.dataset.toggleLikesUrl;
+        const toggleSharesUrl = trigger.dataset.toggleSharesUrl;
+        const toggleCommentsUrl = trigger.dataset.toggleCommentsUrl;
+        const eventUrl = trigger.dataset.eventUrl;
+        const profileUrl = trigger.dataset.profileUrl;
+        list.innerHTML = '';
+
+        const base = [
+            { icon: 'far fa-bookmark', label: 'Salvar publicação', onClick: async () => { const r = await postAction(saveUrl); toast(r.message || 'Publicação salva.'); closeActions(); } },
+            { icon: 'fas fa-share-nodes', label: 'Compartilhar', onClick: async () => { if (navigator.share) { try { await navigator.share({ url: postUrl }); } catch { } } else { await navigator.clipboard.writeText(postUrl); toast('Link copiado para compartilhamento.'); } closeActions(); } },
+            { icon: 'fas fa-link', label: 'Copiar link', onClick: async () => { await navigator.clipboard.writeText(postUrl); toast('Link copiado.'); closeActions(); } }
+        ];
+
+        if (isOwner) {
+            base.push(
+                { icon: 'fas fa-pen', label: 'Editar publicação', onClick: () => { window.location.href = editUrl; } },
+                { icon: 'fas fa-thumbtack', label: 'Fixar no perfil', onClick: async () => { const r = await postAction(pinUrl); toast(r.message || 'Estado atualizado.'); closeActions(); } },
+                { icon: 'fas fa-calendar-days', label: 'Vincular/trocar evento', onClick: () => { window.location.href = editUrl; } },
+                { icon: 'fas fa-heart-slash', label: 'Ocultar número de curtidas', onClick: async () => { const r = await postAction(toggleLikesUrl); toast(r.message || 'Estado atualizado.'); closeActions(); } },
+                { icon: 'fas fa-share-from-square', label: 'Ocultar compartilhamentos', onClick: async () => { const r = await postAction(toggleSharesUrl); toast(r.message || 'Estado atualizado.'); closeActions(); } },
+                { icon: 'fas fa-comments-slash', label: 'Desativar comentários', onClick: async () => { const r = await postAction(toggleCommentsUrl); toast(r.message || 'Estado atualizado.'); closeActions(); } },
+                { icon: 'fas fa-box-archive', label: 'Arquivar publicação', onClick: async () => { const r = await postAction(archiveUrl); toast(r.message || 'Publicação arquivada.'); closeActions(); window.location.reload(); } },
+                { icon: 'fas fa-trash', label: 'Excluir publicação', destructive: true, onClick: async () => { const ok = window.confirm('Excluir esta publicação?'); if (!ok) return; const r = await postAction(deleteUrl); toast(r.message || 'Publicação excluída.'); closeActions(); window.location.reload(); } }
+            );
+        } else {
+            base.push(
+                { icon: 'fas fa-calendar-check', label: 'Ver evento relacionado', onClick: () => { if (eventUrl) window.location.href = eventUrl; else toast('Sem evento relacionado.'); } },
+                { icon: 'fas fa-user-plus', label: 'Seguir perfil', onClick: () => { if (profileUrl) window.location.href = profileUrl; } },
+                { icon: 'fas fa-volume-xmark', label: 'Silenciar perfil', onClick: () => { toast('Perfil silenciado.'); closeActions(); } },
+                { icon: 'fas fa-flag', label: 'Denunciar publicação', destructive: true, onClick: () => { toast('Denúncia registrada.'); closeActions(); } }
+            );
+        }
+
+        base.forEach((cfg) => list.appendChild(buildActionButton(cfg)));
+        overlay.classList.remove('d-none');
+        overlay.setAttribute('aria-hidden', 'false');
+    };
+
+    document.querySelectorAll('.js-post-actions-open').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openActions(btn);
+        });
+    });
+
+    overlay?.addEventListener('click', (e) => {
+        if (e.target === overlay) closeActions();
+    });
+    document.querySelectorAll('.js-post-actions-close').forEach((btn) => btn.addEventListener('click', closeActions));
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeActions();
+    });
+})();
+
+(function () {
     const input = document.querySelector('[data-social-preview-input]');
     const target = document.querySelector('[data-social-preview-target]');
 

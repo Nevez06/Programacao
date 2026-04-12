@@ -2,18 +2,41 @@
 
 <article class="social-card social-post-card">
     <div class="social-card-header">
-        <img src="@Model.FotoPerfilUrl" alt="perfil" class="social-avatar" />
+        <img src="@Model.FotoPerfilUrl"
+             alt="perfil"
+             class="social-avatar"
+             loading="lazy"
+             onerror="this.onerror=null;this.src='/uploads/social/defaults/default-profile.svg';" />
         <div class="social-author-meta">
             <a asp-controller="Social" asp-action="Perfil" asp-route-id="@Model.PerfilId" class="social-author">@Model.NomeAutor</a>
             <small>@Model.TipoPerfil @(!string.IsNullOrWhiteSpace(Model.Cidade) ? $"· {Model.Cidade}" : "") · @Model.DataCriacao.ToLocalTime().ToString("dd/MM HH:mm")</small>
         </div>
-        <button type="button" class="social-post-more" aria-label="Mais opções">
+        <button type="button"
+                class="social-post-more js-post-actions-open"
+                aria-label="Mais opções"
+                data-post-id="@Model.PostId"
+                data-is-owner="@(Model.IsOwner ? "1" : "0")"
+                data-post-url="@Url.Action("Post", "Social", new { id = Model.PostId }, Context.Request.Scheme)"
+                data-save-url="@Url.Action(Model.UsuarioSalvou ? "RemoverSalvo" : "SalvarPost", "Social", new { id = Model.PostId })"
+                data-edit-url="@Url.Action("EditarPost", "Social", new { id = Model.PostId })"
+                data-pin-url="@Url.Action("AlternarFixadoPost", "Social", new { id = Model.PostId })"
+                data-archive-url="@Url.Action("AlternarArquivamentoPost", "Social", new { id = Model.PostId })"
+                data-delete-url="@Url.Action("ExcluirPost", "Social", new { id = Model.PostId })"
+                data-toggle-likes-url="@Url.Action("AlternarOcultarCurtidasPost", "Social", new { id = Model.PostId })"
+                data-toggle-shares-url="@Url.Action("AlternarOcultarCompartilhamentosPost", "Social", new { id = Model.PostId })"
+                data-toggle-comments-url="@Url.Action("AlternarComentariosPost", "Social", new { id = Model.PostId })"
+                data-event-url="@(Model.EventoId.HasValue ? Url.Action("Evento", "Social", new { eventoId = Model.EventoId.Value }) : string.Empty)"
+                data-profile-url="@Url.Action("Perfil", "Social", new { id = Model.PerfilId })">
             <i class="fas fa-ellipsis-h"></i>
         </button>
     </div>
 
     <a asp-controller="Social" asp-action="Post" asp-route-id="@Model.PostId" class="social-post-image-link">
-        <img src="@Model.ImagemUrl" alt="imagem do post" class="social-post-image social-post-image-lg" />
+        <img src="@Model.ImagemUrl"
+             alt="post @Model.PostId"
+             class="social-post-image social-post-image-lg"
+             loading="lazy"
+             onerror="this.onerror=null;this.classList.add('is-broken');this.src='/uploads/social/defaults/default-post.svg';" />
     </a>
 
     <div class="social-card-body">
@@ -39,7 +62,7 @@
         <p class="social-caption">@Model.Legenda</p>
 
         <div class="social-post-stats">
-            <strong><span data-like-count="@Model.PostId">@Model.TotalCurtidas</span> curtidas</strong>
+            <strong><span data-like-count="@Model.PostId">@(Model.HideLikesCount ? "—" : Model.TotalCurtidas)</span> curtidas</strong>
             <small><span data-comment-count="@Model.PostId">@Model.TotalComentarios</span> comentários</small>
         </div>
 
@@ -60,6 +83,9 @@
             <button type="button" class="btn btn-sm btn-outline-info js-share-btn" data-share-url="@Url.Action("Post", "Social", new { id = Model.PostId }, Context.Request.Scheme)">
                 <i class="fas fa-share"></i> compartilhar
             </button>
+            <a asp-controller="Social" asp-action="StorySharePost" asp-route-postId="@Model.PostId" class="btn btn-sm btn-outline-light">
+                <i class="fas fa-circle-play"></i> no story
+            </a>
 
             @if (Model.UsuarioSalvou)
             {

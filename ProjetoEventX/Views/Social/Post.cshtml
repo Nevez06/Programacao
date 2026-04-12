@@ -7,14 +7,40 @@
 <section class="social-page narrow">
     <article class="social-card">
         <div class="social-card-header">
-            <img src="@Model.Perfil.FotoPerfilUrl" alt="perfil" class="social-avatar" />
+            <img src="@Model.Perfil.FotoPerfilUrl"
+                 alt="perfil"
+                 class="social-avatar"
+                 loading="lazy"
+                 onerror="this.onerror=null;this.src='/uploads/social/defaults/default-profile.svg';" />
             <div>
                 <a asp-action="Perfil" asp-route-id="@Model.Perfil.Id" class="social-author">@Model.NomeAutor</a>
                 <small>@Model.TipoPerfil @(!string.IsNullOrWhiteSpace(Model.Cidade) ? $"· {Model.Cidade}" : "") · @Model.Post.CriadoEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
             </div>
+            <button type="button"
+                    class="social-post-more js-post-actions-open"
+                    aria-label="Mais opções"
+                    data-post-id="@Model.Post.Id"
+                    data-is-owner="@(Model.IsOwner ? "1" : "0")"
+                    data-post-url="@Url.Action("Post", "Social", new { id = Model.Post.Id }, Context.Request.Scheme)"
+                    data-save-url="@Url.Action(Model.UsuarioSalvou ? "RemoverSalvo" : "SalvarPost", "Social", new { id = Model.Post.Id })"
+                    data-edit-url="@Url.Action("EditarPost", "Social", new { id = Model.Post.Id })"
+                    data-pin-url="@Url.Action("AlternarFixadoPost", "Social", new { id = Model.Post.Id })"
+                    data-archive-url="@Url.Action("AlternarArquivamentoPost", "Social", new { id = Model.Post.Id })"
+                    data-delete-url="@Url.Action("ExcluirPost", "Social", new { id = Model.Post.Id })"
+                    data-toggle-likes-url="@Url.Action("AlternarOcultarCurtidasPost", "Social", new { id = Model.Post.Id })"
+                    data-toggle-shares-url="@Url.Action("AlternarOcultarCompartilhamentosPost", "Social", new { id = Model.Post.Id })"
+                    data-toggle-comments-url="@Url.Action("AlternarComentariosPost", "Social", new { id = Model.Post.Id })"
+                    data-event-url="@(Model.EventoRelacionado != null ? Url.Action("Evento", "Social", new { eventoId = Model.EventoRelacionado.Id }) : string.Empty)"
+                    data-profile-url="@Url.Action("Perfil", "Social", new { id = Model.Perfil.Id })">
+                <i class="fas fa-ellipsis-h"></i>
+            </button>
         </div>
 
-        <img src="@Model.Post.ImagemUrl" alt="imagem post" class="social-post-image" />
+        <img src="@Model.Post.ImagemUrl"
+             alt="post @Model.Post.Id"
+             class="social-post-image"
+             loading="lazy"
+             onerror="this.onerror=null;this.classList.add('is-broken');this.src='/uploads/social/defaults/default-post.svg';" />
 
         <div class="social-card-body">
             <p>@Model.Post.Legenda</p>
@@ -33,7 +59,7 @@
             <div class="social-actions">
                 <form asp-action="Curtir" asp-route-id="@Model.Post.Id" method="post">
                     @Html.AntiForgeryToken()
-                    <button class="btn btn-sm btn-outline-danger" type="submit">curtir (@Model.TotalCurtidas)</button>
+                    <button class="btn btn-sm btn-outline-danger" type="submit">curtir (@(Model.Post.HideLikesCount ? "—" : Model.TotalCurtidas.ToString()))</button>
                 </form>
                 <form asp-action="Descurtir" asp-route-id="@Model.Post.Id" method="post">
                     @Html.AntiForgeryToken()
@@ -53,17 +79,26 @@
                         <button class="btn btn-sm btn-outline-warning" type="submit">salvar</button>
                     </form>
                 }
+                <a asp-action="StorySharePost" asp-route-postId="@Model.Post.Id" class="btn btn-sm btn-outline-light">compartilhar no story</a>
             </div>
         </div>
     </article>
+    <partial name="Partials/_PostActionsSheet" model="null" />
 
     <section class="comments-box">
         <h3>comentários</h3>
+        @if (Model.Post.CommentsEnabled)
+        {
         <form asp-action="Comentar" asp-route-id="@Model.Post.Id" method="post" class="mb-3">
             @Html.AntiForgeryToken()
             <textarea name="texto" class="form-control" rows="2" placeholder="escreva seu comentário"></textarea>
             <button class="btn btn-primary mt-2" type="submit">comentar</button>
         </form>
+        }
+        else
+        {
+            <p class="text-muted">Comentários desativados para esta publicação.</p>
+        }
 
         @foreach (var comentario in Model.ListaComentarios)
         {
@@ -79,3 +114,4 @@
         }
     </section>
 </section>
+<script src="~/js/social.js" asp-append-version="true"></script>
