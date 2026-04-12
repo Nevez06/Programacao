@@ -8,7 +8,10 @@
 
     @if (Model.DescobertaVisualInicial.Any())
     {
-        <div class="explore-visual-grid js-explore-grid"
+        var layoutClass = Model.LayoutCompacto
+            ? "is-compact"
+            : (Model.LayoutEditorial ? "is-editorial" : "is-balanced");
+        <div class="explore-visual-grid js-explore-grid @layoutClass @(Model.MostrarHero ? string.Empty : "is-dense")"
              data-explore-load-url="@Url.Action("ExplorarMais", "Social")"
              data-explore-busca="@Model.Busca"
              data-explore-categoria="@Model.CategoriaAtiva"
@@ -42,25 +45,28 @@
     }
 </section>
 
-<section class="explore-section" aria-label="Inspirações">
-    <div class="explore-section-head">
-        <h2>Inspiração do momento</h2>
-        <small>tendências para salvar</small>
-    </div>
+@if (Model.MostrarInspiracoes && Model.Inspiracoes.Any())
+{
+    <section class="explore-section" aria-label="Inspirações">
+        <div class="explore-section-head">
+            <h2>Inspiração do momento</h2>
+            <small>tendências para salvar</small>
+        </div>
 
-    <div class="explore-inspiration-row explore-moodboard">
-        @foreach (var item in Model.Inspiracoes)
-        {
-            <a href="@item.Link" class="explore-inspiration-card">
-                <img src="@item.ImagemUrl"
-                     alt="@item.Titulo"
-                     loading="lazy"
-                     onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
-                <div>
-                    <strong>@item.Titulo</strong>
-                    <small>@item.Categoria</small>
-                </div>
-            </a>
-        }
-    </div>
-</section>
+        <div class="explore-inspiration-row explore-moodboard">
+            @foreach (var item in Model.Inspiracoes)
+            {
+                <a href="@item.Link" class="explore-inspiration-card">
+                    <img src="@item.ImagemUrl"
+                         alt="@item.Titulo"
+                         loading="lazy"
+                         onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                    <div>
+                        <strong>@item.Titulo</strong>
+                        <small>@item.Categoria</small>
+                    </div>
+                </a>
+            }
+        </div>
+    </section>
+}

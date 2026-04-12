@@ -17,6 +17,14 @@ namespace ProjetoEventX.ViewModels.Social
         public List<ExplorarVisualItemViewModel> DescobertaVisual { get; set; } = new();
         public List<ExplorarVisualItemViewModel> HeroItems { get; set; } = new();
         public List<ExplorarVisualItemViewModel> DescobertaVisualInicial { get; set; } = new();
+        public bool MostrarHero { get; set; }
+        public bool MostrarInspiracoes { get; set; }
+        public bool MostrarEventos { get; set; }
+        public bool MostrarFornecedores { get; set; }
+        public bool MostrarTemplates { get; set; }
+        public bool MostrarStories { get; set; }
+        public bool LayoutCompacto { get; set; }
+        public bool LayoutEditorial { get; set; }
         public List<string> CategoriasDestaque { get; set; } = new();
         public List<string> SugestoesBusca { get; set; } = new();
         public bool PodeCarregarMais { get; set; }

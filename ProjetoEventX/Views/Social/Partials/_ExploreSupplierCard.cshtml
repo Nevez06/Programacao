@@ -18,7 +18,7 @@
                          onerror="this.onerror=null;this.src='/uploads/social/defaults/default-profile.svg';" />
                     <div>
                         <strong>@perfil.NomeExibicao</strong>
-                        <small>@perfil.TipoPerfil · @(string.IsNullOrWhiteSpace(perfil.Cidade) ? "EventX" : perfil.Cidade)</small>
+                        <small>@perfil.TipoPerfil · @(string.IsNullOrWhiteSpace(perfil.Cidade) ? "Destaque local" : perfil.Cidade)</small>
                         @if (!string.IsNullOrWhiteSpace(perfil.Bio))
                         {
                             <small class="explore-supplier-bio">@perfil.Bio</small>

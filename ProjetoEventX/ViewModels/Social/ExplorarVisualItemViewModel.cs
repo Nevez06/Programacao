@@ -12,11 +12,19 @@ namespace ProjetoEventX.ViewModels.Social
         public decimal ScoreRelevancia { get; set; }
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
         public string? Categoria { get; set; }
+        public string Chave { get; set; } = Guid.NewGuid().ToString("N");
+        public string LayoutVariant { get; set; } = "portrait";
         public int TotalCurtidas { get; set; }
         public int TotalComentarios { get; set; }
         public int TotalVisualizacoes { get; set; }
         public int TotalCompartilhamentos { get; set; }
         public bool PossuiImagemValida { get; set; }
+        public bool HasVisualValue { get; set; }
+        public bool IsInternal { get; set; }
+        public bool IsAuthScreen { get; set; }
+        public bool IsForm { get; set; }
+        public bool IsSystemScreen { get; set; }
+        public decimal ImageQualityScore { get; set; }
         public bool DestaqueManual { get; set; }
         public bool Destaque { get; set; }
         public bool IsVideo { get; set; }

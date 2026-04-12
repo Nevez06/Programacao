@@ -12,7 +12,7 @@
             @foreach (var evento in Model)
             {
                 <a asp-action="Evento" asp-route-eventoId="@evento.EventoId" class="explore-event-card">
-                    <img src="@(string.IsNullOrWhiteSpace(evento.ImagemCapa) ? "/uploads/social/defaults/default-post.svg" : evento.ImagemCapa)"
+                    <img src="@evento.ImagemCapa"
                          alt="@evento.NomeEvento"
                          loading="lazy"
                          onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />

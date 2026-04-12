@@ -38,6 +38,16 @@ namespace ProjetoEventX.Controllers
             "casamento", "aniversário", "corporativo", "formatura", "show", "infantil",
             "decoração", "buffet", "fotografia"
         ];
+        private static readonly string[] ExploreBlockedTokens =
+        [
+            "login","signin","auth","autentic","admin","dashboard","painel","settings","config","swagger",
+            "form","formulario","interface","sistema","interno","screen","screenshot","captura","print",
+            "placeholder","default","mock","wireframe","crud","api","endpoint","schema","database"
+        ];
+        private static readonly string[] ExploreStrongCategoryTokens =
+        [
+            "casamento","decor","fotografia","festa","evento","show","anivers","corporativo","mood","inspira","premium","editorial"
+        ];
 
         public SocialController(EventXContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment environment)
         {
@@ -533,7 +543,7 @@ namespace ProjetoEventX.Controllers
                     PostId = p.Id,
                     NomeAutor = !string.IsNullOrWhiteSpace(p.PerfilSocial != null ? p.PerfilSocial.NomeExibicao : null)
                         ? p.PerfilSocial!.NomeExibicao
-                        : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : (p.User != null ? p.User.Email ?? "Participante" : "Participante")),
+                        : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : "Participante"),
                     FotoPerfilUrl = p.PerfilSocial != null && !string.IsNullOrWhiteSpace(p.PerfilSocial.FotoPerfilUrl)
                         ? NormalizarUrlImagemPerfil(p.PerfilSocial.FotoPerfilUrl)
                         : FotoPerfilPadrao,
@@ -616,7 +626,7 @@ namespace ProjetoEventX.Controllers
                     NomeTemplate = t.Nome,
                     Categoria = string.IsNullOrWhiteSpace(t.Estilo) ? "template" : t.Estilo!,
                     Estilo = string.IsNullOrWhiteSpace(t.Estilo) ? "editor visual" : t.Estilo!,
-                    ThumbnailUrl = ImagemPostPadrao,
+                    ThumbnailUrl = t.Evento != null ? NormalizarUrlImagemPost(t.Evento.ImagemCapa) : ImagemPostPadrao,
                     AtualizadoEm = t.UpdatedAt,
                     LinkEditor = t.EventoId.HasValue
                         ? Url.Action("Editor", "Convite", new { eventoId = t.EventoId.Value, templateId = t.Id }) ?? "#"
@@ -791,10 +801,9 @@ namespace ProjetoEventX.Controllers
                 }
             }
 
-            const int heroSize = 4;
             const int loteInicial = 12;
             var agoraUtc = DateTime.UtcNow;
-            var scoreMinimo = 26m;
+            const decimal scoreMinimo = 52m;
 
             var postsMisturados = popularesFiltrados
                 .Concat(recentesFiltrados)
@@ -802,44 +811,41 @@ namespace ProjetoEventX.Controllers
                 .Select(g => g.OrderByDescending(x => (x.TotalCurtidas * 3) + (x.TotalComentarios * 2)).ThenByDescending(x => x.DataCriacao).First())
                 .ToList();
 
-            var descobertaVisual = new List<ExplorarVisualItemViewModel>();
-            descobertaVisual.AddRange(postsMisturados.Select((p, index) => CriarItemExplorarPost(p, index, agoraUtc)));
-            descobertaVisual.AddRange(eventosFiltrados.Select((e, index) => CriarItemExplorarEvento(e, index, agoraUtc)));
-            descobertaVisual.AddRange(templatesFiltrados.Select((t, index) => CriarItemExplorarTemplate(t, index, agoraUtc)));
-            descobertaVisual.AddRange(storiesFiltrados.Select((s, index) => CriarItemExplorarStory(s, index, agoraUtc)));
-            descobertaVisual.AddRange(fornecedoresFiltrados.Select((f, index) => CriarItemExplorarFornecedor(f, index, agoraUtc)));
+            var candidatos = new List<ExplorarVisualItemViewModel>();
+            candidatos.AddRange(postsMisturados.Select((p, index) => CriarItemExplorarPost(p, index, agoraUtc)));
+            candidatos.AddRange(eventosFiltrados.Select((e, index) => CriarItemExplorarEvento(e, index, agoraUtc)));
+            candidatos.AddRange(storiesFiltrados.Select((s, index) => CriarItemExplorarStory(s, index, agoraUtc)));
+            candidatos.AddRange(fornecedoresFiltrados.Select((f, index) => CriarItemExplorarFornecedor(f, index, agoraUtc)));
+            candidatos.AddRange(templatesFiltrados.Select((t, index) => CriarItemExplorarTemplate(t, index, agoraUtc)));
 
-            descobertaVisual = MisturarItensExplorar(
-                descobertaVisual
-                    .Where(i => i.PossuiImagemValida && i.ScoreRelevancia >= scoreMinimo)
-                    .OrderByDescending(i => i.ScoreRelevancia)
-                    .ThenByDescending(i => i.DestaqueManual)
-                    .Take(72)
-                    .ToList());
+            var candidatosQualificados = candidatos
+                .Where(i => IsValidForExploreItem(i) && i.ScoreRelevancia >= scoreMinimo)
+                .OrderByDescending(i => i.ScoreRelevancia)
+                .ThenByDescending(i => i.ImageQualityScore)
+                .ThenByDescending(i => i.DestaqueManual)
+                .Take(96)
+                .ToList();
 
-            var heroItems = descobertaVisual.Take(heroSize).ToList();
-            var feedRestante = descobertaVisual.Skip(heroItems.Count).ToList();
-            var inspiracoes = new List<ExplorarInspiracaoCardViewModel>();
-            if (descobertaVisual.Count >= 2)
-            {
-                inspiracoes.Add(new() { Titulo = "Inspiração do momento", Categoria = descobertaVisual[0].Categoria ?? "tendência", ImagemUrl = descobertaVisual[0].ImagemUrl, Link = descobertaVisual[0].Link });
-                inspiracoes.Add(new() { Titulo = "Em alta agora", Categoria = descobertaVisual[1].Badge, ImagemUrl = descobertaVisual[1].ImagemUrl, Link = descobertaVisual[1].Link });
-                if (descobertaVisual.Count > 2)
-                {
-                    inspiracoes.Add(new() { Titulo = "Fornecedores em destaque", Categoria = "fornecedores", ImagemUrl = descobertaVisual[2].ImagemUrl, Link = descobertaVisual[2].Link });
-                }
-                if (descobertaVisual.Count > 3)
-                {
-                    inspiracoes.Add(new() { Titulo = "Recomendado para você", Categoria = "recomendado", ImagemUrl = descobertaVisual[3].ImagemUrl, Link = descobertaVisual[3].Link });
-                }
-            }
+            var heroItems = SelecionarHeroItens(candidatosQualificados);
+            var mostrarHero = heroItems.Count >= 3 && candidatosQualificados.Count >= 6;
+            var feedBase = mostrarHero
+                ? candidatosQualificados.Where(i => heroItems.All(h => h.Chave != i.Chave)).ToList()
+                : candidatosQualificados;
 
-            var fornecedoresQuality = fornecedoresFiltrados.Where(f => IsImagemExploravel(f.FotoPerfilUrl)).Take(8).ToList();
-            var eventosQuality = eventosFiltrados.Where(e => IsImagemExploravel(e.ImagemCapa)).Take(8).ToList();
-            var templatesQuality = templatesFiltrados.Where(t => IsImagemExploravel(t.ThumbnailUrl)).Take(8).ToList();
+            var descobertaVisual = MisturarItensExplorar(feedBase).Take(72).ToList();
+            var layoutCompacto = descobertaVisual.Count < 6;
+            var layoutEditorial = descobertaVisual.Count >= 14;
+            AplicarVariantesLayout(descobertaVisual, layoutCompacto);
+
+            var feedRestante = descobertaVisual;
+            var inspiracoes = BuildInspiracoes(descobertaVisual);
+
+            var fornecedoresQuality = fornecedoresFiltrados.Where(FornecedorValidoParaExplore).Take(8).ToList();
+            var eventosQuality = eventosFiltrados.Where(EventoValidoParaExplore).Take(8).ToList();
+            var templatesQuality = templatesFiltrados.Where(TemplateValidoParaExplore).Take(8).ToList();
             var storiesQuality = storiesFiltrados.Where(s => IsImagemExploravel(s.CapaUrl)).Take(10).ToList();
-            var recentesQuality = recentesFiltrados.Where(p => IsImagemExploravel(p.ImagemUrl)).Take(18).ToList();
-            var popularesQuality = popularesFiltrados.Where(p => IsImagemExploravel(p.ImagemUrl)).Take(18).ToList();
+            var recentesQuality = recentesFiltrados.Where(PostValidoParaExplore).Take(18).ToList();
+            var popularesQuality = popularesFiltrados.Where(PostValidoParaExplore).Take(18).ToList();
 
             var model = new ExplorarViewModel
             {
@@ -847,13 +853,21 @@ namespace ProjetoEventX.Controllers
                 CategoriaAtiva = categoriaNormalizada,
                 PostsRecentes = recentesQuality,
                 PostsPopulares = popularesQuality,
-                OrganizadoresDestaque = organizadoresFiltrados.Where(f => IsImagemExploravel(f.FotoPerfilUrl)).Take(8).ToList(),
+                OrganizadoresDestaque = organizadoresFiltrados.Where(FornecedorValidoParaExplore).Take(8).ToList(),
                 FornecedoresPopulares = fornecedoresQuality,
                 EventosEmAlta = eventosQuality,
                 TemplatesEmAlta = templatesQuality,
                 StoriesDestaque = storiesQuality,
                 Inspiracoes = inspiracoes,
                 HeroItems = heroItems,
+                MostrarHero = mostrarHero,
+                MostrarInspiracoes = inspiracoes.Count >= (layoutCompacto ? 2 : 3),
+                MostrarEventos = eventosQuality.Count >= (layoutCompacto ? 2 : 3),
+                MostrarFornecedores = fornecedoresQuality.Count >= (layoutCompacto ? 2 : 3),
+                MostrarTemplates = templatesQuality.Count >= (layoutCompacto ? 2 : 3),
+                MostrarStories = storiesQuality.Count >= 3,
+                LayoutCompacto = layoutCompacto,
+                LayoutEditorial = layoutEditorial,
                 DescobertaVisual = feedRestante,
                 DescobertaVisualInicial = feedRestante.Take(loteInicial).ToList(),
                 CategoriasDestaque = categoriasPadrao,
@@ -868,6 +882,24 @@ namespace ProjetoEventX.Controllers
                 ProximoSkip = loteInicial,
                 PodeCarregarMais = feedRestante.Count > loteInicial
             };
+
+            if (model.DescobertaVisualInicial.Count < 8)
+            {
+                model.PodeCarregarMais = false;
+            }
+            if (model.DescobertaVisual.Count < 6)
+            {
+                model.MostrarInspiracoes = false;
+                model.MostrarHero = false;
+            }
+            if (model.HeroItems.Count < 3)
+            {
+                model.MostrarHero = false;
+            }
+            if (!model.MostrarHero)
+            {
+                model.HeroItems.Clear();
+            }
 
             return View(model);
         }
@@ -895,6 +927,8 @@ namespace ProjetoEventX.Controllers
 
         private ExplorarVisualItemViewModel CriarItemExplorarPost(FeedPostViewModel post, int index, DateTime agoraUtc)
         {
+            var imageQuality = CalcularImageQualityScore(post.ImagemUrl, post.Categoria, post.TipoConteudo, post.Legenda);
+            var bonusVisual = CalcularBonusVisual(post.ImagemUrl, post.Categoria, post.TipoConteudo);
             var visualizacoes = (post.TotalCurtidas * 2) + (post.TotalComentarios * 3);
             var compartilhamentos = post.UsuarioSalvou ? 2 : 0;
             var score = CalcularScoreRelevancia(
@@ -906,12 +940,15 @@ namespace ProjetoEventX.Controllers
                 compartilhamentos,
                 post.Categoria,
                 index % 9 == 0,
-                agoraUtc);
+                agoraUtc) + bonusVisual + (imageQuality * 0.85m);
+            var titulo = string.IsNullOrWhiteSpace(post.NomeEvento) ? post.NomeAutor : post.NomeEvento!;
+            var internalFlags = DetectarFlagsConteudoInterno(titulo, post.Categoria, post.Legenda, post.ImagemUrl);
 
             return new ExplorarVisualItemViewModel
             {
                 Tipo = "post",
-                Titulo = string.IsNullOrWhiteSpace(post.NomeEvento) ? post.NomeAutor : post.NomeEvento!,
+                Chave = $"post-{post.PostId}",
+                Titulo = titulo,
                 Subtitulo = post.Categoria,
                 ImagemUrl = post.ImagemUrl,
                 Link = Url.Action("Post", "Social", new { id = post.PostId }) ?? "#",
@@ -925,6 +962,12 @@ namespace ProjetoEventX.Controllers
                 TotalVisualizacoes = visualizacoes,
                 TotalCompartilhamentos = compartilhamentos,
                 PossuiImagemValida = IsImagemExploravel(post.ImagemUrl),
+                HasVisualValue = imageQuality >= 42m,
+                IsInternal = internalFlags.IsInternal,
+                IsAuthScreen = internalFlags.IsAuthScreen,
+                IsForm = internalFlags.IsForm,
+                IsSystemScreen = internalFlags.IsSystemScreen,
+                ImageQualityScore = imageQuality,
                 DestaqueManual = index % 9 == 0,
                 Destaque = index % 7 == 0,
                 IsVideo = !string.IsNullOrWhiteSpace(post.TipoConteudo) && post.TipoConteudo.Contains("video", StringComparison.OrdinalIgnoreCase),
@@ -934,6 +977,8 @@ namespace ProjetoEventX.Controllers
 
         private ExplorarVisualItemViewModel CriarItemExplorarEvento(ExplorarEventoCardViewModel evento, int index, DateTime agoraUtc)
         {
+            var imageQuality = CalcularImageQualityScore(evento.ImagemCapa, evento.TipoEvento, "evento", evento.NomeEvento);
+            var bonusVisual = CalcularBonusVisual(evento.ImagemCapa, evento.TipoEvento, null);
             var visualizacoes = evento.TotalPostsRelacionados * 6;
             var score = CalcularScoreRelevancia(
                 evento.ImagemCapa,
@@ -944,11 +989,13 @@ namespace ProjetoEventX.Controllers
                 0,
                 evento.TipoEvento,
                 index == 0,
-                agoraUtc);
+                agoraUtc) + bonusVisual + 8m + (imageQuality * 0.85m);
+            var internalFlags = DetectarFlagsConteudoInterno(evento.NomeEvento, evento.TipoEvento, null, evento.ImagemCapa);
 
             return new ExplorarVisualItemViewModel
             {
                 Tipo = "evento",
+                Chave = $"evento-{evento.EventoId}",
                 Titulo = evento.NomeEvento,
                 Subtitulo = $"{evento.TipoEvento} · {evento.DataEvento:dd/MM}",
                 ImagemUrl = string.IsNullOrWhiteSpace(evento.ImagemCapa) ? ImagemPostPadrao : evento.ImagemCapa!,
@@ -963,6 +1010,12 @@ namespace ProjetoEventX.Controllers
                 TotalVisualizacoes = visualizacoes,
                 TotalCompartilhamentos = 0,
                 PossuiImagemValida = IsImagemExploravel(evento.ImagemCapa),
+                HasVisualValue = imageQuality >= 45m,
+                IsInternal = internalFlags.IsInternal,
+                IsAuthScreen = internalFlags.IsAuthScreen,
+                IsForm = internalFlags.IsForm,
+                IsSystemScreen = internalFlags.IsSystemScreen,
+                ImageQualityScore = imageQuality,
                 DestaqueManual = index == 0,
                 Destaque = index < 2
             };
@@ -970,6 +1023,8 @@ namespace ProjetoEventX.Controllers
 
         private ExplorarVisualItemViewModel CriarItemExplorarTemplate(ExplorarTemplateCardViewModel template, int index, DateTime agoraUtc)
         {
+            var imageQuality = CalcularImageQualityScore(template.ThumbnailUrl, template.Categoria, template.Estilo, template.NomeTemplate);
+            var bonusVisual = CalcularBonusVisual(template.ThumbnailUrl, template.Categoria, template.Estilo);
             var visualizacoes = Math.Max(2, 28 - index);
             var score = CalcularScoreRelevancia(
                 template.ThumbnailUrl,
@@ -980,11 +1035,13 @@ namespace ProjetoEventX.Controllers
                 0,
                 template.Categoria,
                 index == 0,
-                agoraUtc);
+                agoraUtc) + bonusVisual + (imageQuality * 0.85m);
+            var internalFlags = DetectarFlagsConteudoInterno(template.NomeTemplate, template.Categoria, template.Estilo, template.ThumbnailUrl);
 
             return new ExplorarVisualItemViewModel
             {
                 Tipo = "template",
+                Chave = $"template-{template.TemplateId}",
                 Titulo = template.NomeTemplate,
                 Subtitulo = template.Estilo,
                 ImagemUrl = template.ThumbnailUrl,
@@ -999,6 +1056,12 @@ namespace ProjetoEventX.Controllers
                 TotalVisualizacoes = visualizacoes,
                 TotalCompartilhamentos = 0,
                 PossuiImagemValida = IsImagemExploravel(template.ThumbnailUrl),
+                HasVisualValue = imageQuality >= 48m,
+                IsInternal = internalFlags.IsInternal,
+                IsAuthScreen = internalFlags.IsAuthScreen,
+                IsForm = internalFlags.IsForm,
+                IsSystemScreen = internalFlags.IsSystemScreen,
+                ImageQualityScore = imageQuality,
                 DestaqueManual = index == 0,
                 Destaque = index == 0
             };
@@ -1006,6 +1069,8 @@ namespace ProjetoEventX.Controllers
 
         private ExplorarVisualItemViewModel CriarItemExplorarStory(ExplorarStoryCardViewModel story, int index, DateTime agoraUtc)
         {
+            var imageQuality = CalcularImageQualityScore(story.CapaUrl, "stories", null, story.NomePerfil);
+            var bonusVisual = CalcularBonusVisual(story.CapaUrl, "stories", null);
             var score = CalcularScoreRelevancia(
                 story.CapaUrl,
                 story.CriadoEm,
@@ -1015,11 +1080,13 @@ namespace ProjetoEventX.Controllers
                 0,
                 "stories",
                 index == 0,
-                agoraUtc);
+                agoraUtc) + bonusVisual + (imageQuality * 0.8m);
+            var internalFlags = DetectarFlagsConteudoInterno(story.NomePerfil, "stories", null, story.CapaUrl);
 
             return new ExplorarVisualItemViewModel
             {
                 Tipo = "story",
+                Chave = $"story-{story.StoryId}",
                 Titulo = story.NomePerfil,
                 Subtitulo = $"{story.Visualizacoes} visualizações",
                 ImagemUrl = story.CapaUrl,
@@ -1034,6 +1101,12 @@ namespace ProjetoEventX.Controllers
                 TotalVisualizacoes = story.Visualizacoes,
                 TotalCompartilhamentos = 0,
                 PossuiImagemValida = IsImagemExploravel(story.CapaUrl),
+                HasVisualValue = imageQuality >= 40m,
+                IsInternal = internalFlags.IsInternal,
+                IsAuthScreen = internalFlags.IsAuthScreen,
+                IsForm = internalFlags.IsForm,
+                IsSystemScreen = internalFlags.IsSystemScreen,
+                ImageQualityScore = imageQuality,
                 DestaqueManual = index == 0,
                 Destaque = index == 0
             };
@@ -1041,6 +1114,8 @@ namespace ProjetoEventX.Controllers
 
         private ExplorarVisualItemViewModel CriarItemExplorarFornecedor(ExplorarPerfilCardViewModel fornecedor, int index, DateTime agoraUtc)
         {
+            var imageQuality = CalcularImageQualityScore(fornecedor.FotoPerfilUrl, "fornecedores", fornecedor.TipoPerfil, fornecedor.NomeExibicao);
+            var bonusVisual = CalcularBonusVisual(fornecedor.FotoPerfilUrl, "fornecedores", fornecedor.TipoPerfil);
             var dataBase = agoraUtc.AddDays(-Math.Min(fornecedor.TotalPosts, 20));
             var visualizacoes = Math.Max(1, fornecedor.TotalPosts * 2);
             var score = CalcularScoreRelevancia(
@@ -1052,11 +1127,13 @@ namespace ProjetoEventX.Controllers
                 0,
                 "fornecedores",
                 index == 0,
-                agoraUtc);
+                agoraUtc) + bonusVisual + (imageQuality * 0.75m);
+            var internalFlags = DetectarFlagsConteudoInterno(fornecedor.NomeExibicao, fornecedor.TipoPerfil, fornecedor.Bio, fornecedor.FotoPerfilUrl);
 
             return new ExplorarVisualItemViewModel
             {
                 Tipo = "fornecedor",
+                Chave = $"fornecedor-{fornecedor.PerfilId}",
                 Titulo = fornecedor.NomeExibicao,
                 Subtitulo = string.IsNullOrWhiteSpace(fornecedor.Cidade) ? fornecedor.TipoPerfil : $"{fornecedor.TipoPerfil} · {fornecedor.Cidade}",
                 ImagemUrl = string.IsNullOrWhiteSpace(fornecedor.FotoPerfilUrl) ? FotoPerfilPadrao : fornecedor.FotoPerfilUrl!,
@@ -1071,6 +1148,12 @@ namespace ProjetoEventX.Controllers
                 TotalVisualizacoes = visualizacoes,
                 TotalCompartilhamentos = 0,
                 PossuiImagemValida = IsImagemExploravel(fornecedor.FotoPerfilUrl),
+                HasVisualValue = imageQuality >= 46m,
+                IsInternal = internalFlags.IsInternal,
+                IsAuthScreen = internalFlags.IsAuthScreen,
+                IsForm = internalFlags.IsForm,
+                IsSystemScreen = internalFlags.IsSystemScreen,
+                ImageQualityScore = imageQuality,
                 DestaqueManual = index == 0,
                 Destaque = index == 0
             };
@@ -1117,12 +1200,156 @@ namespace ProjetoEventX.Controllers
             };
         }
 
+        private static decimal CalcularBonusVisual(string? imagemUrl, string? categoria, string? subtipo)
+        {
+            if (!IsImagemExploravel(imagemUrl))
+            {
+                return -30m;
+            }
+
+            var categoriaNorm = categoria?.Trim().ToLowerInvariant() ?? string.Empty;
+            var subtipoNorm = subtipo?.Trim().ToLowerInvariant() ?? string.Empty;
+            decimal bonus = 0m;
+
+            if (categoriaNorm.Contains("casamento") || categoriaNorm.Contains("decoração") || categoriaNorm.Contains("fotografia"))
+            {
+                bonus += 8m;
+            }
+            if (categoriaNorm.Contains("corporativo") || categoriaNorm.Contains("show") || categoriaNorm.Contains("evento"))
+            {
+                bonus += 6m;
+            }
+            if (subtipoNorm.Contains("video"))
+            {
+                bonus += 4m;
+            }
+            if (subtipoNorm.Contains("editor"))
+            {
+                bonus += 2m;
+            }
+
+            return bonus;
+        }
+
+        private static decimal CalcularImageQualityScore(string? imagemUrl, string? categoria, string? subtipo, string? texto)
+        {
+            if (!IsImagemExploravel(imagemUrl))
+            {
+                return 0m;
+            }
+
+            decimal score = 55m;
+            var url = (imagemUrl ?? string.Empty).ToLowerInvariant();
+            var categoriaNorm = (categoria ?? string.Empty).ToLowerInvariant();
+            var subtipoNorm = (subtipo ?? string.Empty).ToLowerInvariant();
+            var textoNorm = (texto ?? string.Empty).ToLowerInvariant();
+
+            if (url.Contains("/uploads/social/posts/") || url.Contains("/uploads/stories/")) score += 14m;
+            if (url.EndsWith(".jpg") || url.EndsWith(".jpeg") || url.EndsWith(".png") || url.EndsWith(".webp")) score += 8m;
+            if (ExploreStrongCategoryTokens.Any(t => categoriaNorm.Contains(t) || subtipoNorm.Contains(t))) score += 12m;
+            if (!string.IsNullOrWhiteSpace(textoNorm) && textoNorm.Length is >= 10 and <= 120) score += 5m;
+            if (ContemTermoBloqueado(categoriaNorm) || ContemTermoBloqueado(subtipoNorm) || ContemTermoBloqueado(textoNorm)) score -= 40m;
+            if (url.Contains("thumb") || url.Contains("preview")) score -= 4m;
+            if (url.Contains("template") && !categoriaNorm.Contains("template")) score -= 3m;
+
+            return Math.Clamp(score, 0m, 100m);
+        }
+
         private static bool IsImagemExploravel(string? imagemUrl)
         {
             if (string.IsNullOrWhiteSpace(imagemUrl)) return false;
             var url = imagemUrl.Trim().ToLowerInvariant();
             if (url.Contains("default-post") || url.Contains("default-profile") || url.Contains("placeholder")) return false;
+            if (url.Contains("login") || url.Contains("dashboard") || url.Contains("admin") || url.Contains("interno")) return false;
+            if (url.Contains("account") || url.Contains("signin") || url.Contains("auth")) return false;
+            if (url.Contains("form") || url.Contains("formulario") || url.Contains("painel")) return false;
+            if (url.Contains("sistema") || url.Contains("config") || url.Contains("settings")) return false;
+            if (url.Contains("interface") || url.Contains("screen") || url.Contains("screenshot")) return false;
+            if (url.Contains("captura") || url.Contains("print")) return false;
+            if (url.Contains("swagger") || url.Contains("docs")) return false;
+            if (url.Contains("uploads/social/defaults")) return false;
             if (url.EndsWith(".svg", StringComparison.OrdinalIgnoreCase) && url.Contains("defaults")) return false;
+            return true;
+        }
+
+        private static (bool IsInternal, bool IsAuthScreen, bool IsForm, bool IsSystemScreen) DetectarFlagsConteudoInterno(
+            string? titulo,
+            string? categoria,
+            string? subtitulo,
+            string? imagemUrl)
+        {
+            var t = (titulo ?? string.Empty).ToLowerInvariant();
+            var c = (categoria ?? string.Empty).ToLowerInvariant();
+            var s = (subtitulo ?? string.Empty).ToLowerInvariant();
+            var i = (imagemUrl ?? string.Empty).ToLowerInvariant();
+            var combinado = $"{t} {c} {s} {i}";
+
+            var isAuth = combinado.Contains("login") || combinado.Contains("signin") || combinado.Contains("auth") || combinado.Contains("autentic");
+            var isForm = combinado.Contains("form") || combinado.Contains("formulario");
+            var isSystem = combinado.Contains("admin") || combinado.Contains("dashboard") || combinado.Contains("painel")
+                || combinado.Contains("settings") || combinado.Contains("config") || combinado.Contains("swagger")
+                || combinado.Contains("sistema") || combinado.Contains("interno") || combinado.Contains("interface");
+            var isInternal = isAuth || isForm || isSystem || combinado.Contains("screenshot") || combinado.Contains("captura") || combinado.Contains("print");
+
+            return (isInternal, isAuth, isForm, isSystem);
+        }
+
+        private static bool ContemTermoBloqueado(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return false;
+            return ExploreBlockedTokens.Any(value.Contains);
+        }
+
+        private static bool IsValidForExploreItem(ExplorarVisualItemViewModel item)
+        {
+            if (item == null) return false;
+            if (!item.PossuiImagemValida) return false;
+            if (!item.HasVisualValue) return false;
+            if (item.ImageQualityScore < 42m) return false;
+            if (item.IsInternal || item.IsAuthScreen || item.IsForm || item.IsSystemScreen) return false;
+            if (string.IsNullOrWhiteSpace(item.Titulo)) return false;
+            if (item.Titulo.Contains("@", StringComparison.OrdinalIgnoreCase)) return false;
+            if (item.Subtitulo?.Contains("@", StringComparison.OrdinalIgnoreCase) == true) return false;
+            if (ContemTermoBloqueado(item.Titulo.ToLowerInvariant())) return false;
+            if (!string.IsNullOrWhiteSpace(item.Subtitulo) && ContemTermoBloqueado(item.Subtitulo.ToLowerInvariant())) return false;
+            return true;
+        }
+
+        private static bool PostValidoParaExplore(FeedPostViewModel post)
+        {
+            if (post == null) return false;
+            if (!IsImagemExploravel(post.ImagemUrl)) return false;
+            var texto = $"{post.NomeAutor} {post.NomeEvento} {post.Categoria} {post.Legenda}".ToLowerInvariant();
+            if (ContemTermoBloqueado(texto)) return false;
+            return true;
+        }
+
+        private static bool EventoValidoParaExplore(ExplorarEventoCardViewModel evento)
+        {
+            if (evento == null) return false;
+            if (!IsImagemExploravel(evento.ImagemCapa)) return false;
+            var texto = $"{evento.NomeEvento} {evento.TipoEvento}".ToLowerInvariant();
+            if (ContemTermoBloqueado(texto)) return false;
+            return true;
+        }
+
+        private static bool TemplateValidoParaExplore(ExplorarTemplateCardViewModel template)
+        {
+            if (template == null) return false;
+            if (!IsImagemExploravel(template.ThumbnailUrl)) return false;
+            var texto = $"{template.NomeTemplate} {template.Categoria} {template.Estilo}".ToLowerInvariant();
+            if (ContemTermoBloqueado(texto)) return false;
+            return true;
+        }
+
+        private static bool FornecedorValidoParaExplore(ExplorarPerfilCardViewModel perfil)
+        {
+            if (perfil == null) return false;
+            if (!IsImagemExploravel(perfil.FotoPerfilUrl)) return false;
+            if (string.IsNullOrWhiteSpace(perfil.NomeExibicao)) return false;
+            if (perfil.NomeExibicao.Contains("@", StringComparison.OrdinalIgnoreCase)) return false;
+            var texto = $"{perfil.NomeExibicao} {perfil.TipoPerfil} {perfil.Bio} {perfil.Cidade}".ToLowerInvariant();
+            if (ContemTermoBloqueado(texto)) return false;
             return true;
         }
 
@@ -1130,6 +1357,7 @@ namespace ProjetoEventX.Controllers
         {
             var ordenados = itens
                 .OrderByDescending(i => i.ScoreRelevancia)
+                .ThenByDescending(i => i.ImageQualityScore)
                 .ThenByDescending(i => i.DestaqueManual)
                 .ToList();
 
@@ -1159,11 +1387,99 @@ namespace ProjetoEventX.Controllers
                     && (repeticoesCategoria < 2 || !string.Equals(item.Categoria, ultimoCategoria, StringComparison.OrdinalIgnoreCase)))
                     ?? restante[0];
 
+                var ultimosDois = resultado.Skip(Math.Max(0, resultado.Count - 2)).ToList();
+                if (ultimosDois.Count == 2 && ultimosDois.All(x => x.ScoreRelevancia < 52m))
+                {
+                    var forte = restante
+                        .Where(x => x.ScoreRelevancia >= 58m)
+                        .OrderByDescending(x => x.ScoreRelevancia)
+                        .FirstOrDefault();
+                    if (forte != null)
+                    {
+                        proximo = forte;
+                    }
+                }
+
                 resultado.Add(proximo);
                 restante.Remove(proximo);
             }
 
             return resultado;
+        }
+
+        private static List<ExplorarVisualItemViewModel> SelecionarHeroItens(List<ExplorarVisualItemViewModel> itens)
+        {
+            var candidatosHero = itens
+                .Where(i => i.ScoreRelevancia >= 72m
+                    && i.ImageQualityScore >= 64m
+                    && i.HasVisualValue
+                    && (i.Tipo == "evento" || i.Tipo == "post" || i.Tipo == "story")
+                    && IsImagemExploravel(i.ImagemUrl))
+                .ToList();
+            if (candidatosHero.Count < 3)
+            {
+                return new List<ExplorarVisualItemViewModel>();
+            }
+
+            var principal = candidatosHero
+                .OrderByDescending(i => i.Tipo == "evento")
+                .ThenByDescending(i => i.Tipo == "post")
+                .ThenByDescending(i => i.ImageQualityScore)
+                .ThenByDescending(i => i.ScoreRelevancia)
+                .First();
+
+            var secundarios = candidatosHero
+                .Where(i => i.Chave != principal.Chave)
+                .OrderByDescending(i => i.Tipo != principal.Tipo)
+                .ThenByDescending(i => i.ImageQualityScore)
+                .ThenByDescending(i => i.ScoreRelevancia)
+                .Take(3)
+                .ToList();
+
+            return new[] { principal }.Concat(secundarios).ToList();
+        }
+
+        private static List<ExplorarInspiracaoCardViewModel> BuildInspiracoes(List<ExplorarVisualItemViewModel> itens)
+        {
+            if (itens.Count < 2) return new List<ExplorarInspiracaoCardViewModel>();
+
+            var baseItens = itens.Take(4).ToList();
+            return baseItens.Select((item, index) => new ExplorarInspiracaoCardViewModel
+            {
+                Titulo = index switch
+                {
+                    0 => "Inspiração do momento",
+                    1 => "Curadoria visual",
+                    2 => "Em alta agora",
+                    _ => "Recomendado para você"
+                },
+                Categoria = string.IsNullOrWhiteSpace(item.Categoria) ? item.Badge : item.Categoria!,
+                ImagemUrl = item.ImagemUrl,
+                Link = item.Link
+            }).ToList();
+        }
+
+        private static void AplicarVariantesLayout(List<ExplorarVisualItemViewModel> itens, bool layoutCompacto)
+        {
+            if (layoutCompacto)
+            {
+                for (var i = 0; i < itens.Count; i++)
+                {
+                    itens[i].LayoutVariant = "compact";
+                }
+                return;
+            }
+
+            for (var i = 0; i < itens.Count; i++)
+            {
+                itens[i].LayoutVariant = (i % 10) switch
+                {
+                    0 => "tall",
+                    3 => "wide",
+                    6 => "tall",
+                    _ => "portrait"
+                };
+            }
         }
 
         [AllowAnonymous]
