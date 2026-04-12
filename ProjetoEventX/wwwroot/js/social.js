@@ -52,6 +52,69 @@
             card.addEventListener('pointerup', () => card.classList.remove('is-pressed'));
             card.addEventListener('pointerleave', () => card.classList.remove('is-pressed'));
         });
+
+    const grid = document.querySelector('.js-explore-grid');
+    const loadMoreBtn = document.querySelector('.js-explore-load-more');
+    const skeleton = document.querySelector('.js-explore-skeleton');
+    if (grid && loadMoreBtn) {
+        const bindCardInteractions = (root) => {
+            root.querySelectorAll('.explore-visual-card, .explore-event-card, .explore-template-card, .explore-supplier-card')
+                .forEach((card) => {
+                    card.addEventListener('pointerdown', () => card.classList.add('is-pressed'));
+                    card.addEventListener('pointerup', () => card.classList.remove('is-pressed'));
+                    card.addEventListener('pointerleave', () => card.classList.remove('is-pressed'));
+                });
+        };
+
+        const loadMore = async () => {
+            if (loadMoreBtn.dataset.busy === '1') return;
+            loadMoreBtn.dataset.busy = '1';
+            loadMoreBtn.disabled = true;
+            if (skeleton) skeleton.classList.remove('d-none');
+
+            try {
+                const url = grid.dataset.exploreLoadUrl;
+                const busca = grid.dataset.exploreBusca || '';
+                const categoria = grid.dataset.exploreCategoria || '';
+                const skip = parseInt(grid.dataset.exploreSkip || '0', 10);
+                const take = parseInt(grid.dataset.exploreTake || '12', 10);
+                const qs = new URLSearchParams({ skip: String(skip), take: String(take), busca, categoria });
+                const response = await fetch(`${url}?${qs.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!response.ok) return;
+
+                const html = await response.text();
+                if (!html.trim()) {
+                    loadMoreBtn.remove();
+                    return;
+                }
+
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+                const cards = Array.from(tmp.querySelectorAll('.explore-visual-card'));
+                if (!cards.length) {
+                    loadMoreBtn.remove();
+                    return;
+                }
+
+                cards.forEach((card, index) => {
+                    card.classList.add('is-entering');
+                    grid.appendChild(card);
+                    window.setTimeout(() => card.classList.remove('is-entering'), 220 + (index * 30));
+                });
+                bindCardInteractions(grid);
+                grid.dataset.exploreSkip = String(skip + cards.length);
+                if (cards.length < take) loadMoreBtn.remove();
+            } finally {
+                if (skeleton) skeleton.classList.add('d-none');
+                if (document.body.contains(loadMoreBtn)) {
+                    loadMoreBtn.dataset.busy = '0';
+                    loadMoreBtn.disabled = false;
+                }
+            }
+        };
+
+        loadMoreBtn.addEventListener('click', loadMore);
+    }
 })();
 
 (function () {

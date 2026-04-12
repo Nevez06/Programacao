@@ -15,8 +15,13 @@ namespace ProjetoEventX.ViewModels.Social
         public List<ExplorarStoryCardViewModel> StoriesDestaque { get; set; } = new();
         public List<ExplorarInspiracaoCardViewModel> Inspiracoes { get; set; } = new();
         public List<ExplorarVisualItemViewModel> DescobertaVisual { get; set; } = new();
+        public List<ExplorarVisualItemViewModel> HeroItems { get; set; } = new();
+        public List<ExplorarVisualItemViewModel> DescobertaVisualInicial { get; set; } = new();
         public List<string> CategoriasDestaque { get; set; } = new();
         public List<string> SugestoesBusca { get; set; } = new();
+        public bool PodeCarregarMais { get; set; }
+        public int ProximoSkip { get; set; }
+        public int LoteCarregamento { get; set; } = 12;
         public int TotalPostsRecentes { get; set; }
         public int TotalPostsPopulares { get; set; }
         public int TotalEventosEmAlta { get; set; }

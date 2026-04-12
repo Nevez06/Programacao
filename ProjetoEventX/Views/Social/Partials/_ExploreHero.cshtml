@@ -1,7 +1,7 @@
 @model ProjetoEventX.ViewModels.Social.ExplorarViewModel
 @{
-    var heroPrincipal = Model.DescobertaVisual.FirstOrDefault();
-    var heroSecundarios = Model.DescobertaVisual.Skip(1).Take(3).ToList();
+    var heroPrincipal = Model.HeroItems.FirstOrDefault();
+    var heroSecundarios = Model.HeroItems.Skip(1).Take(3).ToList();
 }
 
 @if (heroPrincipal != null)

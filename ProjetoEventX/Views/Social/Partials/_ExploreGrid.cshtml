@@ -3,39 +3,33 @@
 <section class="explore-section" aria-label="Descoberta visual">
     <div class="explore-section-head">
         <h2>Em alta agora</h2>
-        <small>@Model.TotalPostsPopulares posts populares</small>
+        <small>@Model.DescobertaVisual.Count itens relevantes</small>
     </div>
 
-    @if (Model.DescobertaVisual.Any())
+    @if (Model.DescobertaVisualInicial.Any())
     {
-        <div class="explore-visual-grid js-explore-grid">
-            @foreach (var item in Model.DescobertaVisual.Skip(4))
+        <div class="explore-visual-grid js-explore-grid"
+             data-explore-load-url="@Url.Action("ExplorarMais", "Social")"
+             data-explore-busca="@Model.Busca"
+             data-explore-categoria="@Model.CategoriaAtiva"
+             data-explore-skip="@Model.ProximoSkip"
+             data-explore-take="@Model.LoteCarregamento">
+            <partial name="Partials/_ExploreVisualCards" model="Model.DescobertaVisualInicial" />
+        </div>
+
+        @if (Model.PodeCarregarMais)
+        {
+            <div class="explore-load-more-wrap">
+                <button type="button" class="explore-load-more-btn js-explore-load-more">
+                    Carregar mais
+                </button>
+            </div>
+        }
+
+        <div class="explore-skeleton-grid js-explore-skeleton d-none" aria-hidden="true">
+            @for (var i = 0; i < 6; i++)
             {
-                var extra = item.Destaque ? "is-featured" : string.Empty;
-                <a href="@item.Link" class="explore-visual-card @extra">
-                    <img src="@item.ImagemUrl"
-                         alt="@item.Titulo"
-                         loading="lazy"
-                         onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
-
-                    <span class="explore-badge">@item.Badge</span>
-                    @if (item.IsVideo)
-                    {
-                        <span class="explore-icon-indicator"><i class="fas fa-play"></i></span>
-                    }
-                    else if (item.IsMulti)
-                    {
-                        <span class="explore-icon-indicator"><i class="fas fa-clone"></i></span>
-                    }
-
-                    <div class="explore-visual-overlay">
-                        <strong>@item.Titulo</strong>
-                        @if (!string.IsNullOrWhiteSpace(item.Subtitulo))
-                        {
-                            <small>@item.Subtitulo</small>
-                        }
-                    </div>
-                </a>
+                <span class="explore-skeleton-card"></span>
             }
         </div>
     }

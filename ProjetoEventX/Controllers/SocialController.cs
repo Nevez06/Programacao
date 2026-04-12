@@ -352,7 +352,7 @@ namespace ProjetoEventX.Controllers
                     AutorUserId = p.UserId,
                     NomeAutor = !string.IsNullOrWhiteSpace(p.PerfilSocial != null ? p.PerfilSocial.NomeExibicao : null)
                         ? p.PerfilSocial!.NomeExibicao
-                        : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : (p.User != null ? p.User.Email ?? "Participante" : "Participante")),
+                        : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : "Participante"),
                     FotoPerfilUrl = p.PerfilSocial != null && !string.IsNullOrWhiteSpace(p.PerfilSocial.FotoPerfilUrl)
                         ? NormalizarUrlImagemPerfil(p.PerfilSocial.FotoPerfilUrl)
                         : FotoPerfilPadrao,
@@ -500,7 +500,7 @@ namespace ProjetoEventX.Controllers
                     PostId = p.Id,
                     NomeAutor = !string.IsNullOrWhiteSpace(p.PerfilSocial != null ? p.PerfilSocial.NomeExibicao : null)
                         ? p.PerfilSocial!.NomeExibicao
-                        : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : (p.User != null ? p.User.Email ?? "Participante" : "Participante")),
+                        : (!string.IsNullOrWhiteSpace(p.User != null ? p.User.UserName : null) ? p.User!.UserName! : "Participante"),
                     FotoPerfilUrl = p.PerfilSocial != null && !string.IsNullOrWhiteSpace(p.PerfilSocial.FotoPerfilUrl)
                         ? NormalizarUrlImagemPerfil(p.PerfilSocial.FotoPerfilUrl)
                         : FotoPerfilPadrao,
@@ -791,91 +791,379 @@ namespace ProjetoEventX.Controllers
                 }
             }
 
-            var descobertaVisual = new List<ExplorarVisualItemViewModel>();
-            descobertaVisual.AddRange(popularesFiltrados.Take(12).Select((p, index) => new ExplorarVisualItemViewModel
-            {
-                Tipo = "post",
-                Titulo = string.IsNullOrWhiteSpace(p.NomeEvento) ? p.NomeAutor : p.NomeEvento!,
-                Subtitulo = p.Categoria,
-                ImagemUrl = p.ImagemUrl,
-                Link = Url.Action("Post", "Social", new { id = p.PostId }) ?? "#",
-                Badge = "post",
-                Score = (p.TotalCurtidas * 3) + (p.TotalComentarios * 2),
-                Destaque = index % 5 == 0,
-                IsVideo = !string.IsNullOrWhiteSpace(p.TipoConteudo) && p.TipoConteudo.Contains("video", StringComparison.OrdinalIgnoreCase),
-                IsMulti = !string.IsNullOrWhiteSpace(p.Categoria) && p.Categoria.Contains("carrossel", StringComparison.OrdinalIgnoreCase)
-            }));
-            descobertaVisual.AddRange(eventosFiltrados.Take(6).Select((e, index) => new ExplorarVisualItemViewModel
-            {
-                Tipo = "evento",
-                Titulo = e.NomeEvento,
-                Subtitulo = $"{e.TipoEvento} · {e.DataEvento:dd/MM}",
-                ImagemUrl = string.IsNullOrWhiteSpace(e.ImagemCapa) ? ImagemPostPadrao : e.ImagemCapa!,
-                Link = Url.Action("Evento", "Social", new { eventoId = e.EventoId }) ?? "#",
-                Badge = "evento",
-                Score = (e.TotalPostsRelacionados * 4) + (index == 0 ? 10 : 0),
-                Destaque = index == 0
-            }));
-            descobertaVisual.AddRange(templatesFiltrados.Take(6).Select((t, index) => new ExplorarVisualItemViewModel
-            {
-                Tipo = "template",
-                Titulo = t.NomeTemplate,
-                Subtitulo = t.Estilo,
-                ImagemUrl = t.ThumbnailUrl,
-                Link = t.LinkEditor,
-                Badge = "template",
-                Score = 20 - index,
-                Destaque = index == 0
-            }));
-            descobertaVisual.AddRange(storiesFiltrados.Take(4).Select((s, index) => new ExplorarVisualItemViewModel
-            {
-                Tipo = "story",
-                Titulo = s.NomePerfil,
-                Subtitulo = $"{s.Visualizacoes} views",
-                ImagemUrl = s.CapaUrl,
-                Link = Url.Action("Perfil", "Social", new { id = s.PerfilId }) ?? "#",
-                Badge = "story",
-                Score = (s.Visualizacoes * 2) + (s.Reacoes * 3),
-                Destaque = index == 0
-            }));
-            descobertaVisual = descobertaVisual
-                .OrderByDescending(x => x.Score)
-                .ThenByDescending(x => x.Destaque)
-                .Take(36)
+            const int heroSize = 4;
+            const int loteInicial = 12;
+            var agoraUtc = DateTime.UtcNow;
+            var scoreMinimo = 26m;
+
+            var postsMisturados = popularesFiltrados
+                .Concat(recentesFiltrados)
+                .GroupBy(p => p.PostId)
+                .Select(g => g.OrderByDescending(x => (x.TotalCurtidas * 3) + (x.TotalComentarios * 2)).ThenByDescending(x => x.DataCriacao).First())
                 .ToList();
 
-            var inspiracoes = new List<ExplorarInspiracaoCardViewModel>
+            var descobertaVisual = new List<ExplorarVisualItemViewModel>();
+            descobertaVisual.AddRange(postsMisturados.Select((p, index) => CriarItemExplorarPost(p, index, agoraUtc)));
+            descobertaVisual.AddRange(eventosFiltrados.Select((e, index) => CriarItemExplorarEvento(e, index, agoraUtc)));
+            descobertaVisual.AddRange(templatesFiltrados.Select((t, index) => CriarItemExplorarTemplate(t, index, agoraUtc)));
+            descobertaVisual.AddRange(storiesFiltrados.Select((s, index) => CriarItemExplorarStory(s, index, agoraUtc)));
+            descobertaVisual.AddRange(fornecedoresFiltrados.Select((f, index) => CriarItemExplorarFornecedor(f, index, agoraUtc)));
+
+            descobertaVisual = MisturarItensExplorar(
+                descobertaVisual
+                    .Where(i => i.PossuiImagemValida && i.ScoreRelevancia >= scoreMinimo)
+                    .OrderByDescending(i => i.ScoreRelevancia)
+                    .ThenByDescending(i => i.DestaqueManual)
+                    .Take(72)
+                    .ToList());
+
+            var heroItems = descobertaVisual.Take(heroSize).ToList();
+            var feedRestante = descobertaVisual.Skip(heroItems.Count).ToList();
+            var inspiracoes = new List<ExplorarInspiracaoCardViewModel>();
+            if (descobertaVisual.Count >= 2)
             {
-                new() { Titulo = "Noivas minimalistas", Categoria = "casamento", ImagemUrl = descobertaVisual.FirstOrDefault()?.ImagemUrl ?? ImagemPostPadrao, Link = Url.Action("Explorar", "Social", new { categoria = "casamento" }) ?? "#" },
-                new() { Titulo = "Decoração quente", Categoria = "decoração", ImagemUrl = descobertaVisual.Skip(1).FirstOrDefault()?.ImagemUrl ?? ImagemPostPadrao, Link = Url.Action("Explorar", "Social", new { categoria = "decoração" }) ?? "#" },
-                new() { Titulo = "Corporativo premium", Categoria = "corporativo", ImagemUrl = descobertaVisual.Skip(2).FirstOrDefault()?.ImagemUrl ?? ImagemPostPadrao, Link = Url.Action("Explorar", "Social", new { categoria = "corporativo" }) ?? "#" },
-                new() { Titulo = "Convites criativos", Categoria = "templates", ImagemUrl = descobertaVisual.Skip(3).FirstOrDefault()?.ImagemUrl ?? ImagemPostPadrao, Link = Url.Action("Explorar", "Social", new { categoria = "templates" }) ?? "#" }
-            };
+                inspiracoes.Add(new() { Titulo = "Inspiração do momento", Categoria = descobertaVisual[0].Categoria ?? "tendência", ImagemUrl = descobertaVisual[0].ImagemUrl, Link = descobertaVisual[0].Link });
+                inspiracoes.Add(new() { Titulo = "Em alta agora", Categoria = descobertaVisual[1].Badge, ImagemUrl = descobertaVisual[1].ImagemUrl, Link = descobertaVisual[1].Link });
+                if (descobertaVisual.Count > 2)
+                {
+                    inspiracoes.Add(new() { Titulo = "Fornecedores em destaque", Categoria = "fornecedores", ImagemUrl = descobertaVisual[2].ImagemUrl, Link = descobertaVisual[2].Link });
+                }
+                if (descobertaVisual.Count > 3)
+                {
+                    inspiracoes.Add(new() { Titulo = "Recomendado para você", Categoria = "recomendado", ImagemUrl = descobertaVisual[3].ImagemUrl, Link = descobertaVisual[3].Link });
+                }
+            }
+
+            var fornecedoresQuality = fornecedoresFiltrados.Where(f => IsImagemExploravel(f.FotoPerfilUrl)).Take(8).ToList();
+            var eventosQuality = eventosFiltrados.Where(e => IsImagemExploravel(e.ImagemCapa)).Take(8).ToList();
+            var templatesQuality = templatesFiltrados.Where(t => IsImagemExploravel(t.ThumbnailUrl)).Take(8).ToList();
+            var storiesQuality = storiesFiltrados.Where(s => IsImagemExploravel(s.CapaUrl)).Take(10).ToList();
+            var recentesQuality = recentesFiltrados.Where(p => IsImagemExploravel(p.ImagemUrl)).Take(18).ToList();
+            var popularesQuality = popularesFiltrados.Where(p => IsImagemExploravel(p.ImagemUrl)).Take(18).ToList();
 
             var model = new ExplorarViewModel
             {
                 Busca = buscaNormalizada,
                 CategoriaAtiva = categoriaNormalizada,
-                PostsRecentes = recentesFiltrados.Take(18).ToList(),
-                PostsPopulares = popularesFiltrados.Take(18).ToList(),
-                OrganizadoresDestaque = organizadoresFiltrados.Take(8).ToList(),
-                FornecedoresPopulares = fornecedoresFiltrados.Take(8).ToList(),
-                EventosEmAlta = eventosFiltrados.Take(8).ToList(),
-                TemplatesEmAlta = templatesFiltrados.Take(8).ToList(),
-                StoriesDestaque = storiesFiltrados.Take(10).ToList(),
+                PostsRecentes = recentesQuality,
+                PostsPopulares = popularesQuality,
+                OrganizadoresDestaque = organizadoresFiltrados.Where(f => IsImagemExploravel(f.FotoPerfilUrl)).Take(8).ToList(),
+                FornecedoresPopulares = fornecedoresQuality,
+                EventosEmAlta = eventosQuality,
+                TemplatesEmAlta = templatesQuality,
+                StoriesDestaque = storiesQuality,
                 Inspiracoes = inspiracoes,
-                DescobertaVisual = descobertaVisual,
+                HeroItems = heroItems,
+                DescobertaVisual = feedRestante,
+                DescobertaVisualInicial = feedRestante.Take(loteInicial).ToList(),
                 CategoriasDestaque = categoriasPadrao,
                 SugestoesBusca = sugestoesBusca,
-                TotalPostsRecentes = recentesFiltrados.Count(),
-                TotalPostsPopulares = popularesFiltrados.Count(),
-                TotalEventosEmAlta = eventosFiltrados.Count(),
-                TotalFornecedoresPopulares = fornecedoresFiltrados.Count(),
-                TotalTemplatesEmAlta = templatesFiltrados.Count(),
-                TotalStoriesDestaque = storiesFiltrados.Count()
+                TotalPostsRecentes = recentesQuality.Count,
+                TotalPostsPopulares = popularesQuality.Count,
+                TotalEventosEmAlta = eventosQuality.Count,
+                TotalFornecedoresPopulares = fornecedoresQuality.Count,
+                TotalTemplatesEmAlta = templatesQuality.Count,
+                TotalStoriesDestaque = storiesQuality.Count,
+                LoteCarregamento = loteInicial,
+                ProximoSkip = loteInicial,
+                PodeCarregarMais = feedRestante.Count > loteInicial
             };
 
             return View(model);
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> ExplorarMais(string? busca = null, string? categoria = null, int skip = 0, int take = 12)
+        {
+            var skipSeguro = Math.Max(0, skip);
+            var takeSeguro = Math.Clamp(take, 6, 24);
+            var resultado = await Explorar(busca, categoria) as ViewResult;
+            if (resultado?.Model is not ExplorarViewModel model)
+            {
+                return PartialView("Partials/_ExploreVisualCards", new List<ExplorarVisualItemViewModel>());
+            }
+
+            var lote = model.DescobertaVisual.Skip(skipSeguro).Take(takeSeguro).ToList();
+            if (!lote.Any())
+            {
+                return Content(string.Empty, "text/html; charset=utf-8");
+            }
+
+            return PartialView("Partials/_ExploreVisualCards", lote);
+        }
+
+        private ExplorarVisualItemViewModel CriarItemExplorarPost(FeedPostViewModel post, int index, DateTime agoraUtc)
+        {
+            var visualizacoes = (post.TotalCurtidas * 2) + (post.TotalComentarios * 3);
+            var compartilhamentos = post.UsuarioSalvou ? 2 : 0;
+            var score = CalcularScoreRelevancia(
+                post.ImagemUrl,
+                post.DataCriacao,
+                post.TotalCurtidas,
+                post.TotalComentarios,
+                visualizacoes,
+                compartilhamentos,
+                post.Categoria,
+                index % 9 == 0,
+                agoraUtc);
+
+            return new ExplorarVisualItemViewModel
+            {
+                Tipo = "post",
+                Titulo = string.IsNullOrWhiteSpace(post.NomeEvento) ? post.NomeAutor : post.NomeEvento!,
+                Subtitulo = post.Categoria,
+                ImagemUrl = post.ImagemUrl,
+                Link = Url.Action("Post", "Social", new { id = post.PostId }) ?? "#",
+                Badge = "post",
+                Score = (int)Math.Round(score),
+                ScoreRelevancia = score,
+                DataCriacao = post.DataCriacao,
+                Categoria = post.Categoria,
+                TotalCurtidas = post.TotalCurtidas,
+                TotalComentarios = post.TotalComentarios,
+                TotalVisualizacoes = visualizacoes,
+                TotalCompartilhamentos = compartilhamentos,
+                PossuiImagemValida = IsImagemExploravel(post.ImagemUrl),
+                DestaqueManual = index % 9 == 0,
+                Destaque = index % 7 == 0,
+                IsVideo = !string.IsNullOrWhiteSpace(post.TipoConteudo) && post.TipoConteudo.Contains("video", StringComparison.OrdinalIgnoreCase),
+                IsMulti = !string.IsNullOrWhiteSpace(post.Categoria) && post.Categoria.Contains("carrossel", StringComparison.OrdinalIgnoreCase)
+            };
+        }
+
+        private ExplorarVisualItemViewModel CriarItemExplorarEvento(ExplorarEventoCardViewModel evento, int index, DateTime agoraUtc)
+        {
+            var visualizacoes = evento.TotalPostsRelacionados * 6;
+            var score = CalcularScoreRelevancia(
+                evento.ImagemCapa,
+                evento.DataEvento.ToUniversalTime(),
+                evento.TotalPostsRelacionados * 2,
+                evento.TotalPostsRelacionados,
+                visualizacoes,
+                0,
+                evento.TipoEvento,
+                index == 0,
+                agoraUtc);
+
+            return new ExplorarVisualItemViewModel
+            {
+                Tipo = "evento",
+                Titulo = evento.NomeEvento,
+                Subtitulo = $"{evento.TipoEvento} · {evento.DataEvento:dd/MM}",
+                ImagemUrl = string.IsNullOrWhiteSpace(evento.ImagemCapa) ? ImagemPostPadrao : evento.ImagemCapa!,
+                Link = Url.Action("Evento", "Social", new { eventoId = evento.EventoId }) ?? "#",
+                Badge = "evento",
+                Score = (int)Math.Round(score),
+                ScoreRelevancia = score,
+                DataCriacao = evento.DataEvento.ToUniversalTime(),
+                Categoria = evento.TipoEvento,
+                TotalCurtidas = evento.TotalPostsRelacionados * 2,
+                TotalComentarios = evento.TotalPostsRelacionados,
+                TotalVisualizacoes = visualizacoes,
+                TotalCompartilhamentos = 0,
+                PossuiImagemValida = IsImagemExploravel(evento.ImagemCapa),
+                DestaqueManual = index == 0,
+                Destaque = index < 2
+            };
+        }
+
+        private ExplorarVisualItemViewModel CriarItemExplorarTemplate(ExplorarTemplateCardViewModel template, int index, DateTime agoraUtc)
+        {
+            var visualizacoes = Math.Max(2, 28 - index);
+            var score = CalcularScoreRelevancia(
+                template.ThumbnailUrl,
+                template.AtualizadoEm,
+                0,
+                0,
+                visualizacoes,
+                0,
+                template.Categoria,
+                index == 0,
+                agoraUtc);
+
+            return new ExplorarVisualItemViewModel
+            {
+                Tipo = "template",
+                Titulo = template.NomeTemplate,
+                Subtitulo = template.Estilo,
+                ImagemUrl = template.ThumbnailUrl,
+                Link = template.LinkEditor,
+                Badge = "template",
+                Score = (int)Math.Round(score),
+                ScoreRelevancia = score,
+                DataCriacao = template.AtualizadoEm,
+                Categoria = template.Categoria,
+                TotalCurtidas = 0,
+                TotalComentarios = 0,
+                TotalVisualizacoes = visualizacoes,
+                TotalCompartilhamentos = 0,
+                PossuiImagemValida = IsImagemExploravel(template.ThumbnailUrl),
+                DestaqueManual = index == 0,
+                Destaque = index == 0
+            };
+        }
+
+        private ExplorarVisualItemViewModel CriarItemExplorarStory(ExplorarStoryCardViewModel story, int index, DateTime agoraUtc)
+        {
+            var score = CalcularScoreRelevancia(
+                story.CapaUrl,
+                story.CriadoEm,
+                story.Reacoes,
+                0,
+                story.Visualizacoes,
+                0,
+                "stories",
+                index == 0,
+                agoraUtc);
+
+            return new ExplorarVisualItemViewModel
+            {
+                Tipo = "story",
+                Titulo = story.NomePerfil,
+                Subtitulo = $"{story.Visualizacoes} visualizações",
+                ImagemUrl = story.CapaUrl,
+                Link = Url.Action("Perfil", "Social", new { id = story.PerfilId }) ?? "#",
+                Badge = "story",
+                Score = (int)Math.Round(score),
+                ScoreRelevancia = score,
+                DataCriacao = story.CriadoEm,
+                Categoria = "stories",
+                TotalCurtidas = story.Reacoes,
+                TotalComentarios = 0,
+                TotalVisualizacoes = story.Visualizacoes,
+                TotalCompartilhamentos = 0,
+                PossuiImagemValida = IsImagemExploravel(story.CapaUrl),
+                DestaqueManual = index == 0,
+                Destaque = index == 0
+            };
+        }
+
+        private ExplorarVisualItemViewModel CriarItemExplorarFornecedor(ExplorarPerfilCardViewModel fornecedor, int index, DateTime agoraUtc)
+        {
+            var dataBase = agoraUtc.AddDays(-Math.Min(fornecedor.TotalPosts, 20));
+            var visualizacoes = Math.Max(1, fornecedor.TotalPosts * 2);
+            var score = CalcularScoreRelevancia(
+                fornecedor.FotoPerfilUrl,
+                dataBase,
+                fornecedor.TotalPosts,
+                0,
+                visualizacoes,
+                0,
+                "fornecedores",
+                index == 0,
+                agoraUtc);
+
+            return new ExplorarVisualItemViewModel
+            {
+                Tipo = "fornecedor",
+                Titulo = fornecedor.NomeExibicao,
+                Subtitulo = string.IsNullOrWhiteSpace(fornecedor.Cidade) ? fornecedor.TipoPerfil : $"{fornecedor.TipoPerfil} · {fornecedor.Cidade}",
+                ImagemUrl = string.IsNullOrWhiteSpace(fornecedor.FotoPerfilUrl) ? FotoPerfilPadrao : fornecedor.FotoPerfilUrl!,
+                Link = Url.Action("Perfil", "Social", new { id = fornecedor.PerfilId }) ?? "#",
+                Badge = "fornecedor",
+                Score = (int)Math.Round(score),
+                ScoreRelevancia = score,
+                DataCriacao = dataBase,
+                Categoria = "fornecedores",
+                TotalCurtidas = fornecedor.TotalPosts,
+                TotalComentarios = 0,
+                TotalVisualizacoes = visualizacoes,
+                TotalCompartilhamentos = 0,
+                PossuiImagemValida = IsImagemExploravel(fornecedor.FotoPerfilUrl),
+                DestaqueManual = index == 0,
+                Destaque = index == 0
+            };
+        }
+
+        private static decimal CalcularScoreRelevancia(
+            string? imagemUrl,
+            DateTime criadoEmUtc,
+            int curtidas,
+            int comentarios,
+            int visualizacoes,
+            int compartilhamentos,
+            string? categoria,
+            bool destaqueManual,
+            DateTime agoraUtc)
+        {
+            decimal score = 0m;
+            if (IsImagemExploravel(imagemUrl)) score += 40m;
+
+            var horas = Math.Abs((agoraUtc - criadoEmUtc).TotalHours);
+            if (horas <= 24) score += 25m;
+            else if (horas <= 72) score += 15m;
+            else if (horas <= 168) score += 8m;
+
+            score += Math.Min(15m, curtidas * 1.2m);
+            score += Math.Min(10m, comentarios * 1.8m);
+            score += Math.Min(10m, visualizacoes / 4m);
+            score += Math.Min(8m, compartilhamentos * 2m);
+            if (destaqueManual) score += 20m;
+            score += BonusCategoriaExplorar(categoria);
+
+            return score;
+        }
+
+        private static decimal BonusCategoriaExplorar(string? categoria)
+        {
+            if (string.IsNullOrWhiteSpace(categoria)) return 0m;
+            var categoriaNorm = categoria.Trim().ToLowerInvariant();
+            return categoriaNorm switch
+            {
+                "casamento" or "corporativo" or "decoração" or "fotografia" => 8m,
+                "show" or "aniversário" or "fornecedores" or "templates" or "stories" => 6m,
+                _ => 3m
+            };
+        }
+
+        private static bool IsImagemExploravel(string? imagemUrl)
+        {
+            if (string.IsNullOrWhiteSpace(imagemUrl)) return false;
+            var url = imagemUrl.Trim().ToLowerInvariant();
+            if (url.Contains("default-post") || url.Contains("default-profile") || url.Contains("placeholder")) return false;
+            if (url.EndsWith(".svg", StringComparison.OrdinalIgnoreCase) && url.Contains("defaults")) return false;
+            return true;
+        }
+
+        private static List<ExplorarVisualItemViewModel> MisturarItensExplorar(List<ExplorarVisualItemViewModel> itens)
+        {
+            var ordenados = itens
+                .OrderByDescending(i => i.ScoreRelevancia)
+                .ThenByDescending(i => i.DestaqueManual)
+                .ToList();
+
+            var restante = new List<ExplorarVisualItemViewModel>(ordenados);
+            var resultado = new List<ExplorarVisualItemViewModel>(ordenados.Count);
+
+            while (restante.Count > 0)
+            {
+                var ultimoTipo = resultado.Count > 0 ? resultado[^1].Tipo : null;
+                var repeticoesTipo = 0;
+                for (var i = resultado.Count - 1; i >= 0 && ultimoTipo != null; i--)
+                {
+                    if (resultado[i].Tipo != ultimoTipo) break;
+                    repeticoesTipo++;
+                }
+
+                var ultimoCategoria = resultado.Count > 0 ? resultado[^1].Categoria : null;
+                var repeticoesCategoria = 0;
+                for (var i = resultado.Count - 1; i >= 0 && ultimoCategoria != null; i--)
+                {
+                    if (!string.Equals(resultado[i].Categoria, ultimoCategoria, StringComparison.OrdinalIgnoreCase)) break;
+                    repeticoesCategoria++;
+                }
+
+                var proximo = restante.FirstOrDefault(item =>
+                    (repeticoesTipo < 2 || item.Tipo != ultimoTipo)
+                    && (repeticoesCategoria < 2 || !string.Equals(item.Categoria, ultimoCategoria, StringComparison.OrdinalIgnoreCase)))
+                    ?? restante[0];
+
+                resultado.Add(proximo);
+                restante.Remove(proximo);
+            }
+
+            return resultado;
         }
 
         [AllowAnonymous]
