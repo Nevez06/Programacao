@@ -1,0 +1,18 @@
+@model ProjetoEventX.ViewModels.Social.ExplorarViewModel
+
+<section class="explore-chips-wrap" aria-label="Filtros rápidos">
+    <div class="explore-chips-scroll">
+        @foreach (var categoria in Model.CategoriasDestaque)
+        {
+            var cat = categoria.Trim().ToLowerInvariant();
+            var ativa = string.Equals(cat, Model.CategoriaAtiva, StringComparison.OrdinalIgnoreCase);
+            <a asp-action="Explorar"
+               asp-route-categoria="@cat"
+               asp-route-busca="@Model.Busca"
+               class="explore-chip @(ativa ? "is-active" : string.Empty)"
+               data-explore-chip>
+                @categoria
+            </a>
+        }
+    </div>
+</section>

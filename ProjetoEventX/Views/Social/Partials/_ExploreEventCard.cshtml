@@ -1,0 +1,27 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.ExplorarEventoCardViewModel>
+
+<section class="explore-section" aria-label="Eventos em destaque">
+    <div class="explore-section-head">
+        <h2>Eventos em destaque</h2>
+        <a asp-action="EventosEmAlta">abrir lista</a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="explore-events-grid">
+            @foreach (var evento in Model)
+            {
+                <a asp-action="Evento" asp-route-eventoId="@evento.EventoId" class="explore-event-card">
+                    <img src="@(string.IsNullOrWhiteSpace(evento.ImagemCapa) ? "/uploads/social/defaults/default-post.svg" : evento.ImagemCapa)"
+                         alt="@evento.NomeEvento"
+                         loading="lazy"
+                         onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                    <div class="explore-event-overlay">
+                        <strong>@evento.NomeEvento</strong>
+                        <small>@evento.TipoEvento · @evento.DataEvento.ToLocalTime().ToString("dd/MM")</small>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</section>

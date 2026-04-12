@@ -1,0 +1,27 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.ExplorarPerfilCardViewModel>
+
+<section class="explore-section" aria-label="Fornecedores e organizadores">
+    <div class="explore-section-head">
+        <h2>Fornecedores populares</h2>
+        <a asp-action="Explorar" asp-route-categoria="fornecedores">ver mais</a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="explore-supplier-row">
+            @foreach (var perfil in Model)
+            {
+                <a asp-action="Perfil" asp-route-id="@perfil.PerfilId" class="explore-supplier-card">
+                    <img src="@(string.IsNullOrWhiteSpace(perfil.FotoPerfilUrl) ? "/uploads/social/defaults/default-profile.svg" : perfil.FotoPerfilUrl)"
+                         alt="@perfil.NomeExibicao"
+                         loading="lazy"
+                         onerror="this.onerror=null;this.src='/uploads/social/defaults/default-profile.svg';" />
+                    <div>
+                        <strong>@perfil.NomeExibicao</strong>
+                        <small>@perfil.TipoPerfil · @(string.IsNullOrWhiteSpace(perfil.Cidade) ? "EventX" : perfil.Cidade)</small>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</section>
