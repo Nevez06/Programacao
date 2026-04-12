@@ -1,0 +1,94 @@
+@model ProjetoEventX.ViewModels.Social.PerfilSocialViewModel
+@{
+    var avatar = string.IsNullOrWhiteSpace(Model.AvatarUrl) ? "/uploads/social/defaults/default-profile.svg" : Model.AvatarUrl;
+    var usernameRaw = !string.IsNullOrWhiteSpace(Model.Username)
+        ? Model.Username
+        : (!string.IsNullOrWhiteSpace(Model.UsernamePublico)
+            ? Model.UsernamePublico
+            : (!string.IsNullOrWhiteSpace(Model.NomeExibicao)
+                ? Model.NomeExibicao
+                : (!string.IsNullOrWhiteSpace(Model.NomeUsuario) ? Model.NomeUsuario : $"perfil.{Model.Id}")));
+    var username = usernameRaw?.Trim() ?? $"perfil.{Model.Id}";
+    if (!username.StartsWith("@"))
+    {
+        username = $"@{username.TrimStart('@')}";
+    }
+    var nomeAmigavel = !string.IsNullOrWhiteSpace(Model.NomeExibicao)
+        ? Model.NomeExibicao
+        : (!string.IsNullOrWhiteSpace(Model.NomeUsuario) ? Model.NomeUsuario : username.TrimStart('@'));
+    var categoria = string.IsNullOrWhiteSpace(Model.CategoriaPerfil) ? "Convidado" : Model.CategoriaPerfil;
+    var link = Model.Link;
+}
+
+<section class="profile-section profile-header-block">
+    <div class="profile-header-main">
+        <div class="profile-avatar-ring">
+            <img src="@avatar"
+                 alt="avatar de @Model.NomeExibicao"
+                 loading="lazy"
+                 onerror="this.onerror=null;this.src='/uploads/social/defaults/default-profile.svg';" />
+        </div>
+
+        <div class="profile-stat-row">
+            <div class="profile-stat">
+                <strong>@Model.TotalPosts</strong>
+                <span>posts</span>
+            </div>
+            <div class="profile-stat">
+                <strong data-seguidores-count>@Model.TotalSeguidores</strong>
+                <span>seguidores</span>
+            </div>
+            <div class="profile-stat">
+                <strong>@Model.TotalSeguindo</strong>
+                <span>seguindo</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-bio">
+        <h1>@nomeAmigavel</h1>
+        <p class="profile-username">@username</p>
+        <p class="profile-meta profile-meta-role">@categoria.ToLowerInvariant()</p>
+        @if (!string.IsNullOrWhiteSpace(Model.Bio))
+        {
+            <p>@Model.Bio</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Cidade))
+        {
+            <p class="profile-meta"><i class="fas fa-location-dot"></i> @Model.Cidade</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(link))
+        {
+            <a href="@link" class="profile-link" target="_blank" rel="noopener noreferrer">@link</a>
+        }
+    </div>
+
+    <div class="profile-action-row">
+        @if (Model.EhPerfilDoUsuarioLogado)
+        {
+            <a asp-action="EditarPerfil" class="profile-action-btn primary">Editar perfil</a>
+            <button type="button"
+                    class="profile-action-btn secondary js-share-btn"
+                    data-share-url="@Url.Action("Perfil", "Social", new { id = Model.Id }, Context.Request.Scheme)">
+                Compartilhar perfil
+            </button>
+        }
+        else
+        {
+            <button type="button"
+                    class="profile-action-btn primary js-profile-follow"
+                    data-perfil-id="@Model.Id"
+                    data-following="@(Model.UsuarioSegue ? "1" : "0")">
+                @(Model.UsuarioSegue ? "Seguindo" : "Seguir")
+            </button>
+            <button type="button" class="profile-action-btn secondary" aria-label="Mensagem">
+                Mensagem
+            </button>
+            <button type="button"
+                    class="profile-action-btn secondary js-share-btn"
+                    data-share-url="@Url.Action("Perfil", "Social", new { id = Model.Id }, Context.Request.Scheme)">
+                Compartilhar perfil
+            </button>
+        }
+    </div>
+</section>

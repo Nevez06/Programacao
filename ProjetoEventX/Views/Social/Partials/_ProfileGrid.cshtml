@@ -1,0 +1,150 @@
+@model ProjetoEventX.ViewModels.Social.PerfilSocialViewModel
+
+<section class="profile-section profile-grid-stage">
+    <div class="profile-grid-skeleton js-profile-grid-skeleton">
+        @for (var i = 0; i < 9; i++)
+        {
+            <span class="profile-skeleton-item"></span>
+        }
+    </div>
+
+    <div class="profile-tab-panel is-active" data-panel="posts">
+        @if (Model.ListaPosts.Any())
+        {
+            <div class="profile-grid">
+                @foreach (var post in Model.ListaPosts)
+                {
+                    var isVideo = !string.IsNullOrWhiteSpace(post.TipoConteudo) && post.TipoConteudo.Contains("video", StringComparison.OrdinalIgnoreCase);
+                    var isCarrossel = !string.IsNullOrWhiteSpace(post.Categoria) && post.Categoria.Contains("carrossel", StringComparison.OrdinalIgnoreCase);
+                    <a asp-action="Post" asp-route-id="@post.Id" class="profile-grid-item js-open-post">
+                        <img src="@post.ImagemUrl"
+                             alt="post @post.Id"
+                             loading="lazy"
+                             onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                        @if (isVideo)
+                        {
+                            <span class="profile-grid-indicator"><i class="fas fa-play"></i></span>
+                        }
+                        else if (isCarrossel)
+                        {
+                            <span class="profile-grid-indicator"><i class="fas fa-clone"></i></span>
+                        }
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="profile-empty-glass">
+                <h3>Sem publicações</h3>
+                <p>Quando este perfil publicar, as imagens aparecem aqui.</p>
+            </div>
+        }
+    </div>
+
+    <div class="profile-tab-panel" data-panel="videos">
+        @if (Model.ListaVideos.Any())
+        {
+            <div class="profile-grid">
+                @foreach (var post in Model.ListaVideos)
+                {
+                    <a asp-action="Post" asp-route-id="@post.Id" class="profile-grid-item js-open-post">
+                        <img src="@post.ImagemUrl"
+                             alt="vídeo @post.Id"
+                             loading="lazy"
+                             onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                        <span class="profile-grid-indicator"><i class="fas fa-play"></i></span>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="profile-empty-glass">
+                <h3>Sem vídeos</h3>
+                <p>Os vídeos do perfil serão exibidos nesta aba.</p>
+            </div>
+        }
+    </div>
+
+    <div class="profile-tab-panel" data-panel="marcados">
+        @if (Model.ListaMarcados.Any())
+        {
+            <div class="profile-grid">
+                @foreach (var post in Model.ListaMarcados)
+                {
+                    <a asp-action="Post" asp-route-id="@post.Id" class="profile-grid-item js-open-post">
+                        <img src="@post.ImagemUrl"
+                             alt="marcado @post.Id"
+                             loading="lazy"
+                             onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="profile-empty-glass">
+                <h3>Nenhuma marcação</h3>
+                <p>Posts com marcações aparecerão aqui.</p>
+            </div>
+        }
+    </div>
+
+    <div class="profile-tab-panel" data-panel="eventos">
+        @if (Model.ListaEventos.Any())
+        {
+            <div class="profile-grid">
+                @foreach (var evento in Model.ListaEventos)
+                {
+                    <a asp-action="Evento" asp-route-eventoId="@evento.Id" class="profile-grid-item js-open-post">
+                        <img src="@(string.IsNullOrWhiteSpace(evento.ImagemCapa) ? "/uploads/social/defaults/default-post.svg" : evento.ImagemCapa)"
+                             alt="@evento.NomeEvento"
+                             loading="lazy"
+                             onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                        <span class="profile-grid-indicator"><i class="fas fa-calendar-days"></i></span>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="profile-empty-glass">
+                <h3>Sem eventos</h3>
+                <p>Eventos relacionados a este perfil serão listados aqui.</p>
+            </div>
+        }
+    </div>
+
+    @if (Model.EhPerfilDoUsuarioLogado)
+    {
+        <div class="profile-tab-panel" data-panel="salvos">
+            @if (Model.ListaSalvos.Any())
+            {
+                <div class="profile-grid">
+                    @foreach (var post in Model.ListaSalvos)
+                    {
+                        var isVideo = !string.IsNullOrWhiteSpace(post.TipoConteudo) && post.TipoConteudo.Contains("video", StringComparison.OrdinalIgnoreCase);
+                        <a asp-action="Post" asp-route-id="@post.PostId" class="profile-grid-item js-open-post">
+                            <img src="@post.ImagemUrl"
+                                 alt="salvo @post.PostId"
+                                 loading="lazy"
+                                 onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                            @if (isVideo)
+                            {
+                                <span class="profile-grid-indicator"><i class="fas fa-play"></i></span>
+                            }
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="profile-empty-glass">
+                    <h3>Nada salvo ainda</h3>
+                    <p>Seus posts salvos aparecem nesta aba.</p>
+                </div>
+            }
+        </div>
+    }
+</section>
