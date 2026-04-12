@@ -54,6 +54,14 @@ namespace ProjetoEventX.Data
         public DbSet<SocialStatus> SocialStatus { get; set; }
         public DbSet<SocialStatusVisualizacao> SocialStatusVisualizacoes { get; set; }
         public DbSet<SocialPostSalvo> SocialPostsSalvos { get; set; }
+        public DbSet<Story> Stories { get; set; }
+        public DbSet<StoryView> StoryViews { get; set; }
+        public DbSet<StoryReaction> StoryReactions { get; set; }
+        public DbSet<StoryHighlight> StoryHighlights { get; set; }
+        public DbSet<StoryHighlightItem> StoryHighlightItems { get; set; }
+        public DbSet<StoryReply> StoryReplies { get; set; }
+        public DbSet<StoryMention> StoryMentions { get; set; }
+        public DbSet<PerfilSocialFollow> PerfilSocialFollows { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -324,6 +332,13 @@ namespace ProjetoEventX.Data
                 .HasForeignKey(p => p.EventoId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            builder.Entity<SocialPost>()
+                .Property(p => p.CommentsEnabled)
+                .HasDefaultValue(true);
+
+            builder.Entity<SocialPost>()
+                .HasIndex(p => new { p.PerfilSocialId, p.IsPinned, p.PinnedOrder });
+
             builder.Entity<SocialCurtida>()
                 .HasOne(c => c.Post)
                 .WithMany(p => p.Curtidas)
@@ -403,6 +418,115 @@ namespace ProjetoEventX.Data
 
             builder.Entity<SocialPostSalvo>()
                 .HasIndex(s => new { s.PostId, s.UserId })
+                .IsUnique();
+
+            builder.Entity<Story>()
+                .HasIndex(s => s.UserId);
+
+            builder.Entity<Story>()
+                .HasIndex(s => s.ExpireAt);
+
+            builder.Entity<Story>()
+                .HasOne(s => s.PerfilSocial)
+                .WithMany()
+                .HasForeignKey(s => s.PerfilSocialId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Story>()
+                .HasOne(s => s.SharedPost)
+                .WithMany()
+                .HasForeignKey(s => s.SharedPostId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<Story>()
+                .HasOne(s => s.Evento)
+                .WithMany()
+                .HasForeignKey(s => s.EventoId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<StoryView>()
+                .HasOne(v => v.Story)
+                .WithMany(s => s.Views)
+                .HasForeignKey(v => v.StoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<StoryView>()
+                .HasIndex(v => new { v.StoryId, v.UserId })
+                .IsUnique();
+
+            builder.Entity<StoryReaction>()
+                .HasOne(r => r.Story)
+                .WithMany(s => s.Reactions)
+                .HasForeignKey(r => r.StoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<StoryReaction>()
+                .Property(r => r.ReactionType)
+                .HasMaxLength(16);
+
+            builder.Entity<StoryReaction>()
+                .HasIndex(r => new { r.StoryId, r.UserId })
+                .IsUnique();
+
+            builder.Entity<StoryReply>()
+                .HasOne(r => r.Story)
+                .WithMany(s => s.Replies)
+                .HasForeignKey(r => r.StoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<StoryReply>()
+                .Property(r => r.Message)
+                .HasMaxLength(1000);
+
+            builder.Entity<StoryReply>()
+                .HasIndex(r => new { r.StoryId, r.CreatedAt });
+
+            builder.Entity<StoryMention>()
+                .HasOne(m => m.Story)
+                .WithMany(s => s.Mentions)
+                .HasForeignKey(m => m.StoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<StoryMention>()
+                .HasIndex(m => new { m.StoryId, m.MentionedPerfilId });
+
+            builder.Entity<StoryHighlight>()
+                .Property(h => h.Nome)
+                .HasMaxLength(100);
+
+            builder.Entity<StoryHighlight>()
+                .HasIndex(h => h.UserId);
+
+            builder.Entity<StoryHighlightItem>()
+                .HasOne(i => i.Highlight)
+                .WithMany(h => h.Items)
+                .HasForeignKey(i => i.HighlightId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<StoryHighlightItem>()
+                .HasOne(i => i.Story)
+                .WithMany(s => s.HighlightItems)
+                .HasForeignKey(i => i.StoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<StoryHighlightItem>()
+                .HasIndex(i => new { i.HighlightId, i.StoryId })
+                .IsUnique();
+
+            builder.Entity<PerfilSocialFollow>()
+                .HasOne(f => f.SeguidorPerfil)
+                .WithMany()
+                .HasForeignKey(f => f.SeguidorPerfilId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<PerfilSocialFollow>()
+                .HasOne(f => f.SeguindoPerfil)
+                .WithMany()
+                .HasForeignKey(f => f.SeguindoPerfilId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<PerfilSocialFollow>()
+                .HasIndex(f => new { f.SeguidorPerfilId, f.SeguindoPerfilId })
                 .IsUnique();
 
             // Restrições para status

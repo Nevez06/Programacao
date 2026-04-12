@@ -22,6 +22,12 @@ namespace ProjetoEventX.ViewModels.Social
         public string? TipoConteudo { get; set; }
         public bool UsuarioSalvou { get; set; }
         public bool PostRelacionadoAoUsuario { get; set; }
+        public bool IsOwner { get; set; }
+        public bool IsPinned { get; set; }
+        public bool IsArchived { get; set; }
+        public bool HideLikesCount { get; set; }
+        public bool HideSharesCount { get; set; }
+        public bool CommentsEnabled { get; set; } = true;
         public List<FeedComentarioPreviewViewModel> ComentariosPreview { get; set; } = new();
     }
 }

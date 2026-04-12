@@ -48,6 +48,13 @@ namespace ProjetoEventX.Models
         public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
         public DateTime AtualizadoEm { get; set; } = DateTime.UtcNow;
         public bool Ativo { get; set; } = true;
+        public bool IsPinned { get; set; }
+        public int? PinnedOrder { get; set; }
+        public bool IsArchived { get; set; }
+        public bool IsDeleted { get; set; }
+        public bool HideLikesCount { get; set; }
+        public bool HideSharesCount { get; set; }
+        public bool CommentsEnabled { get; set; } = true;
 
         public ICollection<SocialCurtida> Curtidas { get; set; } = new List<SocialCurtida>();
         public ICollection<SocialComentario> Comentarios { get; set; } = new List<SocialComentario>();

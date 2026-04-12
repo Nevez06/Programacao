@@ -218,6 +218,12 @@ namespace ProjetoEventX.Controllers
             return $"{Math.Max(1, (int)diff.TotalDays)} d";
         }
 
+        private static bool PostVisivelPublicamente(SocialPost p)
+            => p.Ativo && !p.IsArchived && !p.IsDeleted;
+
+        private static bool PostVisivelParaFeed(FeedPostViewModel p)
+            => !p.IsArchived;
+
         private async Task<List<SocialStatusItemViewModel>> ObterStoriesAtivosAsync(int? usuarioAtualId)
         {
             var agora = DateTime.UtcNow;
@@ -354,7 +360,7 @@ namespace ProjetoEventX.Controllers
             var seteDiasAtras = DateTime.UtcNow.AddDays(-7);
             var queryPosts = _context.SocialPosts
                 .AsNoTracking()
-                .Where(p => p.Ativo)
+                .Where(p => p.Ativo && !p.IsArchived && !p.IsDeleted)
                 .Where(p => !string.IsNullOrWhiteSpace(p.ImagemUrl))
                 .Select(p => new FeedPostViewModel
                 {
@@ -374,6 +380,11 @@ namespace ProjetoEventX.Controllers
                     DataCriacao = p.CriadoEm,
                     TotalCurtidas = p.Curtidas.Count,
                     TotalComentarios = p.Comentarios.Count(c => c.Ativo),
+                    HideLikesCount = p.HideLikesCount,
+                    HideSharesCount = p.HideSharesCount,
+                    CommentsEnabled = p.CommentsEnabled,
+                    IsPinned = p.IsPinned,
+                    IsArchived = p.IsArchived,
                     UsuarioCurtiu = usuarioId.HasValue && p.Curtidas.Any(c => c.UserId == usuarioId.Value),
                     UsuarioSalvou = usuarioId.HasValue && p.Salvos.Any(s => s.UserId == usuarioId.Value),
                     EventoId = p.EventoId,
@@ -381,15 +392,19 @@ namespace ProjetoEventX.Controllers
                     PerfilId = p.PerfilSocialId,
                     TipoPerfil = p.PerfilSocial != null ? p.PerfilSocial.TipoPerfil : (p.User != null ? p.User.TipoUsuario ?? "Convidado" : "Convidado"),
                     Cidade = p.PerfilSocial != null ? p.PerfilSocial.Cidade : null,
+                    IsOwner = usuarioId.HasValue && p.UserId == usuarioId.Value,
                     PostRelacionadoAoUsuario = usuarioId.HasValue && (p.UserId == usuarioId.Value || (p.Evento != null && p.Evento.OrganizadorId == usuarioId.Value))
                 });
 
             queryPosts = ordemNormalizada == "populares"
-                ? queryPosts.OrderByDescending(p => p.PostRelacionadoAoUsuario)
+                ? queryPosts.OrderByDescending(p => p.IsPinned)
+                    .ThenBy(p => p.IsPinned ? p.PostId : int.MaxValue)
+                    .ThenByDescending(p => p.PostRelacionadoAoUsuario)
                     .ThenByDescending(p => p.TotalCurtidas)
                     .ThenByDescending(p => p.TotalComentarios)
                     .ThenByDescending(p => p.DataCriacao)
-                : queryPosts.OrderByDescending(p => p.PostRelacionadoAoUsuario)
+                : queryPosts.OrderByDescending(p => p.IsPinned)
+                    .ThenByDescending(p => p.PostRelacionadoAoUsuario)
                     .ThenByDescending(p => p.DataCriacao);
 
             var posts = await queryPosts.Take(40).ToListAsync();
@@ -1916,9 +1931,15 @@ namespace ProjetoEventX.Controllers
                 .Include(p => p.User)
                 .Include(p => p.PerfilSocial)
                 .Include(p => p.Evento)
-                .FirstOrDefaultAsync(p => p.Id == id && p.Ativo);
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
 
             if (post == null || post.User == null || post.PerfilSocial == null)
+            {
+                return NotFound();
+            }
+
+            var ehDonoPost = usuarioAtual != null && post.UserId == usuarioAtual.Id;
+            if (!PostVisivelPublicamente(post) && !ehDonoPost)
             {
                 return NotFound();
             }
@@ -1943,6 +1964,7 @@ namespace ProjetoEventX.Controllers
                 NomeAutor = ResolverNomeExibicao(post.PerfilSocial, post.User),
                 TipoPerfil = string.IsNullOrWhiteSpace(post.PerfilSocial.TipoPerfil) ? (post.User.TipoUsuario ?? "Convidado") : post.PerfilSocial.TipoPerfil,
                 Cidade = post.PerfilSocial.Cidade,
+                IsOwner = ehDonoPost,
                 StatusAutorAtivos = await _context.SocialStatus
                     .AsNoTracking()
                     .Where(s => s.Ativo && s.PerfilSocialId == post.PerfilSocialId && s.ExpiraEm > DateTime.UtcNow)
@@ -1982,7 +2004,7 @@ namespace ProjetoEventX.Controllers
 
             var posts = await _context.SocialPosts
                 .AsNoTracking()
-                .Where(p => p.UserId == usuario.Id && p.Ativo)
+                .Where(p => p.UserId == usuario.Id && !p.IsDeleted)
                 .OrderByDescending(p => p.CriadoEm)
                 .ToListAsync();
 
@@ -2010,9 +2032,15 @@ namespace ProjetoEventX.Controllers
                 return Forbid();
             }
 
+            post.IsDeleted = true;
             post.Ativo = false;
             post.AtualizadoEm = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+            var isAjax = string.Equals(Request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
+            if (isAjax)
+            {
+                return Json(new { ok = true, message = "Publicação excluída." });
+            }
             return RedirectToAction(nameof(MeusPosts));
         }
 
@@ -2025,7 +2053,7 @@ namespace ProjetoEventX.Controllers
                 return Challenge();
             }
 
-            var post = await _context.SocialPosts.FirstOrDefaultAsync(p => p.Id == id && p.UserId == usuario.Id && p.Ativo);
+            var post = await _context.SocialPosts.FirstOrDefaultAsync(p => p.Id == id && p.UserId == usuario.Id && !p.IsDeleted);
             if (post == null)
             {
                 return NotFound();
@@ -2056,7 +2084,7 @@ namespace ProjetoEventX.Controllers
                 return Challenge();
             }
 
-            var post = await _context.SocialPosts.FirstOrDefaultAsync(p => p.Id == id && p.UserId == usuario.Id && p.Ativo);
+            var post = await _context.SocialPosts.FirstOrDefaultAsync(p => p.Id == id && p.UserId == usuario.Id && !p.IsDeleted);
             if (post == null)
             {
                 return NotFound();
@@ -2092,10 +2120,16 @@ namespace ProjetoEventX.Controllers
                 return Challenge();
             }
 
-            var postExiste = await _context.SocialPosts.AnyAsync(p => p.Id == id && p.Ativo);
-            if (!postExiste)
+            var post = await _context.SocialPosts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id && p.Ativo && !p.IsArchived && !p.IsDeleted);
+            if (post == null)
             {
                 return NotFound();
+            }
+            if (!post.CommentsEnabled)
+            {
+                return RedirectToAction(nameof(Post), new { id });
             }
 
             var curtidaExiste = await _context.SocialCurtidas.AnyAsync(c => c.PostId == id && c.UserId == usuario.Id);
@@ -2124,7 +2158,7 @@ namespace ProjetoEventX.Controllers
                 return Challenge();
             }
 
-            var postExiste = await _context.SocialPosts.AnyAsync(p => p.Id == id && p.Ativo);
+            var postExiste = await _context.SocialPosts.AnyAsync(p => p.Id == id && p.Ativo && !p.IsArchived && !p.IsDeleted);
             if (!postExiste)
             {
                 return NotFound();
@@ -2200,7 +2234,7 @@ namespace ProjetoEventX.Controllers
                 return RedirectToAction(nameof(Post), new { id });
             }
 
-            var postExiste = await _context.SocialPosts.AnyAsync(p => p.Id == id && p.Ativo);
+            var postExiste = await _context.SocialPosts.AnyAsync(p => p.Id == id && p.Ativo && !p.IsArchived && !p.IsDeleted);
             if (!postExiste)
             {
                 return NotFound();
@@ -2238,10 +2272,14 @@ namespace ProjetoEventX.Controllers
 
             var post = await _context.SocialPosts
                 .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Id == id && p.Ativo);
+                .FirstOrDefaultAsync(p => p.Id == id && p.Ativo && !p.IsArchived && !p.IsDeleted);
             if (post == null)
             {
                 return NotFound();
+            }
+            if (!post.CommentsEnabled)
+            {
+                return BadRequest(new { ok = false, mensagem = "Comentários desativados para esta publicação." });
             }
 
             var perfil = await GarantirPerfilSocialAsync(usuario);
@@ -2310,7 +2348,7 @@ namespace ProjetoEventX.Controllers
 
             var posts = await _context.SocialPosts
                 .AsNoTracking()
-                .Where(p => p.Ativo && p.EventoId == eventoId)
+                .Where(p => p.Ativo && !p.IsArchived && !p.IsDeleted && p.EventoId == eventoId)
                 .OrderByDescending(p => p.CriadoEm)
                 .Select(p => new FeedPostViewModel
                 {
@@ -2329,11 +2367,17 @@ namespace ProjetoEventX.Controllers
                     DataCriacao = p.CriadoEm,
                     TotalCurtidas = p.Curtidas.Count,
                     TotalComentarios = p.Comentarios.Count(c => c.Ativo),
+                    HideLikesCount = p.HideLikesCount,
+                    HideSharesCount = p.HideSharesCount,
+                    CommentsEnabled = p.CommentsEnabled,
+                    IsPinned = p.IsPinned,
+                    IsArchived = p.IsArchived,
                     EventoId = p.EventoId,
                     NomeEvento = p.Evento != null ? p.Evento.NomeEvento : null,
                     PerfilId = p.PerfilSocialId,
                     TipoPerfil = p.PerfilSocial != null ? p.PerfilSocial.TipoPerfil : (p.User != null ? p.User.TipoUsuario ?? "Convidado" : "Convidado"),
-                    Cidade = p.PerfilSocial != null ? p.PerfilSocial.Cidade : null
+                    Cidade = p.PerfilSocial != null ? p.PerfilSocial.Cidade : null,
+                    IsOwner = false
                 })
                 .ToListAsync();
 
@@ -2351,7 +2395,7 @@ namespace ProjetoEventX.Controllers
                 return Challenge();
             }
 
-            var postExiste = await _context.SocialPosts.AnyAsync(p => p.Id == id && p.Ativo);
+            var postExiste = await _context.SocialPosts.AnyAsync(p => p.Id == id && p.Ativo && !p.IsArchived && !p.IsDeleted);
             if (!postExiste)
             {
                 return NotFound();
@@ -2394,6 +2438,127 @@ namespace ProjetoEventX.Controllers
             return string.IsNullOrWhiteSpace(referer) ? RedirectToAction(nameof(Post), new { id }) : Redirect(referer);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AlternarFixadoPost(int id)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var post = await _context.SocialPosts.FirstOrDefaultAsync(p => p.Id == id && p.UserId == usuario.Id && !p.IsDeleted);
+            if (post == null)
+            {
+                return Forbid();
+            }
+
+            post.IsPinned = !post.IsPinned;
+            post.PinnedOrder = post.IsPinned ? (post.PinnedOrder ?? 1) : null;
+            post.AtualizadoEm = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Json(new { ok = true, pinned = post.IsPinned, message = post.IsPinned ? "Publicação fixada no perfil." : "Fixação removida." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AlternarArquivamentoPost(int id)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var post = await _context.SocialPosts.FirstOrDefaultAsync(p => p.Id == id && p.UserId == usuario.Id && !p.IsDeleted);
+            if (post == null)
+            {
+                return Forbid();
+            }
+
+            post.IsArchived = !post.IsArchived;
+            if (post.IsArchived)
+            {
+                post.Ativo = false;
+            }
+            else
+            {
+                post.Ativo = true;
+            }
+            post.AtualizadoEm = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Json(new { ok = true, archived = post.IsArchived, message = post.IsArchived ? "Publicação arquivada." : "Publicação desarquivada." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AlternarOcultarCurtidasPost(int id)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var post = await _context.SocialPosts.FirstOrDefaultAsync(p => p.Id == id && p.UserId == usuario.Id && !p.IsDeleted);
+            if (post == null)
+            {
+                return Forbid();
+            }
+
+            post.HideLikesCount = !post.HideLikesCount;
+            post.AtualizadoEm = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return Json(new { ok = true, hidden = post.HideLikesCount, message = post.HideLikesCount ? "Curtidas ocultadas." : "Curtidas visíveis." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AlternarOcultarCompartilhamentosPost(int id)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var post = await _context.SocialPosts.FirstOrDefaultAsync(p => p.Id == id && p.UserId == usuario.Id && !p.IsDeleted);
+            if (post == null)
+            {
+                return Forbid();
+            }
+
+            post.HideSharesCount = !post.HideSharesCount;
+            post.AtualizadoEm = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return Json(new { ok = true, hidden = post.HideSharesCount, message = post.HideSharesCount ? "Compartilhamentos ocultados." : "Compartilhamentos visíveis." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AlternarComentariosPost(int id)
+        {
+            var usuario = await ObterUsuarioAtualAsync();
+            if (usuario == null)
+            {
+                return Challenge();
+            }
+
+            var post = await _context.SocialPosts.FirstOrDefaultAsync(p => p.Id == id && p.UserId == usuario.Id && !p.IsDeleted);
+            if (post == null)
+            {
+                return Forbid();
+            }
+
+            post.CommentsEnabled = !post.CommentsEnabled;
+            post.AtualizadoEm = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return Json(new { ok = true, enabled = post.CommentsEnabled, message = post.CommentsEnabled ? "Comentários ativados." : "Comentários desativados." });
+        }
+
         [HttpGet]
         public async Task<IActionResult> Salvos()
         {
@@ -2405,7 +2570,7 @@ namespace ProjetoEventX.Controllers
 
             var salvos = await _context.SocialPostsSalvos
                 .AsNoTracking()
-                .Where(s => s.UserId == usuario.Id && s.Post != null && s.Post.Ativo)
+                .Where(s => s.UserId == usuario.Id && s.Post != null && s.Post.Ativo && !s.Post.IsArchived && !s.Post.IsDeleted)
                 .OrderByDescending(s => s.CriadoEm)
                 .Select(s => new FeedPostViewModel
                 {
@@ -2426,13 +2591,19 @@ namespace ProjetoEventX.Controllers
                     DataCriacao = s.Post != null ? s.Post.CriadoEm : DateTime.UtcNow,
                     TotalCurtidas = s.Post != null ? s.Post.Curtidas.Count : 0,
                     TotalComentarios = s.Post != null ? s.Post.Comentarios.Count(c => c.Ativo) : 0,
+                    HideLikesCount = s.Post != null && s.Post.HideLikesCount,
+                    HideSharesCount = s.Post != null && s.Post.HideSharesCount,
+                    CommentsEnabled = s.Post == null || s.Post.CommentsEnabled,
+                    IsPinned = s.Post != null && s.Post.IsPinned,
+                    IsArchived = s.Post != null && s.Post.IsArchived,
                     UsuarioCurtiu = s.Post != null && s.Post.Curtidas.Any(c => c.UserId == usuario.Id),
                     UsuarioSalvou = true,
                     EventoId = s.Post != null ? s.Post.EventoId : null,
                     NomeEvento = s.Post != null && s.Post.Evento != null ? s.Post.Evento.NomeEvento : null,
                     PerfilId = s.Post != null ? s.Post.PerfilSocialId : 0,
                     TipoPerfil = s.Post != null && s.Post.PerfilSocial != null ? s.Post.PerfilSocial.TipoPerfil : (s.Post != null && s.Post.User != null ? s.Post.User.TipoUsuario ?? "Convidado" : "Convidado"),
-                    Cidade = s.Post != null && s.Post.PerfilSocial != null ? s.Post.PerfilSocial.Cidade : null
+                    Cidade = s.Post != null && s.Post.PerfilSocial != null ? s.Post.PerfilSocial.Cidade : null,
+                    IsOwner = true
                 })
                 .ToListAsync();
 
@@ -2508,7 +2679,7 @@ namespace ProjetoEventX.Controllers
 
             var post = await _context.SocialPosts
                 .AsNoTracking()
-                .Where(p => p.Id == postId && p.Ativo)
+                .Where(p => p.Id == postId && p.Ativo && !p.IsArchived && !p.IsDeleted)
                 .Select(p => new FeedPostViewModel
                 {
                     PostId = p.Id,
@@ -2521,8 +2692,14 @@ namespace ProjetoEventX.Controllers
                     Legenda = p.Legenda,
                     ImagemUrl = NormalizarUrlImagemPost(p.ImagemUrl),
                     DataCriacao = p.CriadoEm,
+                    HideLikesCount = p.HideLikesCount,
+                    HideSharesCount = p.HideSharesCount,
+                    CommentsEnabled = p.CommentsEnabled,
+                    IsPinned = p.IsPinned,
+                    IsArchived = p.IsArchived,
                     TipoPerfil = p.PerfilSocial != null ? p.PerfilSocial.TipoPerfil : "Convidado",
-                    PerfilId = p.PerfilSocialId
+                    PerfilId = p.PerfilSocialId,
+                    IsOwner = p.UserId == usuario.Id
                 })
                 .FirstOrDefaultAsync();
 

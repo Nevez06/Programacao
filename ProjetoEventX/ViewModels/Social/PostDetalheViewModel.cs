@@ -14,6 +14,7 @@ namespace ProjetoEventX.ViewModels.Social
         public string NomeAutor { get; set; } = string.Empty;
         public string TipoPerfil { get; set; } = "Convidado";
         public string? Cidade { get; set; }
+        public bool IsOwner { get; set; }
         public List<SocialStatusItemViewModel> StatusAutorAtivos { get; set; } = new();
     }
 }
