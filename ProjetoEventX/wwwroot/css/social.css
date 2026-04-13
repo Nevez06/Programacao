@@ -497,24 +497,9 @@
 }
 
 .profile-social-shell {
-    max-width: 100%;
-    margin: 0;
+    max-width: 980px;
+    margin: 0 auto;
     padding: .35rem .85rem 1.1rem;
-}
-
-.profile-social-layout {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: .85rem;
-}
-
-.profile-social-sidebar {
-    display: grid;
-    gap: .7rem;
-}
-
-.profile-social-content {
-    min-width: 0;
 }
 
 .profile-mobile-topbar {
@@ -574,15 +559,15 @@
 }
 
 .profile-header-main {
-    display: grid;
-    justify-items: center;
-    gap: .7rem;
-    margin-bottom: .7rem;
+    display: flex;
+    align-items: center;
+    gap: .95rem;
+    margin-bottom: .95rem;
 }
 
 .profile-avatar-ring {
-    width: 92px;
-    height: 92px;
+    width: 96px;
+    height: 96px;
     border-radius: 999px;
     padding: 3px;
     background: linear-gradient(135deg, #f43f5e, #7f1d1d, #be123c);
@@ -597,10 +582,10 @@
 }
 
 .profile-stat-row {
+    flex: 1;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: .25rem;
-    width: 100%;
+    gap: .3rem;
 }
 
 .profile-stat {
@@ -620,15 +605,13 @@
 
 .profile-bio h1 {
     margin: 0;
-    font-size: 1.06rem;
+    font-size: 1.18rem;
     font-weight: 800;
-    text-align: center;
 }
 
 .profile-bio p {
     margin: .15rem 0;
     line-height: 1.28;
-    text-align: center;
 }
 
 .profile-username {
@@ -651,19 +634,18 @@
 
 .profile-action-row {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .4rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .45rem;
     margin-top: .75rem;
 }
 
 .profile-action-btn {
-    min-height: 38px;
-    border-radius: 12px;
+    min-height: 42px;
+    border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, .14);
     background: rgba(255, 255, 255, .03);
     color: #f5f5f7;
-    font-weight: 650;
-    font-size: .84rem;
+    font-weight: 700;
     display: grid;
     place-items: center;
     text-decoration: none;
@@ -687,13 +669,13 @@
 
 .profile-highlights-scroll {
     display: flex;
-    gap: .5rem;
+    gap: .7rem;
     overflow-x: auto;
     padding: .2rem 0 .3rem;
 }
 
 .profile-highlight-item {
-    width: 62px;
+    width: 78px;
     border: 0;
     background: transparent;
     color: #eff0f4;
@@ -701,8 +683,8 @@
 }
 
 .profile-highlight-circle {
-    width: 58px;
-    height: 58px;
+    width: 74px;
+    height: 74px;
     border-radius: 999px;
     padding: 2px;
     margin: 0 auto .35rem;
@@ -721,7 +703,7 @@
 
 .profile-highlight-item small {
     display: block;
-    font-size: .68rem;
+    font-size: .74rem;
     color: #b8bbc5;
     white-space: nowrap;
     overflow: hidden;
@@ -732,10 +714,8 @@
     position: relative;
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    border-radius: 16px;
     border-top: 1px solid rgba(255, 255, 255, .09);
     border-bottom: 1px solid rgba(255, 255, 255, .09);
-    background: rgba(255, 255, 255, .02);
 }
 
 .profile-tab {
@@ -872,23 +852,12 @@
 
 @media (min-width: 992px) {
     .profile-social-shell {
-        padding: 1rem 1.2rem 1.2rem;
-    }
-
-    .profile-social-layout {
-        grid-template-columns: 312px minmax(0, 1fr);
-        gap: 1rem;
-        align-items: start;
-    }
-
-    .profile-social-sidebar {
-        position: sticky;
-        top: 1rem;
-        width: 312px;
+        max-width: 980px;
+        padding: 1rem 1.25rem 1.2rem;
     }
 
     .profile-mobile-topbar {
-        border-radius: 14px;
+        border-radius: 16px;
         padding: .55rem .75rem;
     }
 
@@ -900,40 +869,12 @@
         padding-bottom: 1rem;
     }
 
-    .profile-social-content .profile-section {
-        margin-top: 0;
-        margin-bottom: .75rem;
-    }
-
-    .profile-social-sidebar .profile-section {
-        margin-top: 0;
-    }
-
-    .profile-social-sidebar .profile-header-block {
-        padding: .9rem .8rem;
-        border-radius: 18px;
-    }
-
-    .profile-social-sidebar .profile-avatar-ring {
-        width: 86px;
-        height: 86px;
-    }
-
-    .profile-social-sidebar .profile-bio h1 {
-        font-size: 1rem;
-    }
-
-    .profile-social-sidebar .profile-meta,
-    .profile-social-sidebar .profile-bio p {
-        font-size: .82rem;
-    }
-
-    .profile-social-sidebar .profile-action-row {
-        grid-template-columns: 1fr;
-    }
-
-    .profile-social-sidebar .profile-action-btn {
-        min-height: 36px;
+    .profile-grid-stage,
+    .profile-tabs,
+    .profile-section {
+        max-width: 940px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .profile-grid {
@@ -942,11 +883,15 @@
 }
 
 @media (min-width: 1280px) {
-    .profile-social-layout {
-        grid-template-columns: 332px minmax(0, 1fr);
+    .profile-social-shell {
+        max-width: 1040px;
+        padding-left: 1.6rem;
+        padding-right: 1.6rem;
     }
 
-    .profile-social-sidebar {
-        width: 332px;
+    .profile-grid-stage,
+    .profile-tabs,
+    .profile-section {
+        max-width: 980px;
     }
 }
