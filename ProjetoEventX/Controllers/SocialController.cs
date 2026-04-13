@@ -1798,7 +1798,8 @@ namespace ProjetoEventX.Controllers
                 return Challenge();
             }
 
-            return RedirectToAction(nameof(MeusPosts));
+            var perfil = await GarantirPerfilSocialAsync(usuario);
+            return RedirectToAction(nameof(Perfil), new { id = perfil.Id });
         }
 
         [HttpGet]
