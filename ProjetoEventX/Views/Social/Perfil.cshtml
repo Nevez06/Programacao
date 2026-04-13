@@ -1,22 +1,60 @@
 @model ProjetoEventX.ViewModels.Social.PerfilSocialViewModel
 @{
-    Layout = "_Layout";
+    Layout = "_LayoutSocial";
     ViewData["Title"] = "EventX Social - Perfil";
     ViewData["SocialCurrent"] = "perfil";
+    var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var handleBase = !string.IsNullOrWhiteSpace(Model.Username)
+        ? Model.Username
+        : (!string.IsNullOrWhiteSpace(Model.UsernamePublico)
+            ? Model.UsernamePublico
+            : (!string.IsNullOrWhiteSpace(Model.NomeExibicao)
+                ? Model.NomeExibicao
+                : (!string.IsNullOrWhiteSpace(Model.NomeUsuario) ? Model.NomeUsuario : $"perfil.{Model.Id}")));
+    var identidadeTopo = handleBase?.Trim() ?? $"perfil.{Model.Id}";
+    if (!identidadeTopo.StartsWith("@"))
+    {
+        identidadeTopo = $"@{identidadeTopo.TrimStart('@')}";
+    }
 }
+<script>
+    window.__eventxUserId = @(string.IsNullOrWhiteSpace(userIdClaim) ? "null" : userIdClaim);
+</script>
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/social.css" asp-append-version="true" />
-}
-
-<section class="profile-main-content-shell">
+<section class="profile-social-page">
     @Html.AntiForgeryToken()
-    <partial name="Partials/_ProfileHeader" model="Model" />
-    <partial name="Partials/_ProfileHighlights" model="Model" />
-    <partial name="Partials/_ProfileTabs" model="Model" />
-    <partial name="Partials/_ProfileGrid" model="Model" />
+
+    <div class="profile-social-shell profile-social-shell--mobile-first">
+        <header class="profile-mobile-topbar profile-social-topbar">
+            <button type="button"
+                    class="profile-topbar-icon"
+                    onclick="if(window.history.length>1){window.history.back();}else{window.location.href='@Url.Action("Feed", "Social")';}"
+                    aria-label="Voltar">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <strong>@identidadeTopo</strong>
+
+            <div class="profile-topbar-actions">
+                <button type="button"
+                        class="profile-topbar-icon js-share-btn"
+                        data-share-url="@Url.Action("Perfil", "Social", new { id = Model.Id }, Context.Request.Scheme)"
+                        aria-label="Compartilhar perfil">
+                    <i class="fas fa-arrow-up-from-bracket"></i>
+                </button>
+                <a asp-action="Stories" class="profile-topbar-icon" aria-label="Stories">
+                    <i class="fas fa-bolt"></i>
+                </a>
+            </div>
+        </header>
+
+        <partial name="Partials/_ProfileHeader" model="Model" />
+        <partial name="Partials/_ProfileHighlights" model="Model" />
+        <partial name="Partials/_ProfileTabs" model="Model" />
+        <partial name="Partials/_ProfileGrid" model="Model" />
+    </div>
+
+    <partial name="Partials/_MobileBottomNav" />
 </section>
 
-@section Scripts {
-    <script src="~/js/social.js" asp-append-version="true"></script>
-}
+<partial name="Partials/_StoryViewer" />

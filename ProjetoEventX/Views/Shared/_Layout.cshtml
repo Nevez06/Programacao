@@ -196,7 +196,7 @@
                     <i class="fas fa-route"></i><span>Ver tour novamente</span>
                 </button>
 
-                @if (Context.Request.Path.StartsWithSegments("/Social/Perfil", StringComparison.OrdinalIgnoreCase))
+                @if (!Context.Request.Path.StartsWithSegments("/Social/Perfil", StringComparison.OrdinalIgnoreCase))
                 {
                     var routeIdRaw = Context.Request.RouteValues.ContainsKey("id")
                         ? Convert.ToString(Context.Request.RouteValues["id"])
