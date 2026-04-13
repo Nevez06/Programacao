@@ -362,6 +362,95 @@ a {
     border-top: 1px solid rgba(255,255,255,0.08);
 }
 
+.sidebar-social-profile-card {
+    margin: 0.6rem 0.75rem 0.7rem;
+    padding: 0.72rem;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: linear-gradient(170deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+    display: grid;
+    gap: 0.55rem;
+}
+
+.sidebar-social-profile-head {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 0.55rem;
+    align-items: center;
+}
+
+.sidebar-social-profile-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.25);
+}
+
+.sidebar-social-profile-identity {
+    min-width: 0;
+    display: grid;
+    line-height: 1.1;
+}
+
+.sidebar-social-profile-identity strong {
+    color: #fff;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-social-profile-identity span {
+    color: rgba(255,255,255,0.8);
+    font-size: 0.72rem;
+}
+
+.sidebar-social-profile-identity small {
+    color: rgba(255,255,255,0.55);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.sidebar-social-profile-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+}
+
+.sidebar-social-profile-metrics span {
+    text-align: center;
+    color: rgba(255,255,255,0.76);
+    font-size: 0.64rem;
+    display: grid;
+    gap: 0.05rem;
+}
+
+.sidebar-social-profile-metrics strong {
+    color: #fff;
+    font-size: 0.74rem;
+}
+
+.sidebar-social-profile-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    font-size: 0.74rem;
+    font-weight: 600;
+    background: rgba(255,255,255,0.04);
+}
+
+.sidebar-social-profile-link:hover {
+    background: rgba(192, 57, 43, 0.24);
+    color: #fff;
+}
+
 .sidebar-user {
     display: flex;
     align-items: center;

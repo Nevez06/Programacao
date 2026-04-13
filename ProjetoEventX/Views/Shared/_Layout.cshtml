@@ -27,14 +27,15 @@
     string tipoUsuario = "";
     string nomeUsuario = "";
     string emailUsuario = "";
+    ProjetoEventX.Models.PerfilSocial? perfilSocialAtual = null;
 
     if (User.Identity?.IsAuthenticated == true)
     {
         var appUser = await UserManager.GetUserAsync(User);
         tipoUsuario = appUser?.TipoUsuario ?? "";
-        var perfil = appUser != null ? await DbContext.PerfisSociais.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == appUser.Id) : null;
-        nomeUsuario = !string.IsNullOrWhiteSpace(perfil?.NomeExibicao)
-            ? perfil!.NomeExibicao
+        perfilSocialAtual = appUser != null ? await DbContext.PerfisSociais.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == appUser.Id) : null;
+        nomeUsuario = !string.IsNullOrWhiteSpace(perfilSocialAtual?.NomeExibicao)
+            ? perfilSocialAtual!.NomeExibicao
             : !string.IsNullOrWhiteSpace(appUser?.UserName)
                 ? appUser!.UserName!
                 : appUser?.Email ?? "Participante";
@@ -174,21 +175,14 @@
                 <a class="sidebar-link" asp-controller="Social" asp-action="Explorar">
                     <i class="fas fa-compass"></i><span>Explorar</span>
                 </a>
-                <a class="sidebar-link" asp-controller="Social" asp-action="Stories">
-                    <i class="fas fa-circle-play"></i><span>Stories</span>
-                </a>
                 <a class="sidebar-link" asp-controller="Social" asp-action="MeuPerfil">
                     <i class="fas fa-id-badge"></i><span>Meu Perfil</span>
                 </a>
                 <a class="sidebar-link" asp-controller="Social" asp-action="CriarPost">
                     <i class="fas fa-square-plus"></i><span>Criar Post</span>
                 </a>
-                <a class="sidebar-link" asp-controller="Social" asp-action="MeusPosts">
-                    <i class="fas fa-layer-group"></i><span>Meus Posts</span>
-                </a>
-                <a class="sidebar-link" asp-controller="Social" asp-action="Salvos">
-                    <i class="fas fa-bookmark"></i><span>Salvos</span>
-                </a>
+              
+               
                 <a class="sidebar-link" asp-controller="Social" asp-action="EventosEmAlta">
                     <i class="fas fa-fire"></i><span>Eventos em Alta</span>
                 </a>
@@ -201,6 +195,74 @@
                 <button type="button" class="sidebar-tour-btn" onclick="EventXOnboarding.resetOnboarding()" title="Ver tour novamente">
                     <i class="fas fa-route"></i><span>Ver tour novamente</span>
                 </button>
+
+                @if (Context.Request.Path.StartsWithSegments("/Social/Perfil", StringComparison.OrdinalIgnoreCase))
+                {
+                    var routeIdRaw = Context.Request.RouteValues.ContainsKey("id")
+                        ? Convert.ToString(Context.Request.RouteValues["id"])
+                        : null;
+                    var hasRouteId = int.TryParse(routeIdRaw, out var routePerfilId);
+                    var sidebarPerfil = perfilSocialAtual;
+                    if (hasRouteId && (sidebarPerfil == null || sidebarPerfil.Id != routePerfilId))
+                    {
+                        sidebarPerfil = await DbContext.PerfisSociais.AsNoTracking().FirstOrDefaultAsync(p => p.Id == routePerfilId);
+                    }
+
+                    if (sidebarPerfil != null)
+                    {
+                        var avatarSidebar = string.IsNullOrWhiteSpace(sidebarPerfil.FotoPerfilUrl)
+                            ? "/uploads/social/defaults/default-profile.svg"
+                            : sidebarPerfil.FotoPerfilUrl;
+                        var usernameSidebarRaw = !string.IsNullOrWhiteSpace(sidebarPerfil.Username)
+                            ? sidebarPerfil.Username
+                            : sidebarPerfil.NomeExibicao;
+                        var usernameSidebar = string.IsNullOrWhiteSpace(usernameSidebarRaw)
+                            ? $"perfil.{sidebarPerfil.Id}"
+                            : usernameSidebarRaw!.Trim();
+                        if (!usernameSidebar.StartsWith("@"))
+                        {
+                            usernameSidebar = $"@{usernameSidebar.TrimStart('@')}";
+                        }
+                        var totalPostsSidebar = await DbContext.SocialPosts
+                            .AsNoTracking()
+                            .CountAsync(p => p.PerfilSocialId == sidebarPerfil.Id && p.Ativo && !p.IsDeleted && !p.IsArchived);
+                        var totalSeguidoresSidebar = await DbContext.PerfilSocialFollows
+                            .AsNoTracking()
+                            .CountAsync(f => f.SeguindoPerfilId == sidebarPerfil.Id);
+                        var totalSeguindoSidebar = await DbContext.PerfilSocialFollows
+                            .AsNoTracking()
+                            .CountAsync(f => f.SeguidorPerfilId == sidebarPerfil.Id);
+
+                    <section class="sidebar-social-profile-card">
+                        <div class="sidebar-social-profile-head">
+                            <img src="@avatarSidebar"
+                                 alt="avatar do perfil"
+                                 class="sidebar-social-profile-avatar"
+                                 loading="lazy"
+                                 onerror="this.onerror=null;this.src='/uploads/social/defaults/default-profile.svg';" />
+                            <div class="sidebar-social-profile-identity">
+                                <strong>@(string.IsNullOrWhiteSpace(sidebarPerfil.NomeExibicao) ? "Perfil Social" : sidebarPerfil.NomeExibicao)</strong>
+                                <span>@usernameSidebar</span>
+                                <small>@(string.IsNullOrWhiteSpace(sidebarPerfil.TipoPerfil) ? "Convidado" : sidebarPerfil.TipoPerfil)</small>
+                            </div>
+                        </div>
+
+                        <div class="sidebar-social-profile-metrics">
+                            <span><strong>@totalPostsSidebar</strong> posts</span>
+                            <span><strong>@totalSeguidoresSidebar</strong> seguidores</span>
+                            <span><strong>@totalSeguindoSidebar</strong> seguindo</span>
+                        </div>
+
+                        <a asp-controller="Social"
+                           asp-action="Perfil"
+                           asp-route-id="@sidebarPerfil.Id"
+                           class="sidebar-social-profile-link">
+                            <i class="fas fa-id-badge"></i>
+                            <span>Abrir perfil social</span>
+                        </a>
+                    </section>
+                    }
+                }
 
                 <a class="sidebar-link" asp-controller="Notificacao" asp-action="Index">
                     <i class="fas fa-bell"></i><span>Notificações</span>
