@@ -11,6 +11,8 @@
 
 <section class="profile-main-content-shell">
     @Html.AntiForgeryToken()
+    <partial name="Partials/_ProfileHeader" model="Model" />
+    <partial name="Partials/_ProfileHighlights" model="Model" />
     <partial name="Partials/_ProfileTabs" model="Model" />
     <partial name="Partials/_ProfileGrid" model="Model" />
 </section>

@@ -502,6 +502,11 @@
     padding: .35rem .85rem 1.1rem;
 }
 
+.profile-main-content-shell {
+    max-width: 980px;
+    margin: 0 auto;
+}
+
 .profile-mobile-topbar {
     position: sticky;
     top: 0;
