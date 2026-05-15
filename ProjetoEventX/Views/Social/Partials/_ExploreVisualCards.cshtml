@@ -3,7 +3,7 @@
 @foreach (var item in Model)
 {
     var extra = item.Destaque ? "is-featured" : string.Empty;
-    <a href="@item.Link" class="explore-visual-card @extra">
+    <a href="@item.Link" class="explore-visual-card @extra is-@item.LayoutVariant">
         <img src="@item.ImagemUrl"
              alt="@item.Titulo"
              loading="lazy"

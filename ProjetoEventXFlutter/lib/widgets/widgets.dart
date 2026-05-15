@@ -1,0 +1,57 @@
+export 'package:projeto_eventx_flutter/shared/widgets/app_error_message.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/app_loader.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/app_text_field.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/empty_state.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/empty_state_widget.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/error_view.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/event_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/invite_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/loading_view.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/notification_badge.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/notification_tile.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/post_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/primary_button.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/secondary_button.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/section_header.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/section_title.dart';
+
+export 'package:projeto_eventx_flutter/shared/widgets/cards/action_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/budget_summary_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/dashboard_hero_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/empty_state_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/filter_panel.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/metric_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/organizer_metric_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/profile_info_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/ranking_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/status_badge.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/status_chip.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/supplier_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/template_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/cards/template_preview_card.dart';
+
+export 'package:projeto_eventx_flutter/shared/widgets/shell/app_search_bar.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/shell/app_sidebar.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/shell/organizer_topbar.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/shell/search_bar.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/shell/social_topbar.dart';
+
+export 'package:projeto_eventx_flutter/shared/widgets/social/profile_stat_item.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/social/profile_stats.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/social/profile_stats_row.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/social/empty_social_state.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/social/highlight_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/social/social_post_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/social/social_profile_header.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/social/social_tab_bar.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/social/story_bubble.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/social/story_create_option_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/social/story_viewer.dart';
+
+export 'package:projeto_eventx_flutter/shared/widgets/motion/animated_empty_state.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/motion/animated_metric_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/motion/animated_section_header.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/motion/app_skeleton_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/motion/fade_slide_in.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/motion/hover_card.dart';
+export 'package:projeto_eventx_flutter/shared/widgets/motion/staggered_list_reveal.dart';

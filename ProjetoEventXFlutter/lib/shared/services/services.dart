@@ -1,0 +1,11 @@
+export 'chat_repository.dart';
+export 'event_repository.dart';
+export 'feed_ranking_service.dart';
+export 'invitation_repository.dart';
+export 'marketplace_repository.dart';
+export 'marketplace_scoring_service.dart';
+export 'notification_repository.dart';
+export 'recommendation_service.dart';
+export 'ranking_repository.dart';
+export 'social_repository.dart';
+export 'supplier_ranking_service.dart';

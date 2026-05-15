@@ -14,7 +14,11 @@
         @foreach (var post in Model)
         {
             <article class="social-card">
-                <img src="@post.ImagemUrl" alt="post" class="social-post-image" />
+                <img src="@post.ImagemUrl"
+                     alt="post @post.Id"
+                     class="social-post-image"
+                     loading="lazy"
+                     onerror="this.onerror=null;this.classList.add('is-broken');this.src='/uploads/social/defaults/default-post.svg';" />
                 <div class="social-card-body">
                     <div class="social-tags mb-2">
                         @if (!string.IsNullOrWhiteSpace(post.Categoria))

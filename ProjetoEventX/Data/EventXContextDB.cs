@@ -62,6 +62,10 @@ namespace ProjetoEventX.Data
         public DbSet<StoryReply> StoryReplies { get; set; }
         public DbSet<StoryMention> StoryMentions { get; set; }
         public DbSet<PerfilSocialFollow> PerfilSocialFollows { get; set; }
+        public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
+        public DbSet<Message> Messages { get; set; }
+        public DbSet<UserPresence> UserPresences { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -302,6 +306,78 @@ namespace ProjetoEventX.Data
             builder.Entity<Notification>()
                 .Property(n => n.IsRead)
                 .HasDefaultValue(false);
+
+            // Chat realtime
+            builder.Entity<Conversation>()
+                .HasOne(c => c.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(c => c.CreatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<Conversation>()
+                .Property(c => c.IsGroup)
+                .HasDefaultValue(false);
+
+            builder.Entity<Conversation>()
+                .HasIndex(c => c.UpdatedAt);
+
+            builder.Entity<ConversationParticipant>()
+                .HasOne(cp => cp.Conversation)
+                .WithMany(c => c.Participants)
+                .HasForeignKey(cp => cp.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ConversationParticipant>()
+                .HasOne(cp => cp.User)
+                .WithMany()
+                .HasForeignKey(cp => cp.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ConversationParticipant>()
+                .HasIndex(cp => new { cp.ConversationId, cp.UserId })
+                .IsUnique();
+
+            builder.Entity<ConversationParticipant>()
+                .HasIndex(cp => cp.UserId);
+
+            builder.Entity<Message>()
+                .HasOne(m => m.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Message>()
+                .HasOne(m => m.SenderUser)
+                .WithMany()
+                .HasForeignKey(m => m.SenderUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Message>()
+                .Property(m => m.Content)
+                .HasMaxLength(2000);
+
+            builder.Entity<Message>()
+                .HasIndex(m => new { m.ConversationId, m.CreatedAt });
+
+            builder.Entity<UserPresence>()
+                .HasKey(p => p.UserId);
+
+            builder.Entity<UserPresence>()
+                .HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<UserPresence>()
+                .Property(p => p.ActiveConnections)
+                .HasDefaultValue(0);
+
+            builder.Entity<UserPresence>()
+                .Property(p => p.LastConnectionId)
+                .HasMaxLength(200);
+
+            builder.Entity<UserPresence>()
+                .HasIndex(p => p.IsOnline);
 
             // EventX Social
             builder.Entity<PerfilSocial>()

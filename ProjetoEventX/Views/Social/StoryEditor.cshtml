@@ -1,0 +1,65 @@
+@model ProjetoEventX.ViewModels.Social.StoryEditorViewModel
+@{
+    ViewData["Title"] = "Editor de Story";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="story-editor-page">
+    <header class="story-create-header">
+        <a asp-action="StoryCreate" class="story-header-btn" aria-label="Voltar">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1>Editor de Story</h1>
+        <span class="story-header-btn story-header-btn-static">
+            <i class="fas fa-sparkles"></i>
+        </span>
+    </header>
+
+    <div class="story-editor-canvas-wrap">
+        <div class="story-editor-canvas js-story-editor-canvas">
+            <img src="@Model.MediaUrl"
+                 alt="preview do story"
+                 loading="lazy"
+                 onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+            <div class="story-overlay-text js-story-overlay-text" draggable="true">Toque para editar</div>
+        </div>
+    </div>
+
+    <form asp-action="StoryPublish" method="post" class="story-editor-controls">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="MediaUrl" />
+        <input type="hidden" asp-for="MentionsSerialized" id="storyMentionsSerialized" />
+        <input type="hidden" asp-for="SharedPostId" />
+        <label class="form-label">Texto do story</label>
+        <input asp-for="TextOverlay" class="form-control js-story-text-input" maxlength="180" placeholder="Escreva algo..." />
+        <div class="story-mentions-suggest d-none" id="storyMentionsSuggest"></div>
+
+        @if (Model.SharedPostId.HasValue && Model.SharedPost != null)
+        {
+            <partial name="Partials/_SharedPostStoryCard" model="Model.SharedPost" />
+        }
+
+        <div class="story-editor-row">
+            <label class="form-label mb-0">Cor do texto</label>
+            <input asp-for="TextColor" type="color" class="form-control form-control-color js-story-color-input" />
+        </div>
+
+        <div class="form-check">
+            <input asp-for="TextBackground" class="form-check-input js-story-bg-toggle" type="checkbox" />
+            <label asp-for="TextBackground" class="form-check-label">Fundo semi-transparente no texto</label>
+        </div>
+
+        <label asp-for="EventoId" class="form-label">Evento relacionado (opcional)</label>
+        <select asp-for="EventoId" asp-items="Model.EventosDisponiveis" class="form-select">
+            <option value="">Sem vínculo de evento</option>
+        </select>
+
+        <button type="submit" class="btn btn-primary btn-social-publish">
+            <i class="fas fa-paper-plane"></i> Publicar story
+        </button>
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/social.js" asp-append-version="true"></script>
+}

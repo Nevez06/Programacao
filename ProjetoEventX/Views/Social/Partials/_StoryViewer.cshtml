@@ -5,7 +5,10 @@
         <button type="button" class="story-viewer-nav prev" id="storyViewerPrev" aria-label="Anterior">‹</button>
         <button type="button" class="story-viewer-nav next" id="storyViewerNext" aria-label="Próximo">›</button>
 
-        <img src="" alt="story" id="storyViewerImage" />
+        <img src=""
+             alt="story"
+             id="storyViewerImage"
+             onerror="this.onerror=null;this.classList.add('is-broken');this.src='/uploads/social/defaults/default-post.svg';" />
         <div class="story-viewer-content">
             <div class="story-viewer-header">
                 <img src="" alt="perfil" id="storyViewerAvatar" />
@@ -13,13 +16,41 @@
                     <strong id="storyViewerName"></strong>
                     <small id="storyViewerTime"></small>
                 </div>
+                <span class="story-viewer-event d-none" id="storyViewerEventBadge"></span>
             </div>
             <p id="storyViewerText"></p>
+            <a href="#" class="story-shared-post-view d-none" id="storyViewerSharedPost" target="_blank" rel="noopener">
+                <img src="" alt="post compartilhado" id="storyViewerSharedPostImage" />
+                <div>
+                    <small>Post compartilhado</small>
+                    <strong id="storyViewerSharedPostCaption"></strong>
+                </div>
+            </a>
+            <div class="story-viewer-owner-tools d-none" id="storyViewerOwnerTools">
+                <button type="button" class="btn btn-sm btn-outline-light js-story-open-views" id="storyViewerOpenViews">
+                    <i class="fas fa-eye"></i> <span id="storyViewerViewsCount">0</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-light js-story-add-highlight" id="storyViewerAddHighlight">
+                    <i class="fas fa-star"></i> adicionar aos destaques
+                </button>
+            </div>
+            <partial name="Partials/_StoryReactions" />
+            <partial name="Partials/_StoryReplyBox" />
             <form asp-controller="Social" asp-action="ExcluirStatus" method="post" id="storyViewerDeleteForm" class="d-none">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" id="storyViewerDeleteId" />
                 <button type="submit" class="btn btn-sm btn-outline-danger">Excluir status</button>
             </form>
         </div>
+    </div>
+</div>
+
+<div class="story-views-modal d-none" id="storyViewsModal" aria-hidden="true">
+    <div class="story-views-modal-card">
+        <div class="story-views-modal-header">
+            <h3>Visualizações</h3>
+            <button type="button" class="story-views-close" id="storyViewsClose">×</button>
+        </div>
+        <div id="storyViewsModalBody"></div>
     </div>
 </div>

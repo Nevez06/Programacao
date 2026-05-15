@@ -6,6 +6,7 @@ namespace ProjetoEventX.ViewModels.Social
     {
         public List<FeedPostViewModel> Posts { get; set; } = new();
         public List<SocialStatusItemViewModel> Stories { get; set; } = new();
+        public List<SocialStatusItemViewModel> StoriesEmAlta { get; set; } = new();
         public List<PerfilSocial> PerfisDestaque { get; set; } = new();
         public List<Evento> EventosEmAlta { get; set; } = new();
         public PerfilSocial? PerfilAtual { get; set; }

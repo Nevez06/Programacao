@@ -1,0 +1,60 @@
+@model ProjetoEventX.ViewModels.Social.StoryCreateViewModel
+@{
+    ViewData["Title"] = "Criar Story";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="story-create-page">
+    <header class="story-create-header">
+        <a asp-action="Feed" class="story-header-btn" aria-label="Fechar">
+            <i class="fas fa-xmark"></i>
+        </a>
+        <h1>Criar Story</h1>
+        <a asp-action="Stories" class="story-header-btn" aria-label="Ver stories">
+            <i class="fas fa-circle-play"></i>
+        </a>
+    </header>
+
+    <section class="story-actions-strip">
+        <button type="button" class="story-action-pill"><i class="fas fa-wand-magic-sparkles"></i> Modelos</button>
+        <button type="button" class="story-action-pill"><i class="fas fa-music"></i> Música</button>
+        <button type="button" class="story-action-pill"><i class="fas fa-layer-group"></i> Colagem</button>
+    </section>
+
+    <section class="story-media-grid js-story-media-grid">
+        <form asp-action="StoryUpload" method="post" enctype="multipart/form-data" class="story-media-tile story-media-upload">
+            @Html.AntiForgeryToken()
+            <input type="file" name="arquivo" accept=".jpg,.jpeg,.png,.webp" class="d-none" id="storyUploadInput" />
+            <button type="button" class="story-media-upload-btn js-story-open-upload">
+                <i class="fas fa-upload"></i>
+                <span>Upload</span>
+            </button>
+            <button type="submit" class="d-none js-story-submit-upload"></button>
+        </form>
+
+        <form asp-action="StoryUpload" method="post" enctype="multipart/form-data" class="story-media-tile story-media-camera">
+            @Html.AntiForgeryToken()
+            <input type="file" name="arquivo" accept="image/*" capture="environment" class="d-none" id="storyCameraInput" />
+            <button type="button" class="story-media-upload-btn js-story-open-camera">
+                <i class="fas fa-camera"></i>
+                <span>Câmera</span>
+            </button>
+            <button type="submit" class="d-none js-story-submit-camera"></button>
+        </form>
+
+        @foreach (var media in Model.MidiasRecentes)
+        {
+            <a asp-action="StoryEditor" asp-route-mediaUrl="@media" class="story-media-tile story-media-item js-story-media-item">
+                <img src="@media"
+                     alt="mídia recente"
+                     loading="lazy"
+                     onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                <span class="story-media-overlay"><i class="fas fa-check"></i></span>
+            </a>
+        }
+    </section>
+</section>
+
+@section Scripts {
+    <script src="~/js/social.js" asp-append-version="true"></script>
+}

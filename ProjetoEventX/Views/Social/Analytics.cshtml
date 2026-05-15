@@ -1,0 +1,37 @@
+@model ProjetoEventX.ViewModels.Social.StoryAnalyticsViewModel
+@{
+    ViewData["Title"] = "Analytics de Stories";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page">
+    <header class="social-header social-header-premium">
+        <h1>Analytics de Stories</h1>
+        <p>Indicadores de alcance e engajamento dos seus stories.</p>
+    </header>
+
+    <div class="social-metric-grid">
+        <article class="social-metric-card"><small>Total de stories</small><strong>@Model.TotalStoriesPostados</strong></article>
+        <article class="social-metric-card"><small>Total de visualizações</small><strong>@Model.TotalVisualizacoes</strong></article>
+        <article class="social-metric-card"><small>Total de reações</small><strong>@Model.TotalReacoes</strong></article>
+    </div>
+
+    <div class="social-metric-grid">
+        <article class="social-metric-card">
+            <small>Story mais visto</small>
+            <strong>@(Model.StoryMaisVisto?.TotalViews ?? 0) views</strong>
+        </article>
+        <article class="social-metric-card">
+            <small>Story mais engajado</small>
+            <strong>@(Model.StoryMaisEngajado?.EngagementScore ?? 0) pontos</strong>
+        </article>
+    </div>
+
+    <section class="social-side-card">
+        <h3>Últimos viewers</h3>
+        <partial name="Partials/_StoryViewsModal" model="Model.UltimosViewers" />
+    </section>
+
+    <h2 class="mt-4">Destaques</h2>
+    <partial name="Partials/_StoryHighlights" model="Model.Destaques" />
+</section>

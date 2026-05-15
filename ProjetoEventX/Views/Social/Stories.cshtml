@@ -22,7 +22,10 @@
                 <a href="#" class="story-card @(story.Visualizado ? "seen" : "new") js-story-open"
                    data-story-id="@story.Id"
                    data-perfil-id="@story.PerfilId">
-                    <img src="@story.ImagemUrl" alt="@story.NomePerfil" />
+                    <img src="@story.ImagemUrl"
+                         alt="@story.NomePerfil"
+                         loading="lazy"
+                         onerror="this.onerror=null;this.classList.add('is-broken');this.src='/uploads/social/defaults/default-post.svg';" />
                     <div class="story-card-overlay">
                         <strong>@story.NomePerfil</strong>
                         <small>@story.CriadoEm.ToLocalTime().ToString("HH:mm")</small>

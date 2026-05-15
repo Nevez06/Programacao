@@ -4,10 +4,10 @@
     var heroSecundarios = Model.HeroItems.Skip(1).Take(3).ToList();
 }
 
-@if (heroPrincipal != null)
+@if (Model.MostrarHero && heroPrincipal != null)
 {
     <section class="explore-hero" aria-label="Hero de descoberta">
-        <a href="@heroPrincipal.Link" class="explore-hero-main-card">
+        <a href="@heroPrincipal.Link" class="explore-hero-main-card is-@heroPrincipal.LayoutVariant">
             <img src="@heroPrincipal.ImagemUrl"
                  alt="@heroPrincipal.Titulo"
                  loading="eager"
@@ -25,7 +25,7 @@
         <div class="explore-hero-side-stack">
             @foreach (var item in heroSecundarios)
             {
-                <a href="@item.Link" class="explore-hero-side-card">
+                <a href="@item.Link" class="explore-hero-side-card is-@item.LayoutVariant">
                     <img src="@item.ImagemUrl"
                          alt="@item.Titulo"
                          loading="lazy"

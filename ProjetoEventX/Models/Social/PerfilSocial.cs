@@ -18,6 +18,9 @@ namespace ProjetoEventX.Models
         [StringLength(120)]
         public string NomeExibicao { get; set; } = string.Empty;
 
+        [StringLength(40)]
+        public string? Username { get; set; }
+
         [StringLength(500)]
         public string? Bio { get; set; }
 

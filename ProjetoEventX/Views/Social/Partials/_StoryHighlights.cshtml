@@ -1,0 +1,19 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.StoryHighlightViewModel>
+
+@if (Model.Any())
+{
+    <section class="story-highlights">
+        <h3>Destaques</h3>
+        <div class="story-highlights-list">
+            @foreach (var highlight in Model)
+            {
+                <a asp-action="Stories" class="story-highlight-item" data-highlight-id="@highlight.Id">
+                    <span class="story-highlight-cover">
+                        <img src="@highlight.CapaUrl" alt="@highlight.Nome" onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                    </span>
+                    <small>@highlight.Nome</small>
+                </a>
+            }
+        </div>
+    </section>
+}
