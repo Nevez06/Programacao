@@ -1,0 +1,25 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ProjetoEventX.Models
+{
+    public class SocialCurtida
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public int PostId { get; set; }
+
+        [ForeignKey(nameof(PostId))]
+        public SocialPost? Post { get; set; }
+
+        [Required]
+        public int UserId { get; set; }
+
+        [ForeignKey(nameof(UserId))]
+        public ApplicationUser? User { get; set; }
+
+        public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
+    }
+}

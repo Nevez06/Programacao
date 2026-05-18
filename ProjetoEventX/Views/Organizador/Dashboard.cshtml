@@ -43,12 +43,12 @@
             gap: 18px;
         }
 
-        .col-12 { grid-column: span 12; }
-        .col-8 { grid-column: span 8; }
-        .col-7 { grid-column: span 7; }
-        .col-5 { grid-column: span 5; }
-        .col-4 { grid-column: span 4; }
-        .col-3 { grid-column: span 3; }
+        .dash-col-12 { grid-column: span 12; }
+        .dash-col-8 { grid-column: span 8; }
+        .dash-col-7 { grid-column: span 7; }
+        .dash-col-5 { grid-column: span 5; }
+        .dash-col-4 { grid-column: span 4; }
+        .dash-col-3 { grid-column: span 3; }
 
         .stripe-hero {
             position: relative;
@@ -641,7 +641,7 @@
         }
 
         @@media (max-width: 1199.98px) {
-            .col-8, .col-7, .col-5, .col-4, .col-3 {
+            .dash-col-8, .dash-col-7, .dash-col-5, .dash-col-4, .dash-col-3 {
                 grid-column: span 12;
             }
 
@@ -697,7 +697,7 @@
 
 <div class="dash-shell animate-in">
     <div class="dash-grid">
-        <section class="col-12 stripe-hero">
+        <section class="dash-col-12 stripe-hero">
             <div class="row g-4 stripe-hero-inner align-items-center">
                 <div class="col-xl-8">
                     <span class="hero-badge">
@@ -744,7 +744,7 @@
                             <i class="fas fa-plus me-2"></i>Novo Evento
                         </a>
 
-                        <a asp-controller="TemplateConvite" asp-action="Index" class="btn btn-outline-light">
+                        <a asp-controller="Convite" asp-action="Index" asp-route-eventoId="@(Model?.ProximoEvento?.Id)" class="btn btn-outline-light">
                             <i class="fas fa-envelope-open-text me-2"></i>Convites
                         </a>
 
@@ -756,7 +756,7 @@
             </div>
         </section>
 
-        <section class="col-3 metric-card-pro">
+        <section class="dash-col-3 metric-card-pro">
             <div class="metric-card-pro-body">
                 <div class="metric-top">
                     <div class="metric-icon-pro" style="background: linear-gradient(135deg, #992008, #E74C3C);">
@@ -771,7 +771,7 @@
             </div>
         </section>
 
-        <section class="col-3 metric-card-pro">
+        <section class="dash-col-3 metric-card-pro">
             <div class="metric-card-pro-body">
                 <div class="metric-top">
                     <div class="metric-icon-pro" style="background: linear-gradient(135deg, #059669, #10B981);">
@@ -786,7 +786,7 @@
             </div>
         </section>
 
-        <section class="col-3 metric-card-pro">
+        <section class="dash-col-3 metric-card-pro">
             <div class="metric-card-pro-body">
                 <div class="metric-top">
                     <div class="metric-icon-pro" style="background: linear-gradient(135deg, #D97706, #F59E0B);">
@@ -801,7 +801,7 @@
             </div>
         </section>
 
-        <section class="col-3 metric-card-pro">
+        <section class="dash-col-3 metric-card-pro">
             <div class="metric-card-pro-body">
                 <div class="metric-top">
                     <div class="metric-icon-pro" style="background: linear-gradient(135deg, #2563EB, #60A5FA);">
@@ -816,7 +816,7 @@
             </div>
         </section>
 
-        <section class="col-7 panel-card">
+        <section class="dash-col-7 panel-card">
             <div class="panel-card-header">
                 <div class="panel-title-wrap">
                     <div class="panel-title-icon" style="background: linear-gradient(135deg, #2563EB, #60A5FA);">
@@ -879,7 +879,7 @@
                                 <i class="fas fa-eye me-1"></i>Ver detalhes
                             </a>
 
-                            <a asp-controller="TemplateConvite" asp-action="Index" class="btn btn-eventx-outline btn-sm">
+                            <a asp-controller="Convite" asp-action="Index" asp-route-eventoId="@Model.ProximoEvento.Id" class="btn btn-eventx-outline btn-sm">
                                 <i class="fas fa-envelope me-1"></i>Gerenciar convites
                             </a>
 
@@ -903,7 +903,7 @@
             </div>
         </section>
 
-        <section class="col-5 panel-card">
+        <section class="dash-col-5 panel-card">
             <div class="panel-card-header">
                 <div class="panel-title-wrap">
                     <div class="panel-title-icon" style="background: linear-gradient(135deg, #7C3AED, #A78BFA);">
@@ -928,7 +928,7 @@
                         </div>
                     </a>
 
-                    <a asp-controller="TemplateConvite" asp-action="Index" class="linear-action">
+                    <a asp-controller="Convite" asp-action="Index" asp-route-eventoId="@(Model?.ProximoEvento?.Id)" class="linear-action">
                         <div class="linear-action-icon" style="background: linear-gradient(135deg, #2563EB, #60A5FA);">
                             <i class="fas fa-envelope-open-text"></i>
                         </div>
@@ -961,7 +961,7 @@
             </div>
         </section>
 
-        <section class="col-7 panel-card">
+        <section class="dash-col-7 panel-card">
             <div class="panel-card-header">
                 <div class="panel-title-wrap">
                     <div class="panel-title-icon" style="background: linear-gradient(135deg, #0f172a, #334155);">
@@ -1031,7 +1031,7 @@
             </div>
         </section>
 
-        <section class="col-5 panel-card">
+        <section class="dash-col-5 panel-card">
             <div class="panel-card-header">
                 <div class="panel-title-wrap">
                     <div class="panel-title-icon" style="background: linear-gradient(135deg, #059669, #10B981);">
@@ -1099,7 +1099,7 @@
             </div>
         </section>
 
-        <section class="col-12 panel-card">
+        <section class="dash-col-12 panel-card">
             <div class="panel-card-header">
                 <div class="panel-title-wrap">
                     <div class="panel-title-icon" style="background: linear-gradient(135deg, #0f172a, #334155);">

@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using ProjetoEventX.Data;
 using ProjetoEventX.Models;
 using ProjetoEventX.Security;
 using ProjetoEventX.Services;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
@@ -38,6 +40,35 @@ namespace ProjetoEventX.Controllers
             _emailService = emailService;
             _notificationService = notificationService;
             _eventLogService = eventLogService;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Index(int? eventoId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToAction("LoginOrganizador", "Auth");
+
+            if (!eventoId.HasValue)
+            {
+                eventoId = await _context.Eventos
+                    .Where(e => e.Organizador != null && e.Organizador.Email == user.Email)
+                    .OrderBy(e => e.DataEvento < DateTime.UtcNow)
+                    .ThenBy(e => e.DataEvento)
+                    .Select(e => (int?)e.Id)
+                    .FirstOrDefaultAsync();
+            }
+
+            if (!eventoId.HasValue)
+            {
+                TempData["ErrorMessage"] = "❌ Você ainda não possui eventos para gerenciar convites.";
+                return RedirectToAction("Create", "Eventos");
+            }
+
+            if (!await User.IsOwnerOfEventoAsync(_userManager, eventoId.Value, _context))
+                return RedirectToAction("AccessDenied", "Auth");
+
+            return RedirectToAction(nameof(GaleriaTemplates), new { eventoId = eventoId.Value });
         }
 
         [HttpGet]
@@ -476,7 +507,9 @@ namespace ProjetoEventX.Controllers
                     .FirstOrDefaultAsync(t => t.EventoId == eventoId && t.Ativo);
 
                 var htmlConvite = templateConvite != null
-                    ? templateConvite.GerarHTMLConvite(convidado.Pessoa!.Nome, linkConfirmacao)
+                    ? $"<h1>{templateConvite.Titulo ?? $"Convite para {evento.NomeEvento}"}</h1>" +
+                      $"<p>{templateConvite.Saudacao ?? $"Olá {convidado.Pessoa!.Nome},"}</p>" +
+                      $"<p>{templateConvite.Mensagem ?? "Você está convidado!"}</p>"
                     : $"<h1>Convite para {evento.NomeEvento}</h1><p>Olá {convidado.Pessoa!.Nome}, você está convidado!</p>";
 
                 var htmlCompleto = $@"
@@ -677,7 +710,7 @@ namespace ProjetoEventX.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Editor(int eventoId)
+        public async Task<IActionResult> Editor(int eventoId, int? templateId = null, int? rascunhoId = null)
         {
             if (eventoId <= 0)
                 return RedirectToAction("Index", "Eventos");
@@ -696,51 +729,194 @@ namespace ProjetoEventX.Controllers
             if (evento == null)
                 return RedirectToAction("Index", "Eventos");
 
+            ConviteRascunho? rascunho = null;
+            if (rascunhoId.HasValue)
+            {
+                try
+                {
+                    rascunho = await _context.ConvitesRascunhos
+                        .FirstOrDefaultAsync(r => r.Id == rascunhoId.Value && r.EventoId == eventoId);
+                }
+                catch (Exception ex) when (IsConvitesRascunhosTableMissing(ex))
+                {
+                    TempData["WarningMessage"] = "⚠️ O recurso de rascunhos de convite ainda não foi configurado no banco. Aplique as migrations para habilitar.";
+                    rascunho = null;
+                }
+            }
+
+            TemplateConvite? template = null;
+            if (templateId.HasValue)
+            {
+                template = await _context.TemplatesConvites
+                    .FirstOrDefaultAsync(t => t.Id == templateId.Value && t.Ativo && t.EventoId == eventoId);
+            }
+
+            var layoutJson = rascunho?.LayoutJson ?? template?.LayoutJson ?? BuildDefaultLayoutJson(evento);
             ViewBag.EventoId = eventoId;
             ViewBag.NomeEvento = evento.NomeEvento;
             ViewBag.DataEvento = evento.DataEvento.ToString("dd/MM/yyyy");
             ViewBag.HoraInicio = evento.HoraInicio ?? "";
-            ViewBag.HoraFim = evento.HoraFim ?? "";
             ViewBag.NomeLocal = evento.Local?.NomeLocal ?? "Local não informado";
             ViewBag.EnderecoLocal = evento.Local?.EnderecoLocal ?? "";
-            ViewBag.TipoEvento = evento.TipoEvento ?? "Outro";
             ViewBag.DescricaoEvento = evento.DescricaoEvento ?? "";
+            ViewBag.TemplateId = templateId;
+            ViewBag.RascunhoId = rascunho?.Id;
+            ViewBag.NomeRascunho = rascunho?.NomeRascunho ?? template?.Nome ?? $"Convite {evento.NomeEvento}";
+            ViewBag.LayoutJson = layoutJson;
 
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SalvarDesignCanvas(int eventoId, string canvasJson, string nomeTemplate)
+        public async Task<IActionResult> SaveRascunho([FromBody] SaveConviteRascunhoRequest request)
         {
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = "Payload inválido." });
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return Json(new { success = false, message = "Não autenticado" });
 
-            if (!await User.IsOwnerOfEventoAsync(_userManager, eventoId, _context))
+            if (!await User.IsOwnerOfEventoAsync(_userManager, request.EventoId, _context))
                 return Json(new { success = false, message = "Sem permissão" });
 
-            var template = new TemplateConvite
+            ConviteRascunho? rascunho = null;
+            try
+            {
+                if (request.RascunhoId.HasValue)
+                {
+                    rascunho = await _context.ConvitesRascunhos
+                        .FirstOrDefaultAsync(r => r.Id == request.RascunhoId.Value && r.EventoId == request.EventoId);
+                }
+
+                if (rascunho == null)
+                {
+                    rascunho = new ConviteRascunho
+                    {
+                        EventoId = request.EventoId,
+                        OrganizadorId = user.Id,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.ConvitesRascunhos.Add(rascunho);
+                }
+
+                rascunho.TemplateId = request.TemplateId;
+                rascunho.NomeRascunho = string.IsNullOrWhiteSpace(request.NomeRascunho) ? "Convite sem título" : request.NomeRascunho.Trim();
+                rascunho.LayoutJson = request.LayoutJson;
+                rascunho.PreviewHtml = request.PreviewHtml;
+                rascunho.PreviewUrl = request.PreviewUrl;
+                rascunho.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, rascunhoId = rascunho.Id, updatedAt = rascunho.UpdatedAt });
+            }
+            catch (Exception ex) when (IsConvitesRascunhosTableMissing(ex))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Tabela ConvitesRascunhos não encontrada no banco. Execute as migrations para habilitar rascunhos."
+                });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SalvarDesignCanvas(int eventoId, string canvasJson, string nomeTemplate)
+        {
+            var result = await SaveRascunho(new SaveConviteRascunhoRequest
             {
                 EventoId = eventoId,
-                Nome = nomeTemplate ?? "Convite personalizado",
-                Titulo = "Convite",
-                Mensagem = "Convite criado no editor visual",
-                LayoutJson = canvasJson,
-                Estilo = "Canvas",
-                Ativo = true,
-                CorFundo = "#ffffff",
-                CorTexto = "#333333",
-                CorPrimaria = "#992008",
-                Fonte = "'Inter', sans-serif",
-                Saudacao = "Olá Nome do Convidado,",
-                TextoBotao = "Confirmar Presença"
-            };
+                NomeRascunho = nomeTemplate,
+                LayoutJson = canvasJson
+            });
 
-            _context.TemplatesConvites.Add(template);
-            await _context.SaveChangesAsync();
+            return result;
+        }
 
-            return Json(new { success = true, templateId = template.Id });
+        [HttpGet]
+        public async Task<IActionResult> Enviar(int eventoId, int rascunhoId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToAction("LoginOrganizador", "Auth");
+
+            if (!await User.IsOwnerOfEventoAsync(_userManager, eventoId, _context))
+                return RedirectToAction("AccessDenied", "Auth");
+
+            ConviteRascunho? rascunho;
+            try
+            {
+                rascunho = await _context.ConvitesRascunhos
+                    .Include(r => r.Evento)
+                    .FirstOrDefaultAsync(r => r.Id == rascunhoId && r.EventoId == eventoId);
+            }
+            catch (Exception ex) when (IsConvitesRascunhosTableMissing(ex))
+            {
+                TempData["ErrorMessage"] = "❌ Tabela ConvitesRascunhos não encontrada. Aplique as migrations antes de enviar convites por rascunho.";
+                return RedirectToAction(nameof(GaleriaTemplates), new { eventoId });
+            }
+
+            if (rascunho == null)
+                return RedirectToAction(nameof(GaleriaTemplates), new { eventoId });
+
+            var convidados = await _context.ListasConvidados
+                .Include(l => l.Convidado)
+                .ThenInclude(c => c.Pessoa)
+                .Where(l => l.EventoId == eventoId)
+                .OrderBy(l => l.Convidado!.Pessoa!.Nome)
+                .ToListAsync();
+
+            ViewBag.EventoId = eventoId;
+            ViewBag.RascunhoId = rascunhoId;
+            ViewBag.RascunhoNome = rascunho.NomeRascunho;
+            ViewBag.LayoutJson = rascunho.LayoutJson;
+            ViewBag.Convidados = convidados;
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Enviar(int eventoId, int rascunhoId, List<int> convidadosSelecionados, string? mensagemOpcional)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToAction("LoginOrganizador", "Auth");
+
+            if (!await User.IsOwnerOfEventoAsync(_userManager, eventoId, _context))
+                return RedirectToAction("AccessDenied", "Auth");
+
+            ConviteRascunho? rascunho;
+            try
+            {
+                rascunho = await _context.ConvitesRascunhos
+                    .Include(r => r.Evento)
+                    .FirstOrDefaultAsync(r => r.Id == rascunhoId && r.EventoId == eventoId);
+            }
+            catch (Exception ex) when (IsConvitesRascunhosTableMissing(ex))
+            {
+                TempData["ErrorMessage"] = "❌ Tabela ConvitesRascunhos não encontrada. Aplique as migrations antes de enviar convites por rascunho.";
+                return RedirectToAction(nameof(GaleriaTemplates), new { eventoId });
+            }
+
+            if (rascunho == null)
+                return RedirectToAction(nameof(GaleriaTemplates), new { eventoId });
+
+            var convidados = await _context.ListasConvidados
+                .Include(l => l.Convidado).ThenInclude(c => c.Pessoa)
+                .Where(l => l.EventoId == eventoId && convidadosSelecionados.Contains(l.ConvidadoId))
+                .ToListAsync();
+
+            foreach (var item in convidados)
+            {
+                var linkConfirmacao = Url.Action("ConfirmarPresenca", "Convite", new { eventoId, convidadoId = item.ConvidadoId }, protocol: Request.Scheme) ?? "";
+                var html = $"<div>{rascunho.PreviewHtml ?? "Convite EventX Editor"}<p>{mensagemOpcional}</p><p><a href='{linkConfirmacao}'>Confirmar presença</a></p></div>";
+                await _emailService.EnviarEmailAsync(item.Convidado!.Pessoa!.Email!, $"Convite: {rascunho.Evento!.NomeEvento}", html);
+            }
+
+            TempData["SuccessMessage"] = $"✅ Convite enviado para {convidados.Count} convidado(s) usando o layout salvo no EventX Editor.";
+            return RedirectToAction(nameof(Enviar), new { eventoId, rascunhoId });
         }
 
         [HttpGet]
@@ -790,25 +966,118 @@ namespace ProjetoEventX.Controllers
             if (!await User.IsOwnerOfEventoAsync(_userManager, eventoId, _context))
                 return RedirectToAction("AccessDenied", "Auth");
 
-            var evento = await _context.Eventos
-                .Include(e => e.Local)
-                .FirstOrDefaultAsync(e => e.Id == eventoId);
-
+            var evento = await _context.Eventos.FirstOrDefaultAsync(e => e.Id == eventoId);
             if (evento == null)
                 return RedirectToAction("Index", "Eventos");
 
-            ViewBag.EventoId = eventoId;
-            ViewBag.NomeEvento = evento.NomeEvento;
-            ViewBag.TipoEvento = evento.TipoEvento;
+            List<ConviteRascunho> rascunhos;
+            try
+            {
+                rascunhos = await _context.ConvitesRascunhos
+                    .Where(r => r.EventoId == eventoId)
+                    .OrderByDescending(r => r.UpdatedAt)
+                    .Take(8)
+                    .ToListAsync();
+            }
+            catch (Exception ex) when (IsConvitesRascunhosTableMissing(ex))
+            {
+                TempData["WarningMessage"] = "⚠️ Tabela ConvitesRascunhos ausente no banco. Execute as migrations para habilitar os rascunhos no editor.";
+                rascunhos = new List<ConviteRascunho>();
+            }
 
-            var templatesSalvos = await _context.TemplatesConvites
-                .Where(t => t.EventoId == eventoId && t.Ativo)
-                .OrderByDescending(t => t.Id)
-                .ToListAsync();
+            var model = new ConviteCentralViewModel
+            {
+                EventoId = eventoId,
+                NomeEvento = evento.NomeEvento,
+                Templates = BuildTemplateCatalog(),
+                RascunhosRecentes = rascunhos
+            };
 
-            ViewBag.TemplatesSalvos = templatesSalvos;
-
-            return View();
+            return View(model);
         }
+
+        private static bool IsConvitesRascunhosTableMissing(Exception ex)
+        {
+            Exception? current = ex;
+            while (current != null)
+            {
+                if (current is PostgresException pgEx &&
+                    pgEx.SqlState == PostgresErrorCodes.UndefinedTable &&
+                    (string.Equals(pgEx.TableName, "ConvitesRascunhos", StringComparison.OrdinalIgnoreCase) ||
+                     pgEx.MessageText.Contains("ConvitesRascunhos", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return true;
+                }
+
+                current = current.InnerException;
+            }
+
+            return false;
+        }
+
+        private static string BuildDefaultLayoutJson(Evento? evento)
+        {
+            var nomeEvento = evento?.NomeEvento ?? "Seu evento";
+            var dataEvento = evento?.DataEvento.ToString("dd/MM/yyyy") ?? "Data a definir";
+            return """
+            {
+              "version": "5.3.1",
+              "objects": [
+                { "type": "rect", "left": 0, "top": 0, "width": 900, "height": 1280, "fill": "#ffffff", "selectable": false },
+                { "type": "textbox", "left": 120, "top": 180, "width": 660, "text": "{{nomeEvento}}", "fontSize": 64, "fontFamily": "Playfair Display", "fontWeight": "700", "fill": "#8B0000", "textAlign": "center" },
+                { "type": "textbox", "left": 160, "top": 320, "width": 580, "text": "{{dataEvento}} • {{horaEvento}}", "fontSize": 30, "fontFamily": "Inter", "fill": "#0f172a", "textAlign": "center" },
+                { "type": "textbox", "left": 120, "top": 430, "width": 660, "text": "{{localEvento}}", "fontSize": 26, "fontFamily": "Inter", "fill": "#374151", "textAlign": "center" },
+                { "type": "textbox", "left": 160, "top": 620, "width": 580, "text": "Olá {{nomeConvidado}}, sua presença é muito importante para nós!", "fontSize": 26, "fontFamily": "Inter", "fill": "#1f2937", "textAlign": "center" }
+              ],
+              "background": "#ffffff",
+              "eventData": {
+                "nomeEvento": "{{nomeEvento}}",
+                "dataEvento": "{{dataEvento}}",
+                "horaEvento": "{{horaEvento}}",
+                "localEvento": "{{localEvento}}"
+              },
+              "meta": {
+                "seedNomeEvento": "{{nomeEvento}}",
+                "seedDataEvento": "{{dataEvento}}"
+              }
+            }
+            """.Replace("{{nomeEvento}}", nomeEvento).Replace("{{dataEvento}}", dataEvento);
+        }
+
+        private static List<TemplateCatalogItemViewModel> BuildTemplateCatalog()
+        {
+            var nomes = new Dictionary<string, string[]>
+            {
+                ["Casamento"] = new[] { "Luxo Minimalista", "Floral Rosé", "Preto & Dourado", "Clean White Wedding", "Verde Oliva Elegante", "Clássico Europeu", "Terracota Chic", "Noite Romântica" },
+                ["Aniversário"] = new[] { "Neon Party", "Dark Premium", "Color Blast", "Confete Pop", "Glow Party", "Festa Retrô", "Luxury Birthday", "Adulto Sofisticado" },
+                ["Corporativo"] = new[] { "Summit Black", "Blue Executive", "Tech Conference", "Minimal Corporate", "Startup Launch", "Investor Deck Event", "Business Gold", "Workshop Clean" },
+                ["Infantil"] = new[] { "Safari Kids", "Princesa Encantada", "Herói Kids", "Fundo do Mar", "Galáxia Kids", "Arco-íris Fun", "Dino Party", "Doce Diversão" },
+                ["Formatura"] = new[] { "Black Tie Graduate", "Golden Graduation", "Clean Academic", "Foto Destaque", "Azul Royal", "Premium Diploma", "Gala Night", "Academic Minimal" },
+                ["Show/Festa"] = new[] { "Rock Stage", "Festival Neon", "DJ Night", "Sunset Party", "Urban Vibe", "Baile Premium", "House Party", "Summer Beats" }
+            };
+
+            var list = new List<TemplateCatalogItemViewModel>();
+            var id = 1;
+            foreach (var grupo in nomes)
+            {
+                foreach (var nome in grupo.Value)
+                {
+                    list.Add(new TemplateCatalogItemViewModel
+                    {
+                        Id = id,
+                        Nome = nome,
+                        Categoria = grupo.Key,
+                        Estilo = "Editor Visual",
+                        Thumbnail = $"https://placehold.co/600x800/1f2937/ffffff?text={Uri.EscapeDataString(nome)}",
+                        LayoutJson = "{}",
+                        Destaque = id <= 12
+                    });
+                    id++;
+                }
+            }
+
+            return list;
+        }
+
     }
 }

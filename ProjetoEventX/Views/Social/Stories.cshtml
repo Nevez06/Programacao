@@ -1,0 +1,51 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.SocialStatusItemViewModel>
+@{
+    ViewData["Title"] = "EventX Social - Stories";
+    var agrupados = Model.GroupBy(s => s.PerfilId).Select(g => g.OrderByDescending(x => x.CriadoEm).First()).OrderBy(s => s.Visualizado).ThenByDescending(s => s.CriadoEm).ToList();
+    var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+}
+<link rel="stylesheet" href="~/css/social.css" />
+<script>window.__eventxUserId = @(string.IsNullOrWhiteSpace(userIdClaim) ? "null" : userIdClaim);</script>
+
+<section class="social-page">
+    <header class="social-header">
+        <h1>Stories</h1>
+        <p>status ativos das últimas 24 horas.</p>
+        <a asp-action="CriarStatus" class="btn btn-primary">Novo status</a>
+    </header>
+
+    @if (agrupados.Any())
+    {
+        <div class="stories-grid">
+            @foreach (var story in agrupados)
+            {
+                <a href="#" class="story-card @(story.Visualizado ? "seen" : "new") js-story-open"
+                   data-story-id="@story.Id"
+                   data-perfil-id="@story.PerfilId">
+                    <img src="@story.ImagemUrl"
+                         alt="@story.NomePerfil"
+                         loading="lazy"
+                         onerror="this.onerror=null;this.classList.add('is-broken');this.src='/uploads/social/defaults/default-post.svg';" />
+                    <div class="story-card-overlay">
+                        <strong>@story.NomePerfil</strong>
+                        <small>@story.CriadoEm.ToLocalTime().ToString("HH:mm")</small>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="social-empty">
+            <h3>Sem stories ativos</h3>
+            <p>Publique um status para aparecer nesta aba por 24 horas.</p>
+            <a asp-action="CriarStatus" class="btn btn-primary">Publicar status</a>
+        </div>
+    }
+</section>
+
+<partial name="Partials/_StoryViewer" />
+
+@section Scripts {
+    <script src="~/js/social.js" asp-append-version="true"></script>
+}

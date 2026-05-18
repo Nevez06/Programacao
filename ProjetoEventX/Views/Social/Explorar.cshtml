@@ -1,0 +1,40 @@
+@model ProjetoEventX.ViewModels.Social.ExplorarViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "EventX Social - Explorar";
+    ViewData["SocialCurrent"] = "explorar";
+}
+<section class="explore-social-page">
+    <div class="explore-shell">
+        <partial name="Partials/_ExploreSearchBar" model="Model" />
+        <partial name="Partials/_ExploreChips" model="Model" />
+        <partial name="Partials/_ExploreHero" model="Model" />
+        @if (Model.MostrarStories)
+        {
+            <partial name="Partials/_ExploreStories" model="Model.StoriesDestaque" />
+        }
+        <partial name="Partials/_ExploreGrid" model="Model" />
+        @if (Model.MostrarEventos)
+        {
+            <partial name="Partials/_ExploreEventCard" model="Model.EventosEmAlta" />
+        }
+        @if (Model.MostrarFornecedores)
+        {
+            <partial name="Partials/_ExploreSupplierCard" model="Model.FornecedoresPopulares" />
+        }
+        @if (Model.MostrarTemplates)
+        {
+            <partial name="Partials/_ExploreTemplateCard" model="Model.TemplatesEmAlta" />
+        }
+    </div>
+
+    <partial name="Partials/_MobileBottomNav" />
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/social-explore.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script src="~/js/social.js" asp-append-version="true"></script>
+}

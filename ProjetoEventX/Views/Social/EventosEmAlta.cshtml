@@ -1,0 +1,24 @@
+@model IEnumerable<ProjetoEventX.Models.Evento>
+@{
+    ViewData["Title"] = "EventX Social - Eventos em Alta";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page">
+    <header class="social-header">
+        <h1>Eventos em Alta</h1>
+        <p>descubra os eventos com mais movimentação no EventX Social.</p>
+    </header>
+
+    <div class="social-events-grid">
+        @foreach (var evento in Model)
+        {
+            <article class="social-side-card">
+                <h3>@evento.NomeEvento</h3>
+                <p>@evento.TipoEvento</p>
+                <small>@evento.DataEvento.ToLocalTime().ToString("dd/MM/yyyy")</small>
+                <a asp-action="Evento" asp-route-eventoId="@evento.Id" class="btn btn-sm btn-outline-primary mt-2">Ver galeria</a>
+            </article>
+        }
+    </div>
+</section>

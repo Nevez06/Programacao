@@ -1,0 +1,25 @@
+@model ProjetoEventX.ViewModels.Social.PerfilSocialViewModel
+
+<section class="profile-section">
+    <nav class="profile-tabs js-profile-tabs" aria-label="Abas de conteúdo do perfil">
+        <button type="button" class="profile-tab is-active" data-tab="posts" aria-label="Publicações">
+            <i class="fas fa-table-cells"></i>
+        </button>
+        <button type="button" class="profile-tab" data-tab="videos" aria-label="Vídeos">
+            <i class="fas fa-video"></i>
+        </button>
+        <button type="button" class="profile-tab" data-tab="marcados" aria-label="Marcados">
+            <i class="fas fa-user-tag"></i>
+        </button>
+        <button type="button" class="profile-tab" data-tab="eventos" aria-label="Eventos">
+            <i class="fas fa-calendar-days"></i>
+        </button>
+        @if (Model.EhPerfilDoUsuarioLogado)
+        {
+            <button type="button" class="profile-tab" data-tab="salvos" aria-label="Salvos">
+                <i class="fas fa-bookmark"></i>
+            </button>
+        }
+        <span class="profile-tab-indicator"></span>
+    </nav>
+</section>

@@ -5,353 +5,14 @@
 }
 
 @section Styles {
-<style>
-    .canva-editor-page {
-        max-width: 1700px;
-        margin: 0 auto;
-    }
-
-    .canva-topbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        padding: 1rem 1.2rem;
-        margin-bottom: 1rem;
-        background: #fff;
-        border: 1px solid #e9eef5;
-        border-radius: 20px;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
-    }
-
-    .canva-topbar h1 {
-        margin: 0;
-        font-size: 1.2rem;
-        font-weight: 800;
-        color: #0f172a;
-    }
-
-    .canva-topbar p {
-        margin: 0.2rem 0 0;
-        color: #64748b;
-        font-size: 0.85rem;
-    }
-
-    .canva-topbar-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .6rem;
-    }
-
-    .canva-btn {
-        border: 1px solid #dbe2ea;
-        background: #fff;
-        color: #0f172a;
-        border-radius: 12px;
-        padding: .75rem 1rem;
-        font-weight: 700;
-        font-size: .85rem;
-        display: inline-flex;
-        align-items: center;
-        gap: .5rem;
-        cursor: pointer;
-        transition: .2s ease;
-    }
-
-    .canva-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
-    }
-
-    .canva-btn.primary {
-        background: linear-gradient(135deg, #992008, #E74C3C);
-        color: #fff;
-        border: none;
-    }
-
-    .canva-layout {
-        display: grid;
-        grid-template-columns: 290px minmax(0, 1fr) 320px;
-        gap: 1rem;
-        align-items: start;
-    }
-
-    .editor-panel {
-        background: #fff;
-        border: 1px solid #e9eef5;
-        border-radius: 22px;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
-        overflow: hidden;
-    }
-
-    .editor-panel-header {
-        padding: 1rem 1rem .9rem;
-        border-bottom: 1px solid #edf2f7;
-        background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
-    }
-
-    .editor-panel-header h5 {
-        margin: 0;
-        font-size: .95rem;
-        font-weight: 800;
-        color: #0f172a;
-    }
-
-    .editor-panel-header p {
-        margin: .2rem 0 0;
-        color: #64748b;
-        font-size: .78rem;
-    }
-
-    .editor-panel-body {
-        padding: 1rem;
-    }
-
-    .element-list {
-        display: grid;
-        gap: .75rem;
-    }
-
-    .element-btn {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: .75rem;
-        padding: .9rem 1rem;
-        border: 1px solid #e8edf4;
-        border-radius: 14px;
-        background: #f8fafc;
-        cursor: pointer;
-        transition: .2s ease;
-        font-weight: 700;
-        color: #0f172a;
-    }
-
-    .element-btn:hover {
-        background: #fff;
-        transform: translateY(-1px);
-        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
-    }
-
-    .element-btn i {
-        width: 18px;
-        text-align: center;
-        color: #992008;
-    }
-
-    .canvas-stage {
-        background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-        border: 1px solid #e9eef5;
-        border-radius: 24px;
-        min-height: 900px;
-        padding: 1.5rem;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
-        overflow: auto;
-    }
-
-    .canvas-toolbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: .8rem;
-        margin-bottom: 1rem;
-        padding: .9rem 1rem;
-        background: #fff;
-        border: 1px solid #e9eef5;
-        border-radius: 16px;
-        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
-    }
-
-    .canvas-toolbar .left,
-    .canvas-toolbar .right {
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        flex-wrap: wrap;
-    }
-
-    .canvas-wrap {
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        min-height: 760px;
-    }
-
-    .invite-canvas {
-        position: relative;
-        width: 760px;
-        height: 1080px;
-        background: #fff;
-        border-radius: 20px;
-        box-shadow: 0 24px 50px rgba(15, 23, 42, 0.16);
-        overflow: hidden;
-        transform-origin: top center;
-        transition: transform .2s ease;
-    }
-
-    .canvas-grid {
-        position: absolute;
-        inset: 0;
-        background-image:
-            linear-gradient(rgba(15,23,42,0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(15,23,42,0.04) 1px, transparent 1px);
-        background-size: 24px 24px;
-        pointer-events: none;
-        opacity: .5;
-    }
-
-    .canvas-element {
-        position: absolute;
-        min-width: 60px;
-        min-height: 30px;
-        cursor: move;
-        user-select: none;
-        border: 2px solid transparent;
-    }
-
-    .canvas-element.selected {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
-    }
-
-    .canvas-text {
-        padding: .2rem .3rem;
-        line-height: 1.25;
-    }
-
-    .canvas-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: .8rem 1.2rem;
-        border-radius: 12px;
-        font-weight: 800;
-    }
-
-    .layers-list {
-        display: grid;
-        gap: .6rem;
-    }
-
-    .layer-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: .7rem;
-        padding: .8rem .9rem;
-        border-radius: 14px;
-        border: 1px solid #e8edf4;
-        background: #f8fafc;
-        cursor: pointer;
-    }
-
-    .layer-item.active {
-        border-color: #3b82f6;
-        background: #eff6ff;
-    }
-
-    .layer-item-left {
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        min-width: 0;
-    }
-
-    .layer-item-left span {
-        font-size: .82rem;
-        font-weight: 700;
-        color: #0f172a;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .prop-grid {
-        display: grid;
-        gap: .85rem;
-    }
-
-    .prop-field label {
-        display: block;
-        margin-bottom: .35rem;
-        color: #334155;
-        font-size: .78rem;
-        font-weight: 700;
-    }
-
-    .prop-field input,
-    .prop-field select,
-    .prop-field textarea {
-        width: 100%;
-        min-height: 42px;
-        border: 1px solid #dbe2ea;
-        border-radius: 12px;
-        padding: .7rem .8rem;
-        background: #fff;
-        color: #0f172a;
-        outline: none;
-        resize: vertical;
-    }
-
-    .prop-field input:focus,
-    .prop-field select:focus,
-    .prop-field textarea:focus {
-        border-color: #E74C3C;
-        box-shadow: 0 0 0 3px rgba(231,76,60,.12);
-    }
-
-    .prop-inline {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: .7rem;
-    }
-
-    @@media (max-width: 1400px) {
-        .canva-layout {
-            grid-template-columns: 260px minmax(0, 1fr) 300px;
-        }
-
-        .invite-canvas {
-            width: 680px;
-            height: 980px;
-        }
-    }
-
-    @@media (max-width: 1200px) {
-        .canva-layout {
-            grid-template-columns: 1fr;
-        }
-
-        .invite-canvas {
-            width: 100%;
-            max-width: 760px;
-            height: 980px;
-        }
-    }
-
-    @@media (max-width: 768px) {
-        .canva-topbar,
-        .canvas-toolbar {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .invite-canvas {
-            height: 820px;
-        }
-
-        .prop-inline {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
+    <link rel="stylesheet" href="~/css/template-convite-editor.css" asp-append-version="true" />
 }
 
 <div class="canva-editor-page">
     <div class="canva-topbar">
         <div>
             <h1>Editor Visual do Convite</h1>
-            <p>Template: <strong>@Model.NomeTemplate</strong> · Evento: <strong>@Model.NomeEvento</strong></p>
+            <p>Template: <strong>@Model.Nome</strong> · Evento: <strong>@Model.NomeEvento</strong></p>
         </div>
 
         <div class="canva-topbar-actions">
@@ -360,6 +21,12 @@
             </button>
             <button type="button" class="canva-btn" id="btnDelete">
                 <i class="fas fa-trash"></i> Excluir
+            </button>
+            <button type="button" class="canva-btn" id="btnUploadImageTop">
+                <i class="fas fa-upload"></i> Upload imagem
+            </button>
+            <button type="button" class="canva-btn" id="btnExportPng">
+                <i class="fas fa-file-download"></i> Baixar PNG
             </button>
             <button type="button" class="canva-btn primary" id="btnSave">
                 <i class="fas fa-save"></i> Salvar layout
@@ -376,29 +43,18 @@
 
             <div class="editor-panel-body">
                 <div class="element-list">
-                    <button type="button" class="element-btn" data-add="title">
-                        <i class="fas fa-heading"></i> Título
-                    </button>
-                    <button type="button" class="element-btn" data-add="text">
-                        <i class="fas fa-font"></i> Texto
-                    </button>
-                    <button type="button" class="element-btn" data-add="button">
-                        <i class="fas fa-square"></i> Botão
-                    </button>
-                    <button type="button" class="element-btn" data-add="image">
-                        <i class="fas fa-image"></i> Imagem
-                    </button>
-                    <button type="button" class="element-btn" data-add="box">
-                        <i class="fas fa-vector-square"></i> Bloco
-                    </button>
+                    <button type="button" class="element-btn" data-add="title"><i class="fas fa-heading"></i> Título</button>
+                    <button type="button" class="element-btn" data-add="text"><i class="fas fa-font"></i> Texto</button>
+                    <button type="button" class="element-btn" data-add="button"><i class="fas fa-square"></i> Botão</button>
+                    <button type="button" class="element-btn" data-add="image"><i class="fas fa-image"></i> Imagem</button>
                 </div>
 
-                <div class="editor-panel-header" style="margin:1rem -1rem 0; border-top:1px solid #edf2f7;">
+                <div class="editor-panel-header section-divider">
                     <h5>Camadas</h5>
                     <p>Elementos no canvas</p>
                 </div>
 
-                <div class="editor-panel-body" style="padding-left:0; padding-right:0; padding-bottom:0;">
+                <div class="editor-panel-body panel-flush">
                     <div class="layers-list" id="layersList"></div>
                 </div>
             </div>
@@ -407,25 +63,15 @@
         <section>
             <div class="canvas-toolbar">
                 <div class="left">
-                    <button type="button" class="canva-btn" id="zoomOut">
-                        <i class="fas fa-search-minus"></i>
-                    </button>
+                    <button type="button" class="canva-btn" id="zoomOut"><i class="fas fa-search-minus"></i></button>
                     <button type="button" class="canva-btn" id="zoomReset">100%</button>
-                    <button type="button" class="canva-btn" id="zoomIn">
-                        <i class="fas fa-search-plus"></i>
-                    </button>
+                    <button type="button" class="canva-btn" id="zoomIn"><i class="fas fa-search-plus"></i></button>
                 </div>
 
                 <div class="right">
-                    <button type="button" class="canva-btn" id="toggleGrid">
-                        <i class="fas fa-border-all"></i> Grade
-                    </button>
-                    <button type="button" class="canva-btn" id="bringFront">
-                        <i class="fas fa-layer-group"></i> Trazer frente
-                    </button>
-                    <button type="button" class="canva-btn" id="sendBack">
-                        <i class="fas fa-layer-group"></i> Enviar atrás
-                    </button>
+                    <button type="button" class="canva-btn" id="toggleGrid"><i class="fas fa-border-all"></i> Grade</button>
+                    <button type="button" class="canva-btn" id="bringFront"><i class="fas fa-layer-group"></i> Trazer frente</button>
+                    <button type="button" class="canva-btn" id="sendBack"><i class="fas fa-layer-group"></i> Enviar atrás</button>
                 </div>
             </div>
 
@@ -461,10 +107,9 @@
                                 <option value="'Georgia', serif">Georgia</option>
                             </select>
                         </div>
-
                         <div class="prop-field">
                             <label>Tamanho</label>
-                            <input type="number" id="propFontSize" min="10" max="90" />
+                            <input type="number" id="propFontSize" min="10" max="120" />
                         </div>
                     </div>
 
@@ -473,7 +118,6 @@
                             <label>Cor do texto</label>
                             <input type="color" id="propColor" />
                         </div>
-
                         <div class="prop-field">
                             <label>Cor de fundo</label>
                             <input type="color" id="propBackground" />
@@ -485,7 +129,6 @@
                             <label>Largura</label>
                             <input type="number" id="propWidth" min="40" />
                         </div>
-
                         <div class="prop-field">
                             <label>Altura</label>
                             <input type="number" id="propHeight" min="20" />
@@ -497,19 +140,29 @@
                             <label>X</label>
                             <input type="number" id="propX" min="0" />
                         </div>
-
                         <div class="prop-field">
                             <label>Y</label>
                             <input type="number" id="propY" min="0" />
                         </div>
                     </div>
 
-                    <div class="editor-panel-header" style="margin:1rem -1rem 0; border-top:1px solid #edf2f7;">
+                    <div class="prop-field">
+                        <label>URL da imagem (quando tipo imagem)</label>
+                        <input type="text" id="propImageUrl" placeholder="/uploads/convites/arquivo.png" />
+                    </div>
+
+                    <div class="prop-field">
+                        <button type="button" class="canva-btn full" id="btnUploadImageProperty">
+                            <i class="fas fa-upload"></i> Upload imagem para elemento selecionado
+                        </button>
+                    </div>
+
+                    <div class="editor-panel-header section-divider">
                         <h5>Canvas</h5>
                         <p>Fundo geral</p>
                     </div>
 
-                    <div class="prop-field" style="margin-top:1rem;">
+                    <div class="prop-field section-spacer">
                         <label>Cor de fundo do convite</label>
                         <input type="color" id="canvasBackground" value="#ffffff" />
                     </div>
@@ -519,397 +172,19 @@
     </div>
 </div>
 
-@section Scripts {
-<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-
-<script>
-(() => {
-    const templateId = @Model.TemplateId;
-    const canvas = document.getElementById('inviteCanvas');
-    const grid = document.getElementById('canvasGrid');
-    const layersList = document.getElementById('layersList');
-
-    const propText = document.getElementById('propText');
-    const propFont = document.getElementById('propFont');
-    const propFontSize = document.getElementById('propFontSize');
-    const propColor = document.getElementById('propColor');
-    const propBackground = document.getElementById('propBackground');
-    const propWidth = document.getElementById('propWidth');
-    const propHeight = document.getElementById('propHeight');
-    const propX = document.getElementById('propX');
-    const propY = document.getElementById('propY');
-    const canvasBackground = document.getElementById('canvasBackground');
-
-    const zoomOut = document.getElementById('zoomOut');
-    const zoomIn = document.getElementById('zoomIn');
-    const zoomReset = document.getElementById('zoomReset');
-    const toggleGrid = document.getElementById('toggleGrid');
-    const bringFront = document.getElementById('bringFront');
-    const sendBack = document.getElementById('sendBack');
-    const btnDelete = document.getElementById('btnDelete');
-    const btnDuplicate = document.getElementById('btnDuplicate');
-    const btnSave = document.getElementById('btnSave');
-
-    let zoom = 1;
-    let selectedId = null;
-    let layerCounter = 1;
-
-    let state = {
-        background: "#ffffff",
-        elements: []
-    };
-
-    try {
-        const loaded = @Html.Raw(Model.LayoutJson);
-        if (loaded && typeof loaded === 'object') {
-            state = loaded;
-        }
-    } catch {
-        console.warn('Falha ao carregar LayoutJson, usando estado padrão.');
-    }
-
-    if (!state.elements || !Array.isArray(state.elements)) {
-        state.elements = [];
-    }
-
-    if (state.elements.length > 0) {
-        const nums = state.elements
-            .map(e => parseInt(String(e.id || '').replace('el', ''), 10))
-            .filter(n => !isNaN(n));
-
-        if (nums.length) {
-            layerCounter = Math.max(...nums);
-        }
-    }
-
-    function createElement(item) {
-        const el = document.createElement('div');
-        el.className = `canvas-element canvas-${item.type}`;
-        el.dataset.id = item.id;
-
-        el.style.left = item.x + 'px';
-        el.style.top = item.y + 'px';
-        el.style.width = item.width + 'px';
-        el.style.height = item.height + 'px';
-        el.style.zIndex = item.zIndex;
-        el.style.color = item.color;
-        el.style.background = item.background;
-        el.style.fontSize = item.fontSize + 'px';
-        el.style.fontFamily = item.fontFamily;
-        el.style.fontWeight = item.fontWeight || '600';
-
-        if (item.type === 'button') {
-            el.classList.add('canvas-button');
-        } else {
-            el.classList.add('canvas-text');
-        }
-
-        if (item.type === 'image') {
-            el.innerHTML = '<div style="width:100%;height:100%;display:grid;place-items:center;background:#f1f5f9;color:#64748b;border:1px dashed #cbd5e1;border-radius:12px;">Imagem</div>';
-        } else if (item.type === 'box') {
-            el.innerHTML = '';
-            el.style.borderRadius = '14px';
-        } else {
-            el.textContent = item.text || '';
-        }
-
-        el.addEventListener('click', (e) => {
-            e.stopPropagation();
-            selectElement(item.id);
-        });
-
-        canvas.appendChild(el);
-        makeInteractable(el);
-    }
-
-    function renderCanvas() {
-        canvas.querySelectorAll('.canvas-element').forEach(el => el.remove());
-        canvas.style.background = state.background || '#ffffff';
-        canvasBackground.value = normalizeColor(state.background || '#ffffff');
-
-        state.elements
-            .sort((a, b) => a.zIndex - b.zIndex)
-            .forEach(createElement);
-
-        renderLayers();
-        refreshSelection();
-    }
-
-    function renderLayers() {
-        layersList.innerHTML = '';
-        [...state.elements]
-            .sort((a, b) => b.zIndex - a.zIndex)
-            .forEach(item => {
-                const row = document.createElement('div');
-                row.className = 'layer-item' + (item.id === selectedId ? ' active' : '');
-                row.innerHTML = `
-                    <div class="layer-item-left">
-                        <i class="fas fa-layer-group"></i>
-                        <span>${item.text || item.type}</span>
-                    </div>
-                    <small>#${item.zIndex}</small>
-                `;
-                row.addEventListener('click', () => selectElement(item.id));
-                layersList.appendChild(row);
-            });
-    }
-
-    function selectElement(id) {
-        selectedId = id;
-        refreshSelection();
-        fillProperties();
-        renderLayers();
-    }
-
-    function refreshSelection() {
-        canvas.querySelectorAll('.canvas-element').forEach(el => {
-            el.classList.toggle('selected', el.dataset.id === selectedId);
-        });
-    }
-
-    function getSelected() {
-        return state.elements.find(e => e.id === selectedId);
-    }
-
-    function normalizeColor(value) {
-        if (!value || value === 'transparent') return '#ffffff';
-        if (value.startsWith('#')) return value;
-        return '#ffffff';
-    }
-
-    function fillProperties() {
-        const item = getSelected();
-        if (!item) return;
-
-        propText.value = item.text || '';
-        propFont.value = item.fontFamily || "Arial, sans-serif";
-        propFontSize.value = item.fontSize || 16;
-        propColor.value = normalizeColor(item.color || '#000000');
-        propBackground.value = normalizeColor(item.background || '#ffffff');
-        propWidth.value = item.width || 100;
-        propHeight.value = item.height || 40;
-        propX.value = item.x || 0;
-        propY.value = item.y || 0;
-    }
-
-    function updateSelected() {
-        const item = getSelected();
-        if (!item) return;
-
-        item.text = propText.value;
-        item.fontFamily = propFont.value;
-        item.fontSize = parseInt(propFontSize.value || '16', 10);
-        item.color = propColor.value;
-        item.background = propBackground.value;
-        item.width = parseInt(propWidth.value || '100', 10);
-        item.height = parseInt(propHeight.value || '40', 10);
-        item.x = parseInt(propX.value || '0', 10);
-        item.y = parseInt(propY.value || '0', 10);
-
-        renderCanvas();
-    }
-
-    function makeInteractable(target) {
-        interact(target)
-            .draggable({
-                listeners: {
-                    move(event) {
-                        const id = event.target.dataset.id;
-                        const item = state.elements.find(e => e.id === id);
-                        if (!item) return;
-
-                        item.x += event.dx;
-                        item.y += event.dy;
-
-                        event.target.style.left = item.x + 'px';
-                        event.target.style.top = item.y + 'px';
-
-                        if (selectedId === id) {
-                            propX.value = Math.round(item.x);
-                            propY.value = Math.round(item.y);
-                        }
-                    }
-                }
-            })
-            .resizable({
-                edges: { left: true, right: true, bottom: true, top: true },
-                listeners: {
-                    move(event) {
-                        const id = event.target.dataset.id;
-                        const item = state.elements.find(e => e.id === id);
-                        if (!item) return;
-
-                        item.width = Math.max(40, event.rect.width);
-                        item.height = Math.max(20, event.rect.height);
-                        item.x += event.deltaRect.left;
-                        item.y += event.deltaRect.top;
-
-                        event.target.style.width = item.width + 'px';
-                        event.target.style.height = item.height + 'px';
-                        event.target.style.left = item.x + 'px';
-                        event.target.style.top = item.y + 'px';
-
-                        if (selectedId === id) {
-                            propWidth.value = Math.round(item.width);
-                            propHeight.value = Math.round(item.height);
-                            propX.value = Math.round(item.x);
-                            propY.value = Math.round(item.y);
-                        }
-                    }
-                },
-                modifiers: [
-                    interact.modifiers.restrictSize({
-                        min: { width: 40, height: 20 }
-                    })
-                ]
-            });
-    }
-
-    document.querySelectorAll('[data-add]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const type = btn.dataset.add;
-            const id = 'el' + (++layerCounter);
-
-            const base = {
-                id,
-                type,
-                text: type === 'title' ? 'Novo título' :
-                      type === 'button' ? 'Novo botão' :
-                      type === 'image' ? '' :
-                      type === 'box' ? '' : 'Novo texto',
-                x: 120,
-                y: 120 + (state.elements.length * 20),
-                width: type === 'button' ? 200 : type === 'box' ? 220 : 260,
-                height: type === 'button' ? 48 : type === 'box' ? 120 : 50,
-                color: type === 'button' ? '#ffffff' : '#0f172a',
-                background: type === 'button' ? '#992008' : type === 'box' ? '#f8fafc' : 'transparent',
-                fontSize: type === 'title' ? 30 : 16,
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: type === 'title' ? '800' : '600',
-                zIndex: state.elements.length + 1
-            };
-
-            state.elements.push(base);
-            renderCanvas();
-            selectElement(id);
-        });
-    });
-
-    canvas.addEventListener('click', () => {
-        selectedId = null;
-        refreshSelection();
-        renderLayers();
-    });
-
-    [propText, propFont, propFontSize, propColor, propBackground, propWidth, propHeight, propX, propY].forEach(input => {
-        input.addEventListener('input', updateSelected);
-    });
-
-    canvasBackground.addEventListener('input', () => {
-        state.background = canvasBackground.value;
-        canvas.style.background = state.background;
-    });
-
-    function applyZoom() {
-        canvas.style.transform = `scale(${zoom})`;
-    }
-
-    zoomIn.addEventListener('click', () => {
-        zoom = Math.min(1.6, zoom + 0.1);
-        applyZoom();
-    });
-
-    zoomOut.addEventListener('click', () => {
-        zoom = Math.max(0.5, zoom - 0.1);
-        applyZoom();
-    });
-
-    zoomReset.addEventListener('click', () => {
-        zoom = 1;
-        applyZoom();
-    });
-
-    toggleGrid.addEventListener('click', () => {
-        grid.style.display = grid.style.display === 'none' ? 'block' : 'none';
-    });
-
-    bringFront.addEventListener('click', () => {
-        const item = getSelected();
-        if (!item) return;
-        item.zIndex = Math.max(...state.elements.map(e => e.zIndex)) + 1;
-        renderCanvas();
-        selectElement(item.id);
-    });
-
-    sendBack.addEventListener('click', () => {
-        const item = getSelected();
-        if (!item) return;
-        item.zIndex = 1;
-        state.elements
-            .filter(e => e.id !== item.id)
-            .forEach(e => e.zIndex++);
-        renderCanvas();
-        selectElement(item.id);
-    });
-
-    btnDelete.addEventListener('click', () => {
-        if (!selectedId) return;
-        state.elements = state.elements.filter(e => e.id !== selectedId);
-        selectedId = null;
-        renderCanvas();
-    });
-
-    btnDuplicate.addEventListener('click', () => {
-        const item = getSelected();
-        if (!item) return;
-
-        const copy = {
-            ...item,
-            id: 'el' + (++layerCounter),
-            x: item.x + 20,
-            y: item.y + 20,
-            zIndex: Math.max(...state.elements.map(e => e.zIndex)) + 1
-        };
-
-        state.elements.push(copy);
-        renderCanvas();
-        selectElement(copy.id);
-    });
-
-    btnSave.addEventListener('click', async () => {
-        try {
-            const response = await fetch('@Url.Action("SaveLayout", "TemplateConvite")', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-                },
-                body: JSON.stringify({
-                    templateId: templateId,
-                    layoutJson: JSON.stringify(state)
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert('Layout salvo com sucesso.');
-            } else {
-                alert(result.message || 'Não foi possível salvar.');
-            }
-        } catch (error) {
-            console.error(error);
-            alert('Erro ao salvar layout.');
-        }
-    });
-
-    renderCanvas();
-
-    if (state.elements.length > 0) {
-        selectElement(state.elements[0].id);
-    }
-})();
-</script>
-
+<input type="file" id="imageUploadInput" accept="image/png,image/jpeg,image/webp" hidden />
 @Html.AntiForgeryToken()
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script>
+        window.templateEditorConfig = {
+            templateId: @Model.TemplateId,
+            layoutJson: @Html.Raw(Model.LayoutJson),
+            saveLayoutUrl: '@Url.Action("SaveLayout", "TemplateConvite")',
+            uploadImageUrl: '@Url.Action("UploadImage", "TemplateConvite")'
+        };
+    </script>
+    <script src="~/js/template-convite-editor.js" asp-append-version="true"></script>
 }

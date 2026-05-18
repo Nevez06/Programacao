@@ -1,0 +1,37 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.SocialStatusItemViewModel>
+@{
+    var firstByPerfil = Model
+        .GroupBy(s => s.PerfilId)
+        .Select(g => g.OrderByDescending(x => x.CriadoEm).First())
+        .OrderBy(s => s.Visualizado)
+        .ThenByDescending(s => s.CriadoEm)
+        .ToList();
+}
+
+<section class="stories-bar">
+    <div class="stories-header">
+        <h3>Status do evento</h3>
+        <a asp-controller="Social" asp-action="CriarStatus">Adicionar status</a>
+    </div>
+
+    <div class="stories-list">
+        <a asp-controller="Social" asp-action="CriarStatus" class="story-item story-item-create">
+            <span class="story-ring"><i class="fas fa-plus"></i></span>
+            <small>seu status</small>
+        </a>
+
+        @foreach (var story in firstByPerfil)
+        {
+            <a href="#" class="story-item @(story.Visualizado ? "seen" : "new") js-story-open"
+               data-story-id="@story.Id"
+               data-perfil-id="@story.PerfilId">
+                <span class="story-ring">
+                    <img src="@story.FotoPerfilUrl" alt="@story.NomePerfil" />
+                </span>
+                <small>@story.NomePerfil</small>
+            </a>
+        }
+    </div>
+</section>
+
+<partial name="Partials/_StoryViewer" />

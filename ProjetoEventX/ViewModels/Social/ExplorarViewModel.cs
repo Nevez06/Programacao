@@ -1,0 +1,40 @@
+using ProjetoEventX.Models;
+
+namespace ProjetoEventX.ViewModels.Social
+{
+    public class ExplorarViewModel
+    {
+        public string? Busca { get; set; }
+        public string? CategoriaAtiva { get; set; }
+        public List<FeedPostViewModel> PostsRecentes { get; set; } = new();
+        public List<FeedPostViewModel> PostsPopulares { get; set; } = new();
+        public List<ExplorarPerfilCardViewModel> OrganizadoresDestaque { get; set; } = new();
+        public List<ExplorarPerfilCardViewModel> FornecedoresPopulares { get; set; } = new();
+        public List<ExplorarEventoCardViewModel> EventosEmAlta { get; set; } = new();
+        public List<ExplorarTemplateCardViewModel> TemplatesEmAlta { get; set; } = new();
+        public List<ExplorarStoryCardViewModel> StoriesDestaque { get; set; } = new();
+        public List<ExplorarInspiracaoCardViewModel> Inspiracoes { get; set; } = new();
+        public List<ExplorarVisualItemViewModel> DescobertaVisual { get; set; } = new();
+        public List<ExplorarVisualItemViewModel> HeroItems { get; set; } = new();
+        public List<ExplorarVisualItemViewModel> DescobertaVisualInicial { get; set; } = new();
+        public bool MostrarHero { get; set; }
+        public bool MostrarInspiracoes { get; set; }
+        public bool MostrarEventos { get; set; }
+        public bool MostrarFornecedores { get; set; }
+        public bool MostrarTemplates { get; set; }
+        public bool MostrarStories { get; set; }
+        public bool LayoutCompacto { get; set; }
+        public bool LayoutEditorial { get; set; }
+        public List<string> CategoriasDestaque { get; set; } = new();
+        public List<string> SugestoesBusca { get; set; } = new();
+        public bool PodeCarregarMais { get; set; }
+        public int ProximoSkip { get; set; }
+        public int LoteCarregamento { get; set; } = 12;
+        public int TotalPostsRecentes { get; set; }
+        public int TotalPostsPopulares { get; set; }
+        public int TotalEventosEmAlta { get; set; }
+        public int TotalFornecedoresPopulares { get; set; }
+        public int TotalTemplatesEmAlta { get; set; }
+        public int TotalStoriesDestaque { get; set; }
+    }
+}

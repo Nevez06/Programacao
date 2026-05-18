@@ -82,17 +82,26 @@ namespace ProjetoEventX.Controllers
                     .OrderBy(e => e.DataEvento)
                     .Select(e => new EventoDashboard
                     {
+                        Id = e.Id,
                         NomeEvento = e.NomeEvento,
                         DataEvento = e.DataEvento,
-                        TipoEvento = e.TipoEvento
+                        TipoEvento = e.TipoEvento,
+                        HoraInicio = e.HoraInicio,
+                        HoraFim = e.HoraFim,
+                        Local = e.Local != null ? e.Local.NomeLocal : string.Empty
                     })
                     .FirstOrDefault(),
 
                 Eventos = eventos.Select(e => new EventoDashboard
                 {
+                    Id = e.Id,
                     NomeEvento = e.NomeEvento,
                     DataEvento = e.DataEvento,
-                    TipoEvento = e.TipoEvento
+                    TipoEvento = e.TipoEvento,
+                    HoraInicio = e.HoraInicio,
+                    HoraFim = e.HoraFim,
+                    Local = e.Local != null ? e.Local.NomeLocal : string.Empty,
+                    StatusEvento = e.StatusEvento
                 }).ToList()
             }; 
             ViewBag.TotalEventos = eventos.Count;

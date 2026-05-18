@@ -15,6 +15,11 @@ namespace ProjetoEventX.Controllers
 
         public IActionResult Index()
         {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction("Feed", "Social");
+            }
+
             return View();
         }
 

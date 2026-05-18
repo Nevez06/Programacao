@@ -1,0 +1,33 @@
+namespace ProjetoEventX.ViewModels.Social
+{
+    public class FeedPostViewModel
+    {
+        public int PostId { get; set; }
+        public int AutorUserId { get; set; }
+        public string NomeAutor { get; set; } = string.Empty;
+        public string? FotoPerfilUrl { get; set; }
+        public string Legenda { get; set; } = string.Empty;
+        public string ImagemUrl { get; set; } = string.Empty;
+        public string? Categoria { get; set; }
+        public DateTime DataCriacao { get; set; }
+        public int TotalCurtidas { get; set; }
+        public int TotalComentarios { get; set; }
+        public bool UsuarioCurtiu { get; set; }
+        public int? EventoId { get; set; }
+        public string? NomeEvento { get; set; }
+        public int PerfilId { get; set; }
+        public string TipoPerfil { get; set; } = "Convidado";
+        public string? Cidade { get; set; }
+        public string? Localizacao { get; set; }
+        public string? TipoConteudo { get; set; }
+        public bool UsuarioSalvou { get; set; }
+        public bool PostRelacionadoAoUsuario { get; set; }
+        public bool IsOwner { get; set; }
+        public bool IsPinned { get; set; }
+        public bool IsArchived { get; set; }
+        public bool HideLikesCount { get; set; }
+        public bool HideSharesCount { get; set; }
+        public bool CommentsEnabled { get; set; } = true;
+        public List<FeedComentarioPreviewViewModel> ComentariosPreview { get; set; } = new();
+    }
+}

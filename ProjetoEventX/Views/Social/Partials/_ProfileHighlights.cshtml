@@ -1,0 +1,46 @@
+@model ProjetoEventX.ViewModels.Social.PerfilSocialViewModel
+
+<section class="profile-section profile-highlights-section">
+    @if (Model.Destaques.Any())
+    {
+        <div class="profile-highlights-scroll">
+            @foreach (var highlight in Model.Destaques)
+            {
+                var highlightStoryId = highlight.PrimeiroStoryId ?? Model.StoriesAtivos.FirstOrDefault()?.Id;
+                <button type="button"
+                        class="profile-highlight-item js-story-open"
+                        data-story-id="@highlightStoryId"
+                        data-perfil-id="@((highlight.PerfilId ?? Model.Id))"
+                        aria-label="Abrir destaque @highlight.Nome">
+                    <span class="profile-highlight-circle">
+                        <img src="@highlight.CapaUrl"
+                             alt="@highlight.Nome"
+                             loading="lazy"
+                             onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                    </span>
+                    <small>@(string.IsNullOrWhiteSpace(highlight.Nome) ? "Destaque" : highlight.Nome)</small>
+                </button>
+            }
+
+            @if (Model.EhPerfilDoUsuarioLogado)
+            {
+                <a asp-action="Stories" class="profile-highlight-item profile-highlight-item--create" aria-label="Novo destaque">
+                    <span class="profile-highlight-circle">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                    <small>Novo</small>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="profile-empty-glass">
+            <p>Sem destaques ainda.</p>
+            @if (Model.EhPerfilDoUsuarioLogado)
+            {
+                <a asp-action="Stories" class="profile-action-btn secondary">Adicionar destaque</a>
+            }
+        </div>
+    }
+</section>

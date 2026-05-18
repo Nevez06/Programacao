@@ -1,0 +1,64 @@
+@model ProjetoEventX.ViewModels.Social.CriarPostViewModel
+@{
+    ViewData["Title"] = "EventX Social - Criar post";
+}
+<link rel="stylesheet" href="~/css/social.css" />
+
+<section class="social-page narrow">
+    <h1>Novo post</h1>
+    <p class="social-subtitle">Mostre bastidores, decoração, teaser e momentos do seu evento.</p>
+    <form asp-action="CriarPost" method="post" enctype="multipart/form-data" class="social-form social-form-premium">
+        @Html.AntiForgeryToken()
+        <div class="mb-3">
+            <label asp-for="Titulo" class="form-label">Título</label>
+            <input asp-for="Titulo" class="form-control" placeholder="Dê um título curto ao momento" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Legenda" class="form-label">Legenda</label>
+            <textarea asp-for="Legenda" class="form-control" rows="3" placeholder="Conte o que está acontecendo"></textarea>
+            <span asp-validation-for="Legenda" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="TipoConteudo" class="form-label">Tipo de conteúdo</label>
+            <select asp-for="TipoConteudo" class="form-select">
+                <option value="">selecione</option>
+                <option>bastidor</option>
+                <option>decoração</option>
+                <option>teaser</option>
+                <option>cerimônia</option>
+                <option>recepção</option>
+                <option>show</option>
+                <option>fornecedor</option>
+                <option>making of</option>
+                <option>aftermovie</option>
+                <option>promoção</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Categoria" class="form-label">Categoria</label>
+            <input asp-for="Categoria" class="form-control" placeholder="Ex.: casamento, fotografia, buffet" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Localizacao" class="form-label">Localização (opcional)</label>
+            <input asp-for="Localizacao" class="form-control" placeholder="Cidade, bairro ou local do evento" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="EventoId" class="form-label">Evento vinculado</label>
+            <select asp-for="EventoId" asp-items="Model.EventosDisponiveis" class="form-select">
+                <option value="">sem vínculo</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Imagem" class="form-label">Imagem principal</label>
+            <input asp-for="Imagem" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp" data-social-preview-input />
+            <span asp-validation-for="Imagem" class="text-danger"></span>
+        </div>
+        <img src="" alt="preview" class="social-preview d-none" data-social-preview-target />
+        <button type="submit" class="btn btn-primary btn-social-publish">Publicar agora</button>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/social.js" asp-append-version="true"></script>
+}

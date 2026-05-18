@@ -698,13 +698,9 @@
                                         <div class="saved-template-card" data-saved-id="@tpl.Id" onclick="selecionarTemplateSalvo(this, @tpl.Id)">
                                             <div class="st-color" style="background: @tpl.CorPrimaria;"></div>
                                             <div class="st-info">
-                                                <div class="st-name">@tpl.NomeTemplate</div>
-                                                <div class="st-meta">@tpl.EstiloLayout &bull; Criado em @tpl.CreatedAt.ToString("dd/MM")</div>
+                                                <div class="st-name">@tpl.Nome</div>
+                                                <div class="st-meta">@tpl.Estilo</div>
                                             </div>
-                                            @if (tpl.PadraoSistema)
-                                            {
-                                                <span class="st-badge">Padrão</span>
-                                            }
                                         </div>
                                     }
                                 </div>
@@ -713,7 +709,7 @@
 
                         <a asp-controller="TemplateConvite" asp-action="Create" asp-route-eventoId="@ViewBag.EventoId" class="template-option custom-new d-flex align-items-center justify-content-center gap-2" style="display:flex!important; text-decoration:none; width:100%;">
                             <span class="template-emoji" style="font-size:1.4rem;">✨</span>
-                            <span class="template-name">Criar meu próprio convite</span>
+                            <span class="template-name">Criar no EventX Editor</span>
                         </a>
                     </div>
 

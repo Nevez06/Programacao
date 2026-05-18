@@ -1,0 +1,9 @@
+@model ProjetoEventX.ViewModels.Social.FeedPostViewModel
+
+<a asp-controller="Social" asp-action="Post" asp-route-id="@Model.PostId" class="story-shared-post-card" target="_blank" rel="noopener">
+    <img src="@Model.ImagemUrl" alt="@Model.NomeAutor" onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+    <div class="story-shared-post-meta">
+        <small>Compartilhado de @Model.NomeAutor</small>
+        <strong>@(string.IsNullOrWhiteSpace(Model.Legenda) ? "Post do EventX Social" : Model.Legenda)</strong>
+    </div>
+</a>

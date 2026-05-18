@@ -1,0 +1,30 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.ExplorarVisualItemViewModel>
+
+@foreach (var item in Model)
+{
+    var extra = item.Destaque ? "is-featured" : string.Empty;
+    <a href="@item.Link" class="explore-visual-card @extra is-@item.LayoutVariant">
+        <img src="@item.ImagemUrl"
+             alt="@item.Titulo"
+             loading="lazy"
+             onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+
+        <span class="explore-badge">@item.Badge</span>
+        @if (item.IsVideo)
+        {
+            <span class="explore-icon-indicator"><i class="fas fa-play"></i></span>
+        }
+        else if (item.IsMulti)
+        {
+            <span class="explore-icon-indicator"><i class="fas fa-clone"></i></span>
+        }
+
+        <div class="explore-visual-overlay">
+            <strong>@item.Titulo</strong>
+            @if (!string.IsNullOrWhiteSpace(item.Subtitulo))
+            {
+                <small>@item.Subtitulo</small>
+            }
+        </div>
+    </a>
+}

@@ -478,6 +478,77 @@ namespace ProjetoEventX.Migrations
                     b.ToTable("ComentariosFeed");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.Conversation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsGroup")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("UpdatedAt");
+
+                    b.ToTable("Conversations");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.ConversationParticipant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConversationId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LeftAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ConversationId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("ConversationParticipants");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.Convidado", b =>
                 {
                     b.Property<int>("Id")
@@ -548,6 +619,62 @@ namespace ProjetoEventX.Migrations
                         .IsUnique();
 
                     b.ToTable("Convidados");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.ConviteRascunho", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<int>("EventoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("EventoId");
+
+                    b.Property<string>("LayoutJson")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("LayoutJson");
+
+                    b.Property<string>("NomeRascunho")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("NomeRascunho");
+
+                    b.Property<int>("OrganizadorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("OrganizadorId");
+
+                    b.Property<string>("PreviewHtml")
+                        .HasColumnType("text")
+                        .HasColumnName("PreviewHtml");
+
+                    b.Property<string>("PreviewUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("PreviewUrl");
+
+                    b.Property<int?>("TemplateId")
+                        .HasColumnType("integer")
+                        .HasColumnName("TemplateId");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAt");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TemplateId");
+
+                    b.HasIndex("EventoId", "UpdatedAt");
+
+                    b.ToTable("ConvitesRascunhos");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.Despesa", b =>
@@ -1205,6 +1332,43 @@ namespace ProjetoEventX.Migrations
                     b.ToTable("MensagemChats");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.Message", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("ConversationId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EditedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SenderUserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.HasIndex("ConversationId", "CreatedAt");
+
+                    b.ToTable("Messages");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.NegociacaoHistorico", b =>
                 {
                     b.Property<int>("Id")
@@ -1540,6 +1704,92 @@ namespace ProjetoEventX.Migrations
                     b.ToTable("Pedidos");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.PerfilSocial", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Cidade")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FotoPerfilUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Instagram")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("NomeExibicao")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Site")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("TipoPerfil")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Username")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("PerfisSociais");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.PerfilSocialFollow", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("SeguidorPerfilId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SeguindoPerfilId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SeguindoPerfilId");
+
+                    b.HasIndex("SeguidorPerfilId", "SeguindoPerfilId")
+                        .IsUnique();
+
+                    b.ToTable("PerfilSocialFollows");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.Pessoa", b =>
                 {
                     b.Property<int>("Id")
@@ -1816,6 +2066,253 @@ namespace ProjetoEventX.Migrations
                     b.ToTable("ServicoFornecedor");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.SocialComentario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("PerfilSocialId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasMaxLength(600)
+                        .HasColumnType("character varying(600)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PerfilSocialId");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SocialComentarios");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.SocialCurtida", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("PostId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("SocialCurtidas");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.SocialPost", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Categoria")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<bool>("CommentsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("EventoId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("HideLikesCount")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("HideSharesCount")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ImagemUrl")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Legenda")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Localizacao")
+                        .HasMaxLength(140)
+                        .HasColumnType("character varying(140)");
+
+                    b.Property<int>("PerfilSocialId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PinnedOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TipoConteudo")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Titulo")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventoId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("PerfilSocialId", "IsPinned", "PinnedOrder");
+
+                    b.ToTable("SocialPosts");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.SocialPostSalvo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("PostId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("SocialPostsSalvos");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.SocialStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ImagemUrl")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("PerfilSocialId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TextoOverlay")
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("PerfilSocialId", "ExpiraEm", "Ativo");
+
+                    b.ToTable("SocialStatus");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.SocialStatusVisualizacao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("SocialStatusId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("VisualizadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("SocialStatusId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("SocialStatusVisualizacoes");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.SolicitacaoOrcamento", b =>
                 {
                     b.Property<int>("Id")
@@ -1905,6 +2402,242 @@ namespace ProjetoEventX.Migrations
                     b.ToTable("SolicitacoesOrcamento");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.Story", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("EventoId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("ExpireAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MediaUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("PerfilSocialId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SharedPostId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TextOverlay")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventoId");
+
+                    b.HasIndex("ExpireAt");
+
+                    b.HasIndex("PerfilSocialId");
+
+                    b.HasIndex("SharedPostId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Stories");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.StoryHighlight", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CapaUrl")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("StoryHighlights");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.StoryHighlightItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("HighlightId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Ordem")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StoryId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoryId");
+
+                    b.HasIndex("HighlightId", "StoryId")
+                        .IsUnique();
+
+                    b.ToTable("StoryHighlightItems");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.StoryMention", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MentionText")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("MentionedPerfilId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MentionedUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("StoryId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoryId", "MentionedPerfilId");
+
+                    b.ToTable("StoryMentions");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.StoryReaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReactionType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("StoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoryId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("StoryReactions");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.StoryReply", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FromUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("StoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ToUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoryId", "CreatedAt");
+
+                    b.ToTable("StoryReplies");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.StoryView", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("StoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ViewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoryId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("StoryViews");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.TarefaEvento", b =>
                 {
                     b.Property<int>("Id")
@@ -1966,101 +2699,90 @@ namespace ProjetoEventX.Migrations
                     b.Property<bool>("Ativo")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("CSSPersonalizado")
-                        .HasColumnType("text");
-
                     b.Property<string>("CorFundo")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text")
+                        .HasColumnName("CorFundo");
 
                     b.Property<string>("CorPrimaria")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text")
+                        .HasColumnName("CorPrimaria");
 
                     b.Property<string>("CorTexto")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text")
+                        .HasColumnName("CorTexto");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt");
 
-                    b.Property<string>("EstiloLayout")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                    b.Property<string>("Estilo")
+                        .HasColumnType("text")
+                        .HasColumnName("EstiloLayout");
 
-                    b.Property<int>("EventoId")
-                        .HasColumnType("integer");
+                    b.Property<int?>("EventoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("EventoId");
 
-                    b.Property<string>("FonteTexto")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                    b.Property<string>("Fonte")
+                        .HasColumnType("text")
+                        .HasColumnName("FonteTexto");
 
-                    b.Property<string>("FonteTitulo")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                    b.Property<string>("LayoutJson")
+                        .HasColumnType("text")
+                        .HasColumnName("CSSPersonalizado");
 
-                    b.Property<string>("ImagemCabecalho")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("ImagemRodape")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("MensagemPrincipal")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("MensagemSecundaria")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                    b.Property<string>("Mensagem")
+                        .HasColumnType("text")
+                        .HasColumnName("MensagemPrincipal");
 
                     b.Property<bool>("MostrarFotoEvento")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("MostrarFotoEvento");
 
                     b.Property<bool>("MostrarLogo")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("MostrarLogo");
 
                     b.Property<bool>("MostrarMapa")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("MostrarMapa");
 
                     b.Property<bool>("MostrarQRCode")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("MostrarQRCode");
 
-                    b.Property<string>("NomeTemplate")
+                    b.Property<string>("Nome")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text")
+                        .HasColumnName("NomeTemplate");
 
                     b.Property<int>("OrganizadorId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("OrganizadorId");
 
                     b.Property<bool>("PadraoSistema")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("PadraoSistema");
 
                     b.Property<int>("TamanhoFonteTexto")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("TamanhoFonteTexto");
 
                     b.Property<int>("TamanhoFonteTitulo")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("TamanhoFonteTitulo");
 
-                    b.Property<string>("TituloConvite")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                    b.Property<string>("Titulo")
+                        .HasColumnType("text")
+                        .HasColumnName("TituloConvite");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAt");
 
                     b.HasKey("Id");
 
                     b.HasIndex("EventoId");
-
-                    b.HasIndex("OrganizadorId");
 
                     b.ToTable("TemplatesConvites");
                 });
@@ -2136,6 +2858,39 @@ namespace ProjetoEventX.Migrations
                     b.HasIndex("EventoId");
 
                     b.ToTable("TimelineEventos");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.UserPresence", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ActiveConnections")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<bool>("IsOnline")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastConnectionId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("LastHeartbeatAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("IsOnline");
+
+                    b.ToTable("UserPresences");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -2272,6 +3027,35 @@ namespace ProjetoEventX.Migrations
                     b.Navigation("PublicacaoFeed");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.Conversation", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.ConversationParticipant", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Conversation", "Conversation")
+                        .WithMany("Participants")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.Convidado", b =>
                 {
                     b.HasOne("ProjetoEventX.Models.Pessoa", "Pessoa")
@@ -2281,6 +3065,24 @@ namespace ProjetoEventX.Migrations
                         .IsRequired();
 
                     b.Navigation("Pessoa");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.ConviteRascunho", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Evento", "Evento")
+                        .WithMany()
+                        .HasForeignKey("EventoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjetoEventX.Models.TemplateConvite", "Template")
+                        .WithMany()
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Evento");
+
+                    b.Navigation("Template");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.Despesa", b =>
@@ -2436,6 +3238,25 @@ namespace ProjetoEventX.Migrations
                     b.Navigation("Remetente");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.Message", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", "SenderUser")
+                        .WithMany()
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("SenderUser");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.NegociacaoHistorico", b =>
                 {
                     b.HasOne("ProjetoEventX.Models.Quote", "Quote")
@@ -2520,6 +3341,36 @@ namespace ProjetoEventX.Migrations
                     b.Navigation("Produto");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.PerfilSocial", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", "User")
+                        .WithOne()
+                        .HasForeignKey("ProjetoEventX.Models.PerfilSocial", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.PerfilSocialFollow", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.PerfilSocial", "SeguidorPerfil")
+                        .WithMany()
+                        .HasForeignKey("SeguidorPerfilId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjetoEventX.Models.PerfilSocial", "SeguindoPerfil")
+                        .WithMany()
+                        .HasForeignKey("SeguindoPerfilId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SeguidorPerfil");
+
+                    b.Navigation("SeguindoPerfil");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.Produto", b =>
                 {
                     b.HasOne("ProjetoEventX.Models.Fornecedor", "Fornecedor")
@@ -2602,6 +3453,134 @@ namespace ProjetoEventX.Migrations
                         .HasForeignKey("FornecedorId");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.SocialComentario", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.PerfilSocial", "PerfilSocial")
+                        .WithMany()
+                        .HasForeignKey("PerfilSocialId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ProjetoEventX.Models.SocialPost", "Post")
+                        .WithMany("Comentarios")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PerfilSocial");
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.SocialCurtida", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.SocialPost", "Post")
+                        .WithMany("Curtidas")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.SocialPost", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Evento", "Evento")
+                        .WithMany()
+                        .HasForeignKey("EventoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ProjetoEventX.Models.PerfilSocial", "PerfilSocial")
+                        .WithMany("Posts")
+                        .HasForeignKey("PerfilSocialId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Evento");
+
+                    b.Navigation("PerfilSocial");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.SocialPostSalvo", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.SocialPost", "Post")
+                        .WithMany("Salvos")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.SocialStatus", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.PerfilSocial", "PerfilSocial")
+                        .WithMany()
+                        .HasForeignKey("PerfilSocialId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PerfilSocial");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.SocialStatusVisualizacao", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.SocialStatus", "SocialStatus")
+                        .WithMany("Visualizacoes")
+                        .HasForeignKey("SocialStatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SocialStatus");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.SolicitacaoOrcamento", b =>
                 {
                     b.HasOne("ProjetoEventX.Models.Evento", "Evento")
@@ -2628,6 +3607,93 @@ namespace ProjetoEventX.Migrations
                     b.Navigation("Organizador");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.Story", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Evento", "Evento")
+                        .WithMany()
+                        .HasForeignKey("EventoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ProjetoEventX.Models.PerfilSocial", "PerfilSocial")
+                        .WithMany()
+                        .HasForeignKey("PerfilSocialId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ProjetoEventX.Models.SocialPost", "SharedPost")
+                        .WithMany()
+                        .HasForeignKey("SharedPostId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Evento");
+
+                    b.Navigation("PerfilSocial");
+
+                    b.Navigation("SharedPost");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.StoryHighlightItem", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.StoryHighlight", "Highlight")
+                        .WithMany("Items")
+                        .HasForeignKey("HighlightId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjetoEventX.Models.Story", "Story")
+                        .WithMany("HighlightItems")
+                        .HasForeignKey("StoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Highlight");
+
+                    b.Navigation("Story");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.StoryMention", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Story", "Story")
+                        .WithMany("Mentions")
+                        .HasForeignKey("StoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Story");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.StoryReaction", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Story", "Story")
+                        .WithMany("Reactions")
+                        .HasForeignKey("StoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Story");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.StoryReply", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Story", "Story")
+                        .WithMany("Replies")
+                        .HasForeignKey("StoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Story");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.StoryView", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.Story", "Story")
+                        .WithMany("Views")
+                        .HasForeignKey("StoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Story");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.TarefaEvento", b =>
                 {
                     b.HasOne("ProjetoEventX.Models.Evento", "Evento")
@@ -2649,19 +3715,9 @@ namespace ProjetoEventX.Migrations
                 {
                     b.HasOne("ProjetoEventX.Models.Evento", "Evento")
                         .WithMany()
-                        .HasForeignKey("EventoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ProjetoEventX.Models.Organizador", "Organizador")
-                        .WithMany()
-                        .HasForeignKey("OrganizadorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("EventoId");
 
                     b.Navigation("Evento");
-
-                    b.Navigation("Organizador");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.TimelineEvento", b =>
@@ -2673,6 +3729,24 @@ namespace ProjetoEventX.Migrations
                         .IsRequired();
 
                     b.Navigation("Evento");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.UserPresence", b =>
+                {
+                    b.HasOne("ProjetoEventX.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.Conversation", b =>
+                {
+                    b.Navigation("Messages");
+
+                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.Convidado", b =>
@@ -2736,6 +3810,11 @@ namespace ProjetoEventX.Migrations
                     b.Navigation("Eventos");
                 });
 
+            modelBuilder.Entity("ProjetoEventX.Models.PerfilSocial", b =>
+                {
+                    b.Navigation("Posts");
+                });
+
             modelBuilder.Entity("ProjetoEventX.Models.Pessoa", b =>
                 {
                     b.Navigation("Convidado");
@@ -2757,6 +3836,38 @@ namespace ProjetoEventX.Migrations
             modelBuilder.Entity("ProjetoEventX.Models.PublicacaoFeed", b =>
                 {
                     b.Navigation("Comentarios");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.SocialPost", b =>
+                {
+                    b.Navigation("Comentarios");
+
+                    b.Navigation("Curtidas");
+
+                    b.Navigation("Salvos");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.SocialStatus", b =>
+                {
+                    b.Navigation("Visualizacoes");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.Story", b =>
+                {
+                    b.Navigation("HighlightItems");
+
+                    b.Navigation("Mentions");
+
+                    b.Navigation("Reactions");
+
+                    b.Navigation("Replies");
+
+                    b.Navigation("Views");
+                });
+
+            modelBuilder.Entity("ProjetoEventX.Models.StoryHighlight", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("ProjetoEventX.Models.TemplateEvento", b =>

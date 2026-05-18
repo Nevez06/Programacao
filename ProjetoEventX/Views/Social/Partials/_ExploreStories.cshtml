@@ -1,0 +1,28 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.ExplorarStoryCardViewModel>
+
+@if (Model.Any())
+{
+    <section class="explore-section explore-stories" aria-label="Stories em destaque">
+        <div class="explore-section-head">
+            <h2>Stories em destaque</h2>
+            <a asp-action="Stories">ver todos</a>
+        </div>
+        <div class="explore-stories-scroll">
+            @foreach (var story in Model)
+            {
+                <button type="button"
+                        class="explore-story-pill js-story-open"
+                        data-story-id="@story.StoryId"
+                        data-perfil-id="@story.PerfilId"
+                        aria-label="Abrir story de @story.NomePerfil">
+                    <span class="explore-story-ring">
+                        <img src="@story.FotoPerfilUrl"
+                             alt="@story.NomePerfil"
+                             onerror="this.onerror=null;this.src='/uploads/social/defaults/default-profile.svg';" />
+                    </span>
+                    <small>@story.NomePerfil</small>
+                </button>
+            }
+        </div>
+    </section>
+}

@@ -1,0 +1,23 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.StoryViewerViewModel>
+
+@if (!Model.Any())
+{
+    <div class="story-views-empty">
+        <p>Ainda sem visualizações neste story.</p>
+    </div>
+}
+else
+{
+    <div class="story-views-list">
+        @foreach (var viewer in Model)
+        {
+            <div class="story-viewer-row">
+                <img src="@viewer.FotoPerfilUrl" alt="@viewer.NomeExibicao" onerror="this.onerror=null;this.src='/uploads/social/defaults/default-profile.svg';" />
+                <div>
+                    <strong>@viewer.NomeExibicao</strong>
+                    <small>@viewer.TipoPerfil · @viewer.ViewedAt.ToLocalTime().ToString("dd/MM HH:mm")</small>
+                </div>
+            </div>
+        }
+    </div>
+}

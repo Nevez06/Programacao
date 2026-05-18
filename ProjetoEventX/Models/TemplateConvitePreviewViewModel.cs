@@ -2,7 +2,7 @@ namespace ProjetoEventX.Models
 {
     public class TemplateConvitePreviewViewModel
     {
-        public string NomeTemplate { get; set; } = string.Empty;
+        public string Nome { get; set; } = string.Empty;
         public string NomeEvento { get; set; } = string.Empty;
         public string Estilo { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;

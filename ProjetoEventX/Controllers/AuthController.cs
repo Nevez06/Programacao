@@ -123,7 +123,7 @@ namespace ProjetoEventX.Controllers
                         $"Novo organizador criado: {pessoa.Nome}", null, new { user.Id, pessoa.Nome, pessoa.Email });
 
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Dashboard", "Organizador");
+                    return RedirectToAction("Feed", "Social");
                 }
                 catch (Exception ex)
                 {
@@ -234,7 +234,7 @@ namespace ProjetoEventX.Controllers
                         $"Novo fornecedor criado: {pessoa.Nome}", null, new { user.Id, pessoa.Nome, pessoa.Email });
 
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Dashboard", "Fornecedor");
+                    return RedirectToAction("Feed", "Social");
                 }
                 catch (Exception)
                 {
@@ -254,7 +254,7 @@ namespace ProjetoEventX.Controllers
         public IActionResult LoginOrganizador()
         {
             if (User.Identity.IsAuthenticated)
-                return RedirectToAction("Dashboard", "Organizador");
+                return RedirectToAction("Feed", "Social");
             return View();
         }
 
@@ -288,7 +288,7 @@ namespace ProjetoEventX.Controllers
                 if (result.Succeeded)
                 {
                     await _auditoriaService.RegistrarLoginAsync(model.Email, true);
-                    return RedirectToAction("Dashboard", "Organizador");
+                    return RedirectToAction("Feed", "Social");
                 }
                 else
                 {
@@ -305,7 +305,7 @@ namespace ProjetoEventX.Controllers
         public IActionResult LoginFornecedor()
         {
             if (User.Identity.IsAuthenticated)
-                return RedirectToAction("Dashboard", "Fornecedor");
+                return RedirectToAction("Feed", "Social");
             return View();
         }
 
@@ -337,7 +337,7 @@ namespace ProjetoEventX.Controllers
                 if (result.Succeeded)
                 {
                     await _auditoriaService.RegistrarLoginAsync(model.Email, true);
-                    return RedirectToAction("Dashboard", "Fornecedor");
+                    return RedirectToAction("Feed", "Social");
                 }
                 else
                 {
@@ -354,7 +354,7 @@ namespace ProjetoEventX.Controllers
         public IActionResult LoginConvidado()
         {
             if (User.Identity.IsAuthenticated)
-                return RedirectToAction("Dashboard", "Convidado");
+                return RedirectToAction("Feed", "Social");
             return View();
         }
 
@@ -386,7 +386,7 @@ namespace ProjetoEventX.Controllers
                 if (result.Succeeded)
                 {
                     await _auditoriaService.RegistrarLoginAsync(model.Email, true);
-                    return RedirectToAction("Dashboard", "Convidado");
+                    return RedirectToAction("Feed", "Social");
                 }
                 else
                 {

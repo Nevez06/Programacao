@@ -79,7 +79,7 @@
         }
 
         .invite-title {
-            font-family: '@(ViewBag.Template?.FonteTitulo ?? "Playfair Display")', serif;
+            font-family: '@(ViewBag.Template?.Fonte ?? "Playfair Display")', serif;
             font-size: clamp(2rem, 5vw, 3rem);
             font-weight: 700;
             color: @(ViewBag.Template?.CorTexto ?? "#c9a96e");
@@ -270,9 +270,9 @@
                 }
             </div>
 
-            @if (ViewBag.Template?.MensagemPrincipal != null)
+            @if (ViewBag.Template?.Mensagem != null)
             {
-                <p class="invite-message">@ViewBag.Template.MensagemPrincipal</p>
+                <p class="invite-message">@ViewBag.Template.Mensagem</p>
             }
 
             <div class="divider-line"></div>

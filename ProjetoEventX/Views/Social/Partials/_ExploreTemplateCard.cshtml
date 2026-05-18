@@ -1,0 +1,28 @@
+@model IEnumerable<ProjetoEventX.ViewModels.Social.ExplorarTemplateCardViewModel>
+
+<section class="explore-section" aria-label="Templates em alta">
+    <div class="explore-section-head">
+        <h2>Templates em alta</h2>
+        <a asp-action="Explorar" asp-route-categoria="templates">ver mais</a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="explore-template-grid">
+            @foreach (var template in Model)
+            {
+                <a href="@template.LinkEditor" class="explore-template-card">
+                    <img src="@template.ThumbnailUrl"
+                         alt="@template.NomeTemplate"
+                         loading="lazy"
+                         onerror="this.onerror=null;this.src='/uploads/social/defaults/default-post.svg';" />
+                    <span class="explore-template-pill">@template.Categoria</span>
+                    <div>
+                        <strong>@template.NomeTemplate</strong>
+                        <small>@template.Estilo · atualizado @template.AtualizadoEm.ToLocalTime().ToString("dd/MM")</small>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</section>

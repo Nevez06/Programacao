@@ -9,9 +9,14 @@ namespace ProjetoEventX.Security
 {
     public static class SecurityClaimsExtensions
     {
+        private static bool IsAuthenticated(ClaimsPrincipal user)
+        {
+            return user?.Identity?.IsAuthenticated == true;
+        }
+
         public static async Task<bool> IsOrganizadorAsync(this ClaimsPrincipal user, UserManager<Models.ApplicationUser> userManager)
         {
-            if (!user.Identity.IsAuthenticated)
+            if (!IsAuthenticated(user))
                 return false;
 
             var appUser = await userManager.GetUserAsync(user);
@@ -20,7 +25,7 @@ namespace ProjetoEventX.Security
 
         public static async Task<bool> IsFornecedorAsync(this ClaimsPrincipal user, UserManager<Models.ApplicationUser> userManager)
         {
-            if (!user.Identity.IsAuthenticated)
+            if (!IsAuthenticated(user))
                 return false;
 
             var appUser = await userManager.GetUserAsync(user);
@@ -29,7 +34,7 @@ namespace ProjetoEventX.Security
 
         public static async Task<bool> IsConvidadoAsync(this ClaimsPrincipal user, UserManager<Models.ApplicationUser> userManager)
         {
-            if (!user.Identity.IsAuthenticated)
+            if (!IsAuthenticated(user))
                 return false;
 
             var appUser = await userManager.GetUserAsync(user);
@@ -38,7 +43,7 @@ namespace ProjetoEventX.Security
 
         public static async Task<string> GetUserTipoAsync(this ClaimsPrincipal user, UserManager<Models.ApplicationUser> userManager)
         {
-            if (!user.Identity.IsAuthenticated)
+            if (!IsAuthenticated(user))
                 return "Anônimo";
 
             var appUser = await userManager.GetUserAsync(user);
@@ -47,7 +52,7 @@ namespace ProjetoEventX.Security
 
         public static async Task<bool> IsOwnerOfEventoAsync(this ClaimsPrincipal user, UserManager<Models.ApplicationUser> userManager, int eventoId, Data.EventXContext context)
         {
-            if (!user.Identity.IsAuthenticated)
+            if (!IsAuthenticated(user))
                 return false;
 
             var appUser = await userManager.GetUserAsync(user);
@@ -60,7 +65,7 @@ namespace ProjetoEventX.Security
 
         public static async Task<bool> CanAccessEventoAsync(this ClaimsPrincipal user, UserManager<Models.ApplicationUser> userManager, int eventoId, Data.EventXContext context)
         {
-            if (!user.Identity.IsAuthenticated)
+            if (!IsAuthenticated(user))
                 return false;
 
             var appUser = await userManager.GetUserAsync(user);
@@ -90,9 +95,9 @@ namespace ProjetoEventX.Security
             return false;
         }
 
-        public static async Task<Models.ApplicationUser> GetApplicationUserAsync(this ClaimsPrincipal user, UserManager<Models.ApplicationUser> userManager)
+        public static async Task<Models.ApplicationUser?> GetApplicationUserAsync(this ClaimsPrincipal user, UserManager<Models.ApplicationUser> userManager)
         {
-            if (!user.Identity.IsAuthenticated)
+            if (!IsAuthenticated(user))
                 return null;
 
             return await userManager.GetUserAsync(user);
@@ -100,12 +105,12 @@ namespace ProjetoEventX.Security
 
         public static bool HasRole(this ClaimsPrincipal user, string role)
         {
-            return user.Identity.IsAuthenticated && user.IsInRole(role);
+            return IsAuthenticated(user) && user.IsInRole(role);
         }
 
         public static async Task<bool> IsAccountActiveAsync(this ClaimsPrincipal user, UserManager<Models.ApplicationUser> userManager)
         {
-            if (!user.Identity.IsAuthenticated)
+            if (!IsAuthenticated(user))
                 return false;
 
             var appUser = await userManager.GetUserAsync(user);
@@ -124,7 +129,7 @@ namespace ProjetoEventX.Security
 
         public static async Task<bool> RequireTwoFactorAsync(this ClaimsPrincipal user, UserManager<Models.ApplicationUser> userManager)
         {
-            if (!user.Identity.IsAuthenticated)
+            if (!IsAuthenticated(user))
                 return false;
 
             var appUser = await userManager.GetUserAsync(user);

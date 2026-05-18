@@ -1,0 +1,53 @@
+@using ProjetoEventX.Models
+@{
+    ViewData["Title"] = "Revisar e Enviar";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var convidados = ViewBag.Convidados as List<ListaConvidado> ?? new List<ListaConvidado>();
+}
+
+<div class="container py-4">
+    <h2 class="fw-bold">Revisão final do convite</h2>
+    <p class="text-muted">Envie exatamente o layout salvo no EventX Editor.</p>
+
+    @if (TempData["SuccessMessage"] is string msg)
+    {
+        <div class="alert alert-success">@msg</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="fw-bold">Preview fiel</h5>
+                    <pre class="bg-light p-3 rounded" style="white-space:pre-wrap; max-height:420px; overflow:auto;">@ViewBag.LayoutJson</pre>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <form method="post" asp-action="Enviar" asp-controller="Convite">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="eventoId" value="@ViewBag.EventoId" />
+                <input type="hidden" name="rascunhoId" value="@ViewBag.RascunhoId" />
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="fw-bold">Convidados</h5>
+                        <div style="max-height:320px; overflow:auto;">
+                            @foreach (var item in convidados)
+                            {
+                                <label class="d-flex align-items-center justify-content-between border rounded p-2 mb-2">
+                                    <span>@item.Convidado?.Pessoa?.Nome <small class="text-muted">(@item.Convidado?.Pessoa?.Email)</small></span>
+                                    <input type="checkbox" name="convidadosSelecionados" value="@item.ConvidadoId" checked />
+                                </label>
+                            }
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label">Mensagem opcional</label>
+                            <textarea class="form-control" rows="4" name="mensagemOpcional" placeholder="Adicione um recado opcional..."></textarea>
+                        </div>
+                        <button class="btn btn-danger w-100 mt-3" type="submit">Enviar convite</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

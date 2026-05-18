@@ -1,0 +1,36 @@
+@model ProjetoEventX.ViewModels.Social.ExplorarViewModel
+
+<header class="explore-topbar">
+    <form asp-action="Explorar" method="get" class="explore-search-form" autocomplete="off">
+        <i class="fas fa-search" aria-hidden="true"></i>
+        <input type="text"
+               name="busca"
+               value="@Model.Busca"
+               placeholder="Buscar eventos, fornecedores, momentos..."
+               aria-label="Buscar eventos, fornecedores, momentos"
+               data-explore-search-input
+               list="explore-search-suggestions" />
+        @if (!string.IsNullOrWhiteSpace(Model.CategoriaAtiva))
+        {
+            <input type="hidden" name="categoria" value="@Model.CategoriaAtiva" />
+        }
+        <button type="submit" class="explore-filter-btn" aria-label="Aplicar filtros">
+            <i class="fas fa-sliders"></i>
+        </button>
+    </form>
+
+    @if (Model.SugestoesBusca.Any())
+    {
+        <datalist id="explore-search-suggestions">
+            @foreach (var item in Model.SugestoesBusca)
+            {
+                <option value="@item"></option>
+            }
+        </datalist>
+    }
+
+    <div class="explore-headline">
+        <h1>Descobrir</h1>
+        <p>eventos, fornecedores, templates e histórias em um só fluxo visual</p>
+    </div>
+</header>
